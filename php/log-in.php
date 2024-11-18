@@ -19,7 +19,7 @@ if (isset($_SESSION['error_msg'])){
         <div class="login-con-form">
             <div class="login-form" id="loginForm">
                 <div class="login-logo-imgcon">
-                <img src=".//.//assets/images/ccslogo.png" alt="">
+                <img src="/assets/images/ccslogo.png" alt="">
                 </div>
                 <div class="login-title"><p><span class="log-tit-1">CCS (EFMS)</span><span class="log-tit-2">Event & Fee Management System</span></p></div>
                 
