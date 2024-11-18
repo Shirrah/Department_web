@@ -13,16 +13,6 @@
     background-color: white;
 }
 
-.menu-event-management{
-    margin: 15px;
-    display: flex;
-    flex-direction: row;
-}
-
-.menu-items{
-    width: 50%;
-}
-
 .event-fee-item{
     text-decoration: none;
     color: white;

@@ -1,12 +1,9 @@
 <link rel="stylesheet" href=".//.//stylesheet/student/student-fees.css">
 
 <div class="fee-management-con">
-
-    <div class="title">
-        <h3>Your Fees</h3>
-        <span>View your pending department fees</span>
+<div class="fee-management-header">
+        <span>Manage Fees</span>
     </div>
-
     <div class="list-fees-con">
 
     <?php
@@ -55,53 +52,6 @@
 </div>
 
 <style>
-/* Custom student fee styles */
-.fee-management-con {
-    width: 100%;
-    padding: 20px;
-    background-color: #f9f9f9;
-    border-radius: 8px;
-}
 
-.title h3 {
-    font-size: 24px;
-    margin-bottom: 10px;
-}
-
-.title span {
-    font-size: 14px;
-    color: #666;
-}
-
-.list-fees-con {
-    margin-top: 20px;
-}
-
-.fee {
-    background-color: #fff;
-    padding: 15px;
-    margin-bottom: 10px;
-    border: 1px solid #ddd;
-    border-radius: 8px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
-.name-date h4 {
-    margin: 0;
-    font-size: 18px;
-    color: #333;
-}
-
-.name-date p {
-    font-size: 14px;
-    color: #666;
-}
-
-.date-created p {
-    font-size: 16px;
-    color: #000;
-}
 
 </style>

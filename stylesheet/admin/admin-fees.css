@@ -1,5 +1,12 @@
 .fee-management-con{
     font-family: "Open-sans", sans-serif;
+    width: auto;
+    height: auto;
+    padding: 1.8rem;
+    margin: 1.8rem;
+    display: flex;
+    flex-direction: column;
+    background-color: white;
 }
 .fee-management-header{
     width: 100%;

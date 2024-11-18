@@ -1,0 +1,46 @@
+/* Custom student fee styles */
+.fee-management-con {
+    font-family: "Open-sans", sans-serif;
+    width: auto;
+    height: auto;
+    padding: 1.8rem;
+    margin: 1.8rem;
+    display: flex;
+    flex-direction: column;
+    background-color: white;
+}
+
+.fee-management-header{
+    width: 100%;
+    padding: 5px;
+    border-bottom: solid 1px #e8ecf1;
+    display: flex;
+    flex-direction: row;
+}
+
+.fee-management-header span{
+    font-weight: 600;
+    width: 50%;
+}
+.list-fees-con {
+    margin-top: 20px;
+}
+
+.fee {
+    display: flex;
+    flex-direction: row;
+    width: 100%;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid rgb(194, 194, 194);
+    padding: 10px 0; /* Add some padding for better spacing */
+}
+
+.fee:hover{
+    background-color: #e8ecf1;
+}
+
+
+.name-date h4, .name-date p, .date-created p{
+    font-size: 14px;
+}

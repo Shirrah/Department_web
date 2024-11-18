@@ -1,17 +1,16 @@
 <?php
 class Database {
-    public $conn;  // Public property to store the database connection
-    public $error; // Public property to store any connection errors
+    public $db; // Change the visibility to public
+    public $error; // Added property to store connection errors
 
     public function __construct() {
-        // Connection to the database
-        $this->conn = new mysqli("localhost", "root", "", "dcs");
+        // Establishing a connection to the database
+        $this->db = new mysqli("auth-db1632.hstgr.io", "u958767601_shirrah", "Shirrah612345", "u958767601_dcs");
 
         // Checking for connection errors
-        if ($this->conn->connect_error) {
-            // Storing the error message in the class property and terminating the script
-            $this->error = "Connection failed: " . $this->conn->connect_error;
-            die($this->error);
+        if ($this->db->connect_error) {
+            $this->error = "Connection failed: " . $this->db->connect_error;
+            die($this->error); // Terminating script execution if connection fails
         }
     }
 }

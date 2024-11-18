@@ -3,7 +3,9 @@
 <div class="student-body">
     <div class="studentcon">
         <div class="student-left-navbar">
-            <a href="?content=student-index&student=student-events-payments" class=""><img src=".//.//assets/images/income.png" alt="">Events & Fees</a>
+        <a href="" class="title">DASHBOARD</a>
+            <a href="?content=student-index&student=student-fees" class=""><img src=".//.//assets/images/income.png" alt="">Events</a>
+            <a href="?content=student-index&student=student-fees" class=""><img src=".//.//assets/images/income.png" alt="">Fees</a>
             <a href="?content=student-index&student=notifications" class=""><img src=".//.//assets/images/ringing.png" alt="">Notification & History</a>
         </div>
         <div class="student-navbar-display">
@@ -16,18 +18,19 @@
 
             switch($student_pg){
                 case "default":
-                    include 'php/student/student-events-payments.php';
-                case "student-events-payments":
-                    include 'php/student/student-events-payments.php';
+                    include 'php/student/student-events.php';
                     break;
-                case "student-attendance-records":
-                    include 'php/student/student-attendance-records.php';
+                case "student-events":
+                    include 'php/student/student-events.php';
+                    break;
+                case "student-fees":
+                    include 'php/student/student-fees.php';
                     break;
                 case "notifications":
                     include 'php/admin/notifications.php';
                     break;
                 default:
-                    include 'php/student/student-events-payments.php';
+                include 'php/student/student-events.php';
                     break;
             }
         ?>

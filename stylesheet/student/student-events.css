@@ -1,19 +1,42 @@
 .event-management-con {
-    width: 100%;
-    max-width: 100%;
-    min-height: 100vh;
-    border: 1px solid rgb(216, 216, 216);
-    padding: 10px;
-}
-
-.menu {
-    width: 100px;
+    font-family: "Open-sans", sans-serif;
+    width: auto;
+    height: auto;
+    padding: 1.8rem;
+    margin: 1.8rem;
     display: flex;
     flex-direction: column;
-    justify-content: space-evenly;
-    padding: 10px;
-    margin-bottom: 5px;
-    background-color: rgb(255, 219, 219);
+    background-color: white;
+}
+
+.event-management-header{
+    width: 100%;
+    padding: 5px;
+    border-bottom: solid 1px #e8ecf1;
+    display: flex;
+    flex-direction: row;
+}
+
+.event-management-header span{
+    font-weight: 600;
+    width: 50%;
+}
+
+.location{
+    width: 50%;
+    text-align: end;
+}
+
+.location a{
+    text-decoration: none;
+    margin-right: 5px;
+    color: blue;
+    font-size: 14px;
+}
+
+.location span{
+    margin-left: 5px;
+    font-size: 14px;
 }
 
 .list-events-con {
@@ -32,9 +55,17 @@
     padding: 10px 0; /* Add some padding for better spacing */
 }
 
+.event:hover{
+    background-color: #e8ecf1;
+}
+
 .name-date {
     margin: 10px;
     width: 40%;
+}
+
+.name-date h4, .name-date p, .date-created p{
+    font-size: 14px;
 }
 
 .date-created {

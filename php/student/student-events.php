@@ -31,9 +31,8 @@ if (isset($_GET['show_attendances'])) {
 <link rel="stylesheet" href=".//.//stylesheet/student/student-events.css">
 
 <div class="event-management-con">
-    <div class="title">
-        <h3>Events</h3>
-        <span>View department events and your attendance records</span>
+<div class="event-management-header">
+        <span>Manage Events</span>
     </div>
 
     <div class="list-events-con">
