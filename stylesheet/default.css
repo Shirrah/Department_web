@@ -63,16 +63,11 @@
 }
 
 @media (max-width: 480px) {
-    .default-content {
-        padding: 20px; /* Add padding around content on smaller screens */
-    }
-
     .default-content-display img {
-        width: 100px; /* Smaller logo for mobile screens */
-        margin: 10px;
+        margin: 15px;
     }
 
     .default-ccs, .web-name {
-        font-size: 1.2rem; /* Smaller font for mobile screens */
+        margin: 10px 0; /* Add spacing for touch comfort */
     }
 }
