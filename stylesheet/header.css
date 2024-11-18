@@ -150,4 +150,22 @@
 @media (min-width: 481px) and (max-width: 767px) {
     /* Mobile phones (landscape) */
     /* Adjust styles for larger phones */
+    .headerbody{
+        height: 100px;
+    }
+    .dept-name{
+        font-size: 1rem;
+    }
+    .system-name{
+        font-size: .5rem;
+    }
+    .headerbody{
+        justify-content: space-evenly;
+    }
+    .navbar{
+        width: auto;
+    }
+    .header_logo{
+        width: auto;
+    }
 }
