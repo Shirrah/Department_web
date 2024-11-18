@@ -1,0 +1,92 @@
+.student-events-payments-body {
+    width: 100%;
+    height: 100vh;
+    background-color: rgb(255, 236, 231);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: #f4f4f4;
+}
+
+.events-payments-content {
+    width: 95%;
+    height: 100%;
+    max-width: 1200px;
+    margin: 0 auto;
+    background-color: #fff;
+    border-radius: 10px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+.events-payments-display {
+    border: 1px solid rgb(182, 182, 182);
+    background-color: white;
+    width: 100%;
+    height: 100vh;
+    padding: 20px;
+}
+
+.student-events-payments-title {
+    padding: 20px;
+    font-size: 32px;
+    color: #333;
+    text-decoration: none;
+    font-weight: bold;
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+}
+
+.status-box {
+    margin-top: 20px;
+}
+
+.status-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 15px;
+    border: 1px solid #ddd;
+    background-color: #f9f9f9;
+    border-radius: 5px;
+    margin-bottom: 10px;
+}
+
+.status-item h3 {
+    font-size: 18px;
+    margin: 0;
+}
+
+.status {
+    padding: 5px 15px;
+    border-radius: 4px;
+    font-size: 16px;
+}
+
+.status.cleared {
+    background-color: #28a745;
+    color: white;
+}
+
+.status.pending {
+    background-color: #ffc107;
+    color: white;
+}
+
+/* Hover effects for status items */
+.status-item:hover {
+    background-color: #f1f1f1;
+}
+
+/* Media Queries for smaller screens */
+@media (max-width: 768px) {
+    .student-events-payments-title {
+        font-size: 24px;
+    }
+
+    .status-item {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .status-item h3 {
+        margin-bottom: 10px;
+    }
+}

@@ -1,0 +1,126 @@
+<?php
+// Check if the request method is POST
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    // Check if event and attendance are set
+    if (isset($_POST['event']) && isset($_POST['attendance'])) {
+        $event = $_POST['event'];
+        $attendance = $_POST['attendance'];
+    } else {
+        die('Event and attendance selection missing.');
+    }
+} else {
+    die('Invalid request method.');
+}
+
+// Database connection
+$conn = new mysqli("localhost", "root", "", "event_management");
+
+if ($conn->connect_error) {
+    die("Connection failed: " . $conn->connect_error);
+}
+
+$student = null;
+$message = ''; // To store messages
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['student_id'])) {
+    $student_id = $_POST['student_id'];
+    
+    // Validate student ID from student table
+    $student_query = "SELECT * FROM student WHERE id_student = '$student_id'";
+    $result = $conn->query($student_query);
+    
+    if ($result->num_rows > 0) {
+        // Fetch student details
+        $student = $result->fetch_assoc();
+        
+        // Check if student has already scanned for this event and attendance
+        $attendance_query = "SELECT * FROM student_attendance WHERE id_student = '$student_id' AND id_event = '$event' AND id_attendance = '$attendance'";
+        $attendance_result = $conn->query($attendance_query);
+
+        if ($attendance_result->num_rows > 0) {
+            // Student has already scanned
+            $message = "<div class='error'>You already scanned for this event and attendance!</div>";
+        } else {
+            // Insert new record as 'Present' with no fine
+            $insert_query = "INSERT INTO student_attendance (id_student, id_event, id_attendance, date_attendance, status_attendance, fine_amount) 
+                             VALUES ('$student_id', '$event', '$attendance', NOW(), 'Present', 0)";
+            $conn->query($insert_query);
+            $message = "<div class='success'>Student attendance recorded as Present!</div>";
+        }
+    } else {
+        $message = "<div class='error'>Student ID not found!</div>";
+    }
+}
+?>
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Scan Student ID</title>
+    <link rel="stylesheet" type="text/css" href="css/scan.css">
+    <script type="text/javascript">
+        // Automatically focus on the input field and auto-submit the form when a barcode is scanned
+        window.onload = function() {
+            let inputField = document.getElementById('student_id');
+            inputField.focus();
+
+            inputField.addEventListener('input', function() {
+                if (this.value.length > 0) {
+                    document.getElementById('scanForm').submit();
+                }
+            });
+        };
+    </script>
+</head>
+<body>
+    <div class="container">
+        <h1>Event: <?php echo $event; ?></h1>
+        <h2>Attendance: <?php echo $attendance; ?></h2>
+
+        <!-- Display any message (like "You already scanned") -->
+        <?php if ($message): ?>
+            <?php echo $message; ?>
+        <?php endif; ?>
+        
+        <form method="POST" action="scan.php" id="scanForm">
+            <input type="hidden" name="event" value="<?php echo $event; ?>">
+            <input type="hidden" name="attendance" value="<?php echo $attendance; ?>">
+            <label for="student_id">Scan Student ID:</label>
+            <input type="text" name="student_id" id="student_id" required>
+        </form>
+
+        <br>
+
+        <?php if ($student): ?>
+            <div class="student-details">
+                <h3>Student Details:</h3>
+                <div class="student-box">
+                    <div class="student-info">
+                        <p><strong>Student ID:</strong> <?php echo $student['id_student']; ?></p>
+                        <p><strong>Name:</strong> <?php echo $student['firstname_student'] . " " . $student['lastname_student']; ?></p>
+                        <p><strong>Year:</strong> <?php echo $student['year_student']; ?></p>
+                    </div>
+                </div>
+            </div>
+        <?php endif; ?>
+
+        <!-- Button to View Scanned Students -->
+        <form action="view_scanned.php" method="GET">
+            <input type="hidden" name="event" value="<?php echo $event; ?>">
+            <input type="hidden" name="attendance" value="<?php echo $attendance; ?>">
+            <button type="submit">View Scanned Students</button>
+        </form>
+
+        <br>
+
+        <button onclick="goBack()">Go Back</button>
+    </div>
+
+    <script type="text/javascript">
+        // Function to go back to the previous page
+        function goBack() {
+            window.history.back();
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,173 @@
+body {
+    font-family: Arial, sans-serif;
+    background-color: #FFF1ED;
+    color: #333;
+    line-height: 1.6;
+    padding: 20px;
+    margin: 0;
+    height: 100vh;
+    overflow: hidden;
+}
+
+.container {
+    display: flex;
+    height: 100vh; /* Ensures full viewport height */
+    gap: 20px;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.left-column, .right-column {
+    width: 50%;
+    background-color: #FFFFFF;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 0 15px rgba(249, 68, 21, 0.2);
+    display: flex;
+    flex-direction: column;
+}
+
+.right-column {
+    overflow-y: auto; /* Adds vertical scroll if content overflows */
+}
+
+h1, h2, h3 {
+    color: #f94415;
+    margin-bottom: 20px;
+}
+
+h1 i, h2 i, h3 i {
+    margin-right: 10px;
+}
+
+form {
+    margin-bottom: 20px;
+}
+
+label {
+    display: block;
+    margin-bottom: 5px;
+    color: #f94415;
+    font-weight: bold;
+}
+
+input[type="text"] {
+    width: 100%;
+    padding: 10px;
+    border: 2px solid #f94415;
+    border-radius: 4px;
+    font-size: 16px;
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+input[type="text"]:focus {
+    outline: none;
+    border-color: #f94415;
+    box-shadow: 0 0 8px rgba(249, 68, 21, 0.4);
+}
+
+button {
+    background-color: #f94415;
+    color: white;
+    padding: 12px 20px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 16px;
+    transition: background-color 0.3s ease, transform 0.1s ease;
+    width: 100%;
+    margin-top: 10px;
+}
+
+button:hover {
+    background-color: #e03305;
+}
+
+button:active {
+    transform: scale(0.98);
+}
+
+button i {
+    margin-right: 5px;
+}
+
+.student-details {
+    background-color: #FFF7F5;
+    border: 2px solid #f94415;
+    border-radius: 8px;
+    padding: 20px;
+    margin-top: 20px;
+}
+
+.student-box {
+    background-color: #FFFFFF;
+    border-radius: 4px;
+    padding: 15px;
+    box-shadow: 0 2px 5px rgba(249, 68, 21, 0.1);
+}
+
+.student-info p {
+    margin: 10px 0;
+}
+
+.success {
+    background-color: #d4edda;
+    color: #155724;
+    padding: 10px;
+    border-radius: 4px;
+    margin-bottom: 20px;
+}
+
+.error {
+    background-color: #f8d7da;
+    color: #721c24;
+    padding: 10px;
+    border-radius: 4px;
+    margin-bottom: 20px;
+}
+
+/* Responsive design */
+@media (max-width: 480px) {
+    .container {
+        flex-direction: column;
+    }
+
+    button {
+        font-size: 14px;
+        padding: 10px 15px;
+    }
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+table th, table td {
+    padding: 10px;
+    text-align: left;
+    border-bottom: 1px solid #ddd;
+}
+
+table th {
+    background-color: #f94415;
+    color: white;
+}
+
+/* Custom scrollbar for webkit browsers */
+::-webkit-scrollbar {
+    width: 10px;
+}
+
+::-webkit-scrollbar-track {
+    background: #FFF1ED;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #f94415;
+    border-radius: 5px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #e03305;
+}

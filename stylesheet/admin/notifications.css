@@ -1,0 +1,50 @@
+.notifications {
+    padding: 20px;
+    background-color: #f9f9f9;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    margin: 20px;
+    max-width: 93%;
+}
+
+.notifications h2 {
+    margin-top: 0;
+    font-size: 1.75rem;
+    color: #444;
+    font-weight: 700;
+    border-bottom: 2px solid #f94415;
+    padding-bottom: 10px;
+    margin-bottom: 20px;
+}
+
+.notifications ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.notifications li {
+    padding: 15px;
+    border-bottom: 1px solid #ddd;
+    font-size: 1rem;
+    color: #333;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    transition: background-color 0.3s, transform 0.3s;
+}
+
+.notifications li:hover {
+    background-color: #f1f1f1;
+    transform: translateY(-2px);
+}
+
+.notifications li:last-child {
+    border-bottom: none;
+}
+
+.notifications li small {
+    font-size: 0.875rem;
+    color: #777;
+}

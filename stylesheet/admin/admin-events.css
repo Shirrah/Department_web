@@ -1,0 +1,199 @@
+.event-management-con{
+    font-family: "Open-sans", sans-serif;
+}
+
+.event-management-header{
+    width: 100%;
+    padding: 5px;
+    border-bottom: solid 1px #e8ecf1;
+    display: flex;
+    flex-direction: row;
+}
+
+.event-management-header span{
+    font-weight: 600;
+    width: 50%;
+}
+
+.location{
+    width: 50%;
+    text-align: end;
+}
+
+.location a{
+    text-decoration: none;
+    margin-right: 5px;
+    color: blue;
+    font-size: 14px;
+}
+
+.location span{
+    margin-left: 5px;
+    font-size: 14px;
+}
+
+.list-events-con{
+    width: 100%;
+    height: 100%;
+}
+
+.event{
+    display: flex;
+    flex-direction: row;
+    width: 100%;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid #e8ecf1;
+    margin-bottom: 10px;
+}
+
+.event:hover{
+    background-color: #e8ecf1;
+}
+.name-date{
+    margin: 10px;
+    width: 40%;
+}
+
+.name-date h4, .name-date p, .date-created p{
+    font-size: 14px;
+}
+
+.date-created{
+    width: 30%;
+}
+.action-btn{
+    width: 30%;
+    display: flex;
+}
+
+.action-btn a{
+    text-decoration: none;
+    color: #007BFF;
+    margin: 0px 10px 0px 10px;
+}
+
+.action-btn a:hover {
+    color: #ff7b00;
+    border-bottom: 1px solid black;
+}
+
+    /* Modal styles */
+    .modal {
+        display: none;
+        position: fixed;
+        z-index: 1;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        overflow: auto;
+        background-color: rgba(0, 0, 0, 0.4);
+    }
+
+    .modal-content {
+        background-color: #fefefe;
+        margin: 15% auto;
+        padding: 20px;
+        border: 1px solid #888;
+        width: 80%;
+        max-width: 500px;
+    }
+
+    .close, 
+    .close-edit{
+        color: #aaa;
+        float: right;
+        font-size: 28px;
+        font-weight: bold;
+    }
+
+    .close:hover,
+    .close:focus,
+    .close-edit:hover,
+    .close-edit:focus {
+        color: black;
+        text-decoration: none;
+        cursor: pointer;
+    }
+
+    /* Style form inputs */
+    form input, form textarea, form button {
+        display: block;
+        width: 100%;
+        margin: 10px 0;
+        padding: 10px 0px 10px 0px;
+    }
+
+    form button {
+        background-color: #f94316;
+        color: white;
+        border: none;
+        cursor: pointer;
+    }
+
+    form button:hover {
+        background-color: #f94316;
+    }
+
+    .dots {
+        font-size: 14px;
+        cursor: pointer;
+        padding: 5px;
+        user-select: none;
+        border-radius: 5px;
+        color: #f94316;
+        font-weight: bold;
+        font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+    }
+
+    .dots:hover{
+        text-decoration: underline;
+    }
+
+    
+    /* Hide the dropdown content by default */
+    .dropdown-content {
+        display: flex;
+        flex-direction: row;
+    }
+    
+    .dropdown-content a {
+        text-decoration: none;
+        display: flex;
+        align-items: center;
+    }
+
+    .dropdown-content a img{
+        width: 20px;
+    }
+    
+    /* Hover effect for dropdown links */
+    .event-management-con #create-event-btn{
+        border: none;
+        padding: 10px;
+        font-size: 14px;
+        font-weight: 600;
+        background-color: #f94316;
+        color: white;
+        border-radius: 5px;
+    }
+
+    .start-attendance-btn{
+        border: none;
+        user-select: none;
+    }
+    .start-attendance-btn a{ 
+        border: none;
+        padding: 10px;
+        font-size: 14px;
+        font-weight: 600;
+        background-color: #f94316;
+        color: white;
+        border-radius: 5px;
+        text-decoration: none;
+    }
+
+    .event-management-con button:hover, .event-management-con button a:hover, #create-event-btn:hover{
+        background-color: #ff7b00;
+    }
