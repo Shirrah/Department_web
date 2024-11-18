@@ -7,12 +7,6 @@
     z-index: -1;
 }
 
-
-@font-face{
-    font-family: behavior;
-    src: url(..//..//assets/fonts/behavior/Behavior.otf);
-}
-
 .header_logo{
     width: 40%;
     display: flex;
@@ -125,4 +119,35 @@
 .logout-Dropdown a:hover {
     background-color: #f1f1f1;
     color: black;
+}
+
+/* 1. Extra Small Devices (Phones in Portrait Mode) */
+@media (max-width: 480px) {
+    /* Mobile phones (portrait) */
+    /* Adjust styles for very small screens */
+    .headerbody{
+        height: 100px;
+    }
+    .dept-name{
+        font-size: 1rem;
+    }
+    .system-name{
+        font-size: .5rem;
+    }
+    .headerbody{
+        justify-content: space-evenly;
+    }
+    .navbar{
+        width: auto;
+    }
+    .header_logo{
+        width: auto;
+    }
+    
+}
+
+/* 2. Small Devices (Phones in Landscape Mode) */
+@media (min-width: 481px) and (max-width: 767px) {
+    /* Mobile phones (landscape) */
+    /* Adjust styles for larger phones */
 }
