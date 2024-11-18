@@ -136,7 +136,8 @@
         justify-content: space-evenly;
     }
     .navbar{
-        width: auto;
+        display: flex;
+        align-items: center;
     }
     .header_logo{
         width: auto;
@@ -161,7 +162,8 @@
         justify-content: space-evenly;
     }
     .navbar{
-        width: auto;
+        display: flex;
+        align-items: center;
     }
     .header_logo{
         width: auto;
