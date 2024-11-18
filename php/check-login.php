@@ -8,7 +8,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     // Check if username and password are empty
     if (empty($_POST['id']) || empty($_POST['psw'])) {
         $_SESSION['error_msg'] = 'Please fill in all fields!';
-        header("location: http://localhost/Department_web/?content=log-in");
+        header("location: /?content=log-in");
         exit();
     }
 
@@ -29,7 +29,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
             $_SESSION['logged_in'] = 'yes';
             $_SESSION['user_data'] = $row; // Storing admin details in the session
-            header("location: http://localhost/Department_web/?content=admin-index");
+            header("location: /?content=admin-index");
             exit();
         }
     }
@@ -44,18 +44,18 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
             $_SESSION['logged_in'] = 'yes';
             $_SESSION['user_data'] = $row; // Storing admin details in the session
-            header("location: http://localhost/Department_web/?content=student-index");
+            header("location: /?content=student-index");
             exit();
         }
     }
 
     $_SESSION['error_msg'] = 'Invalid id or password.';
-    header("location: http://localhost/Department_web/?content=log-in");
+    header("location: /?content=log-in");
     exit();
 } else {
     // Redirect them to the login page or handle unauthorized access
     $_SESSION['error_msg'] = 'Please log in.';
-    header("location: http://localhost/Department_web/?content=log-in");
+    header("location: /?content=log-in");
     exit();
 }
 ?>
