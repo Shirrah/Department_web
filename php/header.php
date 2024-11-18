@@ -17,7 +17,7 @@ if (session_status() == PHP_SESSION_NONE) {
         <div class="header_logo">
             <img src="assets/images/ccslogo.png" alt="CCS Logo" class="logo">
             <span>
-                <p class="dept-name">COLLEGE OF COMPUTER STUDIES</p>
+                <p class="dept-name">COLLEGE OF hey COMPUTER STUDIES</p>
                 <p class="system-name">Event & Fee Management System (EFMS)</p>
             </span>
         </div>
