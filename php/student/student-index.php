@@ -4,9 +4,9 @@
     <div class="studentcon">
         <div class="student-left-navbar">
         <a href="" class="title">DASHBOARD</a>
-            <a href="?content=student-index&student=student-fees" class=""><img src=".//.//assets/images/income.png" alt="">Events</a>
-            <a href="?content=student-index&student=student-fees" class=""><img src=".//.//assets/images/income.png" alt="">Fees</a>
-            <a href="?content=student-index&student=notifications" class=""><img src=".//.//assets/images/ringing.png" alt="">Notification & History</a>
+            <a href="?content=student-index&student=student-fees" class="">Events</a>
+            <a href="?content=student-index&student=student-fees" class="">Fees</a>
+            <a href="?content=student-index&student=notifications" class="">Notification & History</a>
         </div>
         <div class="student-navbar-display">
         <?php
