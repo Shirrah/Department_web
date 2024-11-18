@@ -13,17 +13,22 @@
     display: flex;
     justify-content: center;
     align-items: center;
+    padding: 10px;
+    box-sizing: border-box;
 }
 
 .default-content-display {
     width: 100%;
-    height: 100%;
-    background-color: rgba(73, 73, 73, 0.3);
+    max-width: 500px; /* Limit content width for better readability */
+    background-color: rgba(73, 73, 73, 0.5); /* Slightly darker background for better contrast */
+    padding: 20px;
+    border-radius: 10px; /* Rounded corners for a modern look */
     display: flex;
+    flex-direction: column;
     justify-content: center;
     align-items: center;
-    flex-direction: column;
     text-align: center;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3); /* Add a subtle shadow */
 }
 
 .default-content-display img {
@@ -34,27 +39,34 @@
 .default-ccs, .web-name {
     text-shadow: 0px 0px 3px black;
     font-family: Tahoma, sans-serif;
+    color: white;
 }
 
 .default-ccs {
     font-size: 2rem;
-    color: white;
 }
 
 .web-name {
     font-size: 2rem;
     font-weight: bold;
-    color: white;
 }
 
 /* Responsive Styles */
 @media (max-width: 768px) {
+    .default-content {
+        padding: 20px;
+    }
+
+    .default-content-display {
+        max-width: 90%; /* Reduce content width on tablets */
+    }
+
     .default-content-display img {
-        width: 120px; /* Smaller logo for tablet screens */
+        width: 120px;
     }
 
     .default-ccs {
-        font-size: 1.5rem; /* Adjust font size */
+        font-size: 1.5rem;
     }
 
     .web-name {
@@ -63,16 +75,16 @@
 }
 
 @media (max-width: 480px) {
-    .default-content {
-        padding: 20px; /* Add padding around content on smaller screens */
-    }
-
     .default-content-display img {
-        width: 100px; /* Smaller logo for mobile screens */
+        width: 100px;
         margin: 10px;
     }
 
-    .default-ccs, .web-name {
-        font-size: 1.2rem; /* Smaller font for mobile screens */
+    .default-ccs {
+        font-size: 1.2rem;
+    }
+
+    .web-name {
+        font-size: 1.2rem;
     }
 }
