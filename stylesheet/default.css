@@ -69,6 +69,7 @@
 
     .default-content-display img {
         width: 100px; /* Smaller logo for mobile screens */
+        margin: 10px;
     }
 
     .default-ccs, .web-name {
