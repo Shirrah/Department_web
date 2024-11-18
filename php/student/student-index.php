@@ -4,7 +4,7 @@
     <div class="studentcon">
         <div class="student-left-navbar">
         <a href="" class="title">DASHBOARD</a>
-            <a href="?content=student-index&student=student-fees" class="">Events</a>
+            <a href="?content=student-index&student=student-events" class="">Events</a>
             <a href="?content=student-index&student=student-fees" class="">Fees</a>
             <a href="?content=student-index&student=notifications" class="">Notification & History</a>
         </div>
