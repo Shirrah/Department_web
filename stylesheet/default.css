@@ -37,15 +37,17 @@
 }
 
 .default-ccs {
-    font-size: 2rem;
+    font-size: 3rem;
     color: white;
+    font-weight: 600;
 }
 
 .web-name {
-    font-size: 2rem;
+    font-size: 1.5rem;
     font-weight: bold;
     color: white;
 }
+
 
 /* Responsive Styles */
 @media (max-width: 768px) {
@@ -69,5 +71,9 @@
 
     .default-ccs, .web-name {
         margin: 10px 0; /* Add spacing for touch comfort */
+    }
+
+    .default-content {
+        height: 80vh;
     }
 }

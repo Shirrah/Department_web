@@ -8,9 +8,10 @@ if (session_status() == PHP_SESSION_NONE) {
 
 <div class="headerbody">
     <div class="header_logo">
+        <img src=".//.//assets/images/SJC-LOGO-NEWER-1536x1024.png" alt="Logo of the Saint Joseph College" class="sjclogo" loading="lazy">
         <img src="assets/images/ccslogo.png" alt="" class="logo">
-        <span><p class="dept-name">COLLEGE OF COMPUTER STUDIES</p>
-        <p class="system-name">Event & Fee Management System (EFMS)</p>
+        <span><p class="school-name">SAINT JOSEPH COLLEGE</p>
+        <p class="dept-name">College of Computer Studies</p>
         </span>
     </div>
 
