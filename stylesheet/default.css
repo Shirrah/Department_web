@@ -19,10 +19,8 @@
 
 .default-content-display {
     width: 100%;
-    max-width: 500px; /* Limit content width for better readability */
+    height: 100%;
     background-color: rgba(73, 73, 73, 0.5); /* Slightly darker background for better contrast */
-    padding: 20px;
-    border-radius: 10px; /* Rounded corners for a modern look */
     display: flex;
     flex-direction: column;
     justify-content: center;
