@@ -93,3 +93,9 @@ if ($result) {
         </div>
         </div>
 </div>
+
+<script>
+  window.addEventListener('unload', function () {
+    navigator.sendBeacon('http://localhost/Department_web//php/logout.php'); // Sends a logout request when the tab is closed
+  });
+</script>

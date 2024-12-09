@@ -78,6 +78,22 @@
     $query = "SELECT id_payment, payment_name, payment_amount, date_payment FROM payments";
     $result = $db->db->query($query);
 
+
+    // Initialize pagination variables
+$limit = 7; // Records per page
+$page = isset($_GET['page']) ? max(1, (int)$_GET['page']) : 1; // Current page, default to 1
+$offset = ($page - 1) * $limit;
+
+// Fetch total records and calculate total pages
+$countQuery = "SELECT COUNT(*) as total FROM payments";
+$totalResult = $db->db->query($countQuery);
+$totalRecords = ($totalResult && $row = $totalResult->fetch_assoc()) ? (int)$row['total'] : 0;
+$totalPages = $totalRecords > 0 ? ceil($totalRecords / $limit) : 1;
+
+// Fetch records for the current page
+$query = "SELECT id_payment, payment_name, payment_amount, date_payment FROM payments LIMIT $limit OFFSET $offset";
+$result = $db->db->query($query);
+
     if ($result && mysqli_num_rows($result) > 0) {
         while ($row = mysqli_fetch_assoc($result)) {
             $id_payment = $row['id_payment'];
@@ -107,7 +123,24 @@
     ?>
 
     </div>
+    <div class="admin-fees-action">
     <button id="createFeeBtn">Create fee</button>
+    </div>
+
+        <!-- Pagination -->
+        <div class="pagination">
+        <button <?php if($page <= 1) echo 'disabled'; ?> onclick="navigateToPage(1)">First</button>
+        <button <?php if($page <= 1) echo 'disabled'; ?> onclick="navigateToPage(<?php echo $page - 1; ?>)">Previous</button>
+        <span>Page <?php echo $page; ?> of <?php echo $totalPages; ?></span>
+        <button <?php if($page >= $totalPages) echo 'disabled'; ?> onclick="navigateToPage(<?php echo $page + 1; ?>)">Next</button>
+        <button <?php if($page >= $totalPages) echo 'disabled'; ?> onclick="navigateToPage(<?php echo $totalPages; ?>)">Last</button>
+    </div>
+
+    <script>
+        function navigateToPage(page) {
+            window.location.href = '?content=admin-index&admin=event-management&admin_events=admin-fees&page=' + page;
+        }
+    </script>
     </div>
 </div>
 

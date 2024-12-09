@@ -166,6 +166,22 @@ if (isset($_GET['id'])) {
 // Fetch events from the database
 $sql = "SELECT id_event, name_event, date_event, event_desc, date_created FROM events";
 $events = $db->db->query($sql);
+
+// Initialize pagination variables
+$limit = 7; // Number of records per page
+$page = isset($_GET['page']) ? max(1, (int)$_GET['page']) : 1; // Default to page 1
+$offset = ($page - 1) * $limit;
+
+// Fetch total records and calculate total pages
+$countQuery = "SELECT COUNT(*) as total FROM events";
+$totalResult = $db->db->query($countQuery);
+$totalRecords = ($totalResult && $row = $totalResult->fetch_assoc()) ? (int)$row['total'] : 0;
+$totalPages = $totalRecords > 0 ? ceil($totalRecords / $limit) : 1;
+
+// Fetch records for the current page
+$query = "SELECT id_event, name_event, date_event, event_desc, date_created FROM events LIMIT $limit OFFSET $offset";
+$events = $db->db->query($query);
+
 ?>
 
 <link rel="stylesheet" href=".//.//stylesheet/admin/admin-events.css">
@@ -183,39 +199,51 @@ $events = $db->db->query($sql);
         </div>
     </div>
     <div class="list-events-con">
-        <?php if ($events->num_rows > 0): ?>
-            <?php while($event = $events->fetch_assoc()): ?>
-    <div class="event">
-        <div class="name-date">
-            <h4><?php echo $event['name_event']; ?></h4>
-            <p><?php echo date("F j, Y", strtotime($event['date_event'])); ?></p>
-        </div>
-        <div class="date-created">
-            <p>Date created: <?php echo date("F j, Y g:i a", strtotime($event['date_created'])); ?></p>
-        </div>
-        <div class="action-btn">
-                <div class="dropdown-content">
-                    <!-- Edit Button: passes event data to the modal -->
-                    <a href="#" onclick="openEditModal(
-                        '<?php echo $event['id_event']; ?>',
-                        '<?php echo addslashes($event['name_event']); ?>',
-                        '<?php echo date('Y-m-d', strtotime($event['date_event'])); ?>',
-                        '<?php echo addslashes($event['event_desc']); ?>'
-                    )"><i class='fas fa-edit'></i></a>
-                    <a href="#" onclick="confirmDelete(<?php echo $event['id_event']; ?>)"><i class='fas fa-trash'></i></a>
-                    <a href="?content=admin-index&admin=attendance-records&id=<?php echo $event['id_event']; ?>"><i class="fas fa-database"></i>
-                    </a>
+    <?php if ($events->num_rows > 0): ?>
+        <?php while($event = $events->fetch_assoc()): ?>
+            <div class="event">
+                <div class="name-date">
+                    <h4><?php echo $event['name_event']; ?></h4>
+                    <p><?php echo date("F j, Y", strtotime($event['date_event'])); ?></p>
                 </div>
-        </div>
-    </div>
-<?php endwhile; ?>
+                <div class="date-created">
+                    <p>Date created: <?php echo date("F j, Y g:i a", strtotime($event['date_created'])); ?></p>
+                </div>
+                <div class="action-btn">
+                    <div class="dropdown-content">
+                        <a href="#" onclick="openEditModal(
+                            '<?php echo $event['id_event']; ?>',
+                            '<?php echo addslashes($event['name_event']); ?>',
+                            '<?php echo date('Y-m-d', strtotime($event['date_event'])); ?>',
+                            '<?php echo addslashes($event['event_desc']); ?>'
+                        )"><i class='fas fa-edit'></i></a>
+                        <a href="#" onclick="confirmDelete(<?php echo $event['id_event']; ?>)"><i class='fas fa-trash'></i></a>
+                        <a href="?content=admin-index&admin=attendance-records&id=<?php echo $event['id_event']; ?>"><i class="fas fa-database"></i></a>
+                    </div>
+                </div>
+            </div>
+        <?php endwhile; ?>
+    <?php else: ?>
+        <p>No events found.</p>
+    <?php endif; ?>
+</div>
 
-        <?php else: ?>
-            <p>No events found.</p>
-        <?php endif; ?>
-        <button id="create-event-btn">Create event</button>
+<!-- Pagination Controls -->
+<div class="pagination">
+    <button <?php if($page <= 1) echo 'disabled'; ?> onclick="navigateToPage(1)">First</button>
+    <button <?php if($page <= 1) echo 'disabled'; ?> onclick="navigateToPage(<?php echo $page - 1; ?>)">Previous</button>
+    <span>Page <?php echo $page; ?> of <?php echo $totalPages; ?></span>
+    <button <?php if($page >= $totalPages) echo 'disabled'; ?> onclick="navigateToPage(<?php echo $page + 1; ?>)">Next</button>
+    <button <?php if($page >= $totalPages) echo 'disabled'; ?> onclick="navigateToPage(<?php echo $totalPages; ?>)">Last</button>
+</div>
+<script>
+function navigateToPage(page) {
+    window.location.href = '?content=admin-index&admin=event-management&page=' + page;
+}
+</script>
+
+<button id="create-event-btn">Create event</button>
         <button class="start-attendance-btn"><a href="./Barcode" target="_blank">Start Attendance</a></button>
-    </div>
 
 </div>
 

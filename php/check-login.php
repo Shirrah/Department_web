@@ -1,8 +1,18 @@
 <?php
+session_set_cookie_params(0); 
 session_start();
+// Set session timeout in seconds (e.g., 180 for 3 minutes)
+$timeout = 180;
 
-// Set session timeout to a very short period (in seconds)
-ini_set('session.gc_maxlifetime', 10); // session expires after 10 seconds of inactivity
+// Check for inactivity timeout
+if (isset($_SESSION['LAST_ACTIVITY']) && (time() - $_SESSION['LAST_ACTIVITY']) > $timeout) {
+    session_unset(); // Clear session variables
+    session_destroy(); // Destroy session
+    header("location: ../index.php?content=log-in"); // Redirect to login
+    exit();
+}
+
+$_SESSION['LAST_ACTIVITY'] = time(); // Update last activity timestamp
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     // Check if username and password are empty

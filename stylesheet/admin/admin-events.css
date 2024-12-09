@@ -33,7 +33,6 @@
 }
 
 .list-events-con{
-    margin: 30px 0px;
     width: 100%;
     height: auto;
 }
@@ -45,7 +44,6 @@
     justify-content: space-between;
     align-items: center;
     border-bottom: 1px solid rgb(194, 194, 194);
-    padding: 10px 0; /* Add some padding for better spacing */
 }
 
 .event:hover{
@@ -77,6 +75,28 @@
 .action-btn a:hover {
     color: #ff7b00;
     border-bottom: 1px solid black;
+}
+
+/* Pagination */
+.pagination {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin-top: 20px;
+}
+
+.pagination button {
+    padding: 10px;
+    cursor: pointer;
+    background-color: #007BFF;
+    color: white;
+    border: none;
+    border-radius: 4px;
+}
+
+.pagination button:disabled {
+    background-color: #ccc;
+    cursor: not-allowed;
 }
 
     /* Modal styles */

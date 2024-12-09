@@ -2,8 +2,6 @@
     font-family: "Open-sans", sans-serif;
     width: auto;
     height: auto;
-    padding: 1.8rem;
-    margin: 1.8rem;
     display: flex;
     flex-direction: column;
     background-color: white;
@@ -108,4 +106,26 @@
 
 .fee-management-con button:hover, .event-management-con button a:hover{
     background-color: tomato;
+}
+
+/* Pagination */
+.pagination {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin-top: 20px;
+}
+
+.pagination button {
+    padding: 10px;
+    cursor: pointer;
+    background-color: #007BFF;
+    color: white;
+    border: none;
+    border-radius: 4px;
+}
+
+.pagination button:disabled {
+    background-color: #ccc;
+    cursor: not-allowed;
 }

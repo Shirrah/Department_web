@@ -45,6 +45,8 @@
 }
 .navbar{
     width: auto;
+    display: flex;
+    align-items: center;
 }
 
 .navbar button{

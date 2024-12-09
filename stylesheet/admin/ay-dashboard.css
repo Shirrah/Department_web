@@ -1,0 +1,95 @@
+.ay-dashboard-body{
+    font-family: "Open-sans", sans-serif;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+}
+
+.ay-dashboard-con{  
+    margin-top: 20px;
+    padding: 1.8rem;
+    margin: 1.8rem;
+    background-color: white;
+}
+.ay-dashboard-header{
+    width: 100%;
+    padding: 5px;
+    border-bottom: solid 1px #e8ecf1;
+    display: flex;
+    flex-direction: row;
+}
+
+.ay-dashboard-header span{
+    font-family: "Open Sans", sans-serif;
+    font-weight: 600;
+    width: 50%;
+}
+
+.location{
+    width: 50%;
+    text-align: end;
+}
+
+.location a{
+    text-decoration: none;
+    font-family: "Open-sans", sans-serif;
+    margin-right: 5px;
+    color: blue;
+    font-size: 14px;
+}
+
+.location span{
+    margin-left: 5px;
+    font-size: 14px;
+}
+
+/* Table styling */
+.semester-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+    border: 1px solid #e8ecf1;
+}
+
+.semester-table th,
+.semester-table td {
+    padding: 12px;
+    text-align: left;
+    font-size: 14px;
+    border-bottom: 1px solid #e8ecf1;
+    font-family: "Open Sans", sans-serif;
+}
+
+.semester-table th {
+    background-color: #f2f2f2;
+    color: black;
+    font-weight: bold;
+    cursor: pointer;
+    position: sticky;
+    top: 0;
+}
+
+.semester-table th:hover {
+    background-color: #e1e1e1;
+}
+
+.semester-table tr:nth-child(even) {
+    background-color: #f9f9f9;
+}
+
+.semester-table tr:hover {
+    background-color: #f1f1f1;
+}
+
+.semester-table td {
+    color: black;
+}
+
+.semester-table td a {
+    color: #007BFF;
+    text-decoration: none;
+}
+
+.semester-table td a:hover {
+    text-decoration: underline;
+}
