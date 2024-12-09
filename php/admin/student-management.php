@@ -120,38 +120,88 @@ if (isset($_GET['show_all']) && $_GET['show_all'] == 'true') {
             </div>
        
             <table class="student-table" id="studentTable">
-                <thead>
-                    <tr>
-                        <th onclick="sortTable(0)">Identification Number</th>
-                        <th onclick="sortTable(1)">Password</th>
-                        <th onclick="sortTable(2)">Last Name</th>
-                        <th onclick="sortTable(3)">First Name</th>
-                        <th onclick="sortTable(4)">Year</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-    <?php
-    // Display each student in a table row
-    if ($students->num_rows > 0) {
-        while ($row = $students->fetch_assoc()) {
-            echo "<tr>";
-            echo "<td>" . htmlspecialchars($row['id_student']) . "</td>";
-            echo "<td>" . str_repeat('•', strlen($row['pass_student'])) . "</td>";
-            echo "<td>" . htmlspecialchars($row['lastname_student']) . "</td>";
-            echo "<td>" . htmlspecialchars($row['firstname_student']) . "</td>";
-            echo "<td>" . htmlspecialchars($row['year_student']) . "</td>";
-            echo "<td><a href='?content=admin-index&admin=student-management&edit_id=" . htmlspecialchars($row['id_student']) . "' class='edit-btn'><i class='fas fa-edit'></i></a>
-            <a href='?content=admin-index&admin=student-management&delete_id=" . htmlspecialchars($row['id_student']) . "' class='delete-btn'><i class='fas fa-trash'></i></a></td>";
-            echo "</tr>";
+    <thead>
+        <tr>
+            <th onclick="sortTable(0)">Identification Number</th>
+            <th onclick="sortTable(1)">Password</th>
+            <th onclick="sortTable(2)">Last Name</th>
+            <th onclick="sortTable(3)">First Name</th>
+            <th onclick="sortTable(4)">Year</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        <?php
+        // Display each student in a table row
+        if ($students->num_rows > 0) {
+            while ($row = $students->fetch_assoc()) {
+                echo "<tr>";
+                echo "<td>" . htmlspecialchars($row['id_student']) . "</td>";
+                echo "<td>
+                    <span class='password-mask'>" . str_repeat('•', strlen($row['pass_student'])) . "</span>
+                    <span class='password-full' style='display:none;'>" . htmlspecialchars($row['pass_student']) . "</span>
+                    <button class='toggle-password-btn' onclick='togglePassword(this)' title='Show Password'>
+                        <i class='fas fa-eye'></i>
+                    </button>
+                </td>";
+                echo "<td>" . htmlspecialchars($row['lastname_student']) . "</td>";
+                echo "<td>" . htmlspecialchars($row['firstname_student']) . "</td>";
+                echo "<td>" . htmlspecialchars($row['year_student']) . "</td>";
+                echo "<td>
+                    <a href='?content=admin-index&admin=student-management&edit_id=" . htmlspecialchars($row['id_student']) . "' class='edit-btn'><i class='fas fa-edit'></i></a>
+                    <a href='?content=admin-index&admin=student-management&delete_id=" . htmlspecialchars($row['id_student']) . "' class='delete-btn'><i class='fas fa-trash'></i></a>
+                </td>";
+                echo "</tr>";
+            }
+        } else {
+            echo "<tr><td colspan='6'>No students found</td></tr>";
         }
-    } else {
-        echo "<tr><td colspan='6'>No students found</td></tr>";
-    }
-    ?>
-</tbody>
+        ?>
+    </tbody>
+</table>
 
-            </table>
+<script>
+    function togglePassword(button) {
+        const passwordMask = button.parentElement.querySelector('.password-mask');
+        const passwordFull = button.parentElement.querySelector('.password-full');
+        const isHidden = passwordFull.style.display === 'none';
+
+        if (isHidden) {
+            passwordMask.style.display = 'none';
+            passwordFull.style.display = 'inline';
+            button.innerHTML = '<i class="fas fa-eye-slash"></i>';
+            button.title = 'Hide Password';
+        } else {
+            passwordMask.style.display = 'inline';
+            passwordFull.style.display = 'none';
+            button.innerHTML = '<i class="fas fa-eye"></i>';
+            button.title = 'Show Password';
+        }
+    }
+</script>
+
+<style>
+    .password-mask,
+    .password-full {
+        margin-right: 5px;
+    }
+
+    .toggle-password-btn {
+        border: none;
+        background: none;
+        cursor: pointer;
+        font-size: 16px;
+    }
+
+    .toggle-password-btn i {
+        color: #007bff;
+    }
+
+    .toggle-password-btn:hover i {
+        color: #0056b3;
+    }
+</style>
+
 
             <!-- No records found message -->
             <p id="noRecordMsg" style="display:none;">No records found</p>
@@ -185,7 +235,7 @@ if (isset($_GET['show_all']) && $_GET['show_all'] == 'true') {
     <div class="modal-content">
         <span class="close" onclick="closeEnrollForm()">&times;</span>
         <h2>Add Student</h2>
-        <form method="POST" action="">
+        <form class="enrollForm" method="POST" action="">
             <label for="id_student">Identification Number (ID):</label>
             <input type="text" id="id_student" name="id_student" required>
 
