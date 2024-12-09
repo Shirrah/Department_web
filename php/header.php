@@ -40,7 +40,7 @@ if (session_status() == PHP_SESSION_NONE) {
             <div class="logout-btn-dropdown">
                 <button class="dropbtn" onclick="toggleDropdown()">
                     <img src=".//.//assets/images/user.png" alt="">
-                    ' . htmlspecialchars($role) . ' - ' . htmlspecialchars($lastname) . ' ' . htmlspecialchars($id) . '
+                    ' . htmlspecialchars($role) . ' - ' . htmlspecialchars($lastname) . '
                     <span id="arrow" class="arrow-down">&#9661;</span>
                 </button>
                 <div id="logout-Dropdown" class="logout-Dropdown">
