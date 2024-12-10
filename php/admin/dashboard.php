@@ -8,54 +8,54 @@ if (session_status() == PHP_SESSION_NONE) {
 require_once "././php/db-conn.php";
 $db = new Database();
 
-// This is query that counts how much students in the db
-$query = "SELECT COUNT(*) AS student_count FROM student";
-$result = $db->db->query($query);
+// Get the selected semester from the URL
+$selected_semester = isset($_GET['semester']) ? $_GET['semester'] : '';
+
+// Query to count students in the selected semester
+$query = "SELECT COUNT(*) AS student_count FROM student WHERE semester_ID = ?";
+$stmt = $db->db->prepare($query);
+$stmt->bind_param("s", $selected_semester);
+$stmt->execute();
+$result = $stmt->get_result();
 
 // Check if the query was successful
 if ($result) {
-    // Fetch the result as an associative array
     $row = $result->fetch_assoc();
-    
-    // Retrieve the count from the result
     $student_count = $row['student_count'];
 } else {
-    // Display an error message if the query fails
     echo "<p>Error retrieving student count.</p>";
 }
 
-
-// This is query that counts how much students in the db
-$query = "SELECT COUNT(*) AS events_count FROM events";
-$result = $db->db->query($query);
+// Query to count events in the selected semester
+$query = "SELECT COUNT(*) AS events_count FROM events WHERE semester_ID = ?";
+$stmt = $db->db->prepare($query);
+$stmt->bind_param("s", $selected_semester);
+$stmt->execute();
+$result = $stmt->get_result();
 
 // Check if the query was successful
 if ($result) {
-    // Fetch the result as an associative array
     $row = $result->fetch_assoc();
-    
-    // Retrieve the count from the result
     $events_count = $row['events_count'];
 } else {
-    // Display an error message if the query fails
     echo "<p>Error retrieving event count.</p>";
 }
 
-// This is query that counts how much students in the db
-$query = "SELECT COUNT(*) AS fees_count FROM payments";
-$result = $db->db->query($query);
+// Query to count fees in the selected semester
+$query = "SELECT COUNT(*) AS fees_count FROM payments WHERE semester_ID = ?";
+$stmt = $db->db->prepare($query);
+$stmt->bind_param("s", $selected_semester);
+$stmt->execute();
+$result = $stmt->get_result();
 
 // Check if the query was successful
 if ($result) {
-    // Fetch the result as an associative array
     $row = $result->fetch_assoc();
-    
-    // Retrieve the count from the result
     $fees_count = $row['fees_count'];
 } else {
-    // Display an error message if the query fails
     echo "<p>Error retrieving fee count.</p>";
 }
+
 ?>
 
 <link rel="stylesheet" href=".//.//stylesheet/admin/dashboard.css">
