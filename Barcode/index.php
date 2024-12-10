@@ -19,12 +19,13 @@ $events = $database->conn->query($event_query);
 <html>
 <head>
     <title>Select Event and Attendance</title>
-    <link rel="stylesheet" type="text/css" href="css/indexxx.css">
+    <link rel="stylesheet" type="text/css" href="css/index.css">
     <link rel="icon" href="../../assets/images/ccslogo.png" type="image/icon type">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 </head>
 <body>
+    <div class="particles"></div>
     <div class="container">
         <h1><i class="fas fa-calendar-alt"></i> Select Event and Attendance</h1>
         <form method="POST" action="scan.php">
@@ -84,6 +85,25 @@ $events = $database->conn->query($event_query);
                 $('#attendance').append('<option value="">-- Select Attendance --</option>');
             }
         });
+
+        // Add particle effect
+        function createParticles() {
+            const particlesContainer = document.querySelector('.particles');
+            const particleCount = 50;
+
+            for (let i = 0; i < particleCount; i++) {
+                const particle = document.createElement('div');
+                particle.classList.add('particle');
+                particle.style.width = `${Math.random() * 5 + 1}px`;
+                particle.style.height = particle.style.width;
+                particle.style.left = `${Math.random() * 100}vw`;
+                particle.style.top = `${Math.random() * 100}vh`;
+                particle.style.animationDuration = `${Math.random() * 10 + 10}s`;
+                particlesContainer.appendChild(particle);
+            }
+        }
+
+        createParticles();
     </script>
 </body>
 </html>
