@@ -6,6 +6,7 @@ if (session_status() == PHP_SESSION_NONE) {
 require_once "././php/db-conn.php";
 $db = new Database();
 
+
 // Query to fetch students data
 $query = "SELECT id_student, pass_student, lastname_student, firstname_student, year_student FROM student";
 $students = $db->db->query($query);
@@ -70,27 +71,43 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['update_student'])) {
     }
 }
 
+// Get the selected semester from the URL
+$selected_semester = isset($_GET['semester']) ? $_GET['semester'] : '';
+
 // Initialize pagination variables
 $limit = 10; // Records per page
 $page = isset($_GET['page']) ? max(1, (int)$_GET['page']) : 1; // Current page, default to 1
 $offset = ($page - 1) * $limit;
 
-// Fetch total records and calculate total pages
-$countQuery = "SELECT COUNT(*) as total FROM student";
-$totalResult = $db->db->query($countQuery);
-$totalRecords = ($totalResult && $row = $totalResult->fetch_assoc()) ? (int)$row['total'] : 0;
+// Fetch total records and calculate total pages for the selected semester
+$countQuery = "SELECT COUNT(*) as total FROM student WHERE semester_ID = ?";
+$stmt = $db->db->prepare($countQuery);
+$stmt->bind_param("s", $selected_semester);
+$stmt->execute();
+$totalResult = $stmt->get_result();
+$row = $totalResult->fetch_assoc();
+$totalRecords = $row ? (int)$row['total'] : 0; // Ensure totalRecords is assigned
 $totalPages = $totalRecords > 0 ? ceil($totalRecords / $limit) : 1;
 
-// Fetch records for the current page
+// Fetch records for the current page for the selected semester
 if (isset($_GET['show_all']) && $_GET['show_all'] == 'true') {
-    $query = "SELECT id_student, pass_student, lastname_student, firstname_student, year_student FROM student";
-    $students = $db->db->query($query);
+    // Query to fetch all records for the selected semester (no pagination)
+    $query = "SELECT id_student, pass_student, lastname_student, firstname_student, year_student 
+              FROM student WHERE semester_ID = ?";
+    $stmt = $db->db->prepare($query);
+    $stmt->bind_param("s", $selected_semester);
+    $stmt->execute();
+    $students = $stmt->get_result();
     $totalPages = 1;
     $page = 1;
 } else {
+    // Query to fetch paginated records for the selected semester
     $query = "SELECT id_student, pass_student, lastname_student, firstname_student, year_student 
-              FROM student LIMIT $limit OFFSET $offset";
-    $students = $db->db->query($query);
+              FROM student WHERE semester_ID = ? LIMIT $limit OFFSET $offset";
+    $stmt = $db->db->prepare($query);
+    $stmt->bind_param("s", $selected_semester);
+    $stmt->execute();
+    $students = $stmt->get_result();
 }
 
 
@@ -120,17 +137,58 @@ if (isset($_GET['show_all']) && $_GET['show_all'] == 'true') {
             </div>
        
             <table class="student-table" id="studentTable">
-    <thead>
-        <tr>
-            <th onclick="sortTable(0)">Identification Number</th>
-            <th onclick="sortTable(1)">Password</th>
-            <th onclick="sortTable(2)">Last Name</th>
-            <th onclick="sortTable(3)">First Name</th>
-            <th onclick="sortTable(4)">Year</th>
-            <th>Actions</th>
-        </tr>
-    </thead>
+            <thead>
+                <tr>
+                    <th onclick="sortTable(0)">Identification Number <i class="fas fa-arrow-down sort-arrow"></i></th>
+                    <th onclick="sortTable(1)">Password <i class="fas fa-arrow-down sort-arrow"></i></th>
+                    <th onclick="sortTable(2)">Last Name <i class="fas fa-arrow-down sort-arrow"></i></th>
+                    <th onclick="sortTable(3)">First Name <i class="fas fa-arrow-down sort-arrow"></i></th>
+                    <th onclick="sortTable(4)">Year <i class="fas fa-arrow-down sort-arrow"></i></th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+
     <tbody>
+
+    <style>
+
+.sort-arrow {
+    margin-left: 5px;
+    font-size: 14px;
+    opacity: 0.5;
+}
+
+.sort-arrow.asc {
+    transform: rotate(180deg); /* Flip the arrow for ascending */
+}
+
+.sort-arrow.desc {
+    transform: rotate(0deg); /* Default, downward arrow for descending */
+}
+
+            .arrow {
+    margin-left: 5px;
+    font-size: 12px;
+    color: #aaa;
+}
+
+.arrow-up::after {
+    content: "▲"; /* Up arrow */
+}
+
+.arrow-down::after {
+    content: "▼"; /* Down arrow */
+}
+
+th {
+    cursor: pointer;
+}
+
+th:hover .arrow-up, th:hover .arrow-down {
+    color: #333; /* Change color on hover */
+}
+
+        </style>
         <?php
         // Display each student in a table row
         if ($students->num_rows > 0) {
@@ -360,6 +418,13 @@ function sortTable(columnIndex) {
     switching = true;
     dir = "asc"; // Set the sorting direction to ascending initially
 
+    // Reset all arrow icons to down
+    var arrows = table.querySelectorAll('.sort-arrow');
+    arrows.forEach(function(arrow) {
+        arrow.classList.remove('asc', 'desc');
+        arrow.classList.add('desc'); // Reset all arrows to down
+    });
+
     while (switching) {
         switching = false;
         rows = table.rows;
@@ -396,7 +461,20 @@ function sortTable(columnIndex) {
             }
         }
     }
+
+    // Toggle the arrow for the clicked column
+    var header = table.rows[0].cells[columnIndex];
+    var arrow = header.querySelector('.sort-arrow');
+    if (dir === "asc") {
+        arrow.classList.remove('desc');
+        arrow.classList.add('asc');
+    } else {
+        arrow.classList.remove('asc');
+        arrow.classList.add('desc');
+    }
 }
+
+
 
 // JavaScript function to search the table
 function searchTable() {

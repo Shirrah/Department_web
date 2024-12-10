@@ -95,6 +95,7 @@
     font-weight: bold;
     cursor: pointer;
     position: sticky;
+    user-select: none;
     top: 0;
 }
 
@@ -220,19 +221,19 @@
 
 
 /* Form Styles */
-form {
+.enrollForm {
     display: flex;
     flex-direction: column;
 }
 
-form label {
+.enrollForm  label {
     margin: 10px 0 5px;
     font-size: 16px;
     font-weight: bold;
 }
 
-form input[type="text"],
-form input[type="password"], select {
+.enrollForm  input[type="text"],
+.enrollForm  input[type="password"], .enrollForm select {
     padding: 10px;
     margin-bottom: 15px;
     border: 1px solid #ccc;
@@ -240,7 +241,7 @@ form input[type="password"], select {
     font-size: 14px;
 }
 
-form input[type="submit"] {
+.enrollForm  input[type="submit"] {
     padding: 12px;
     background-color: #f94415;
     color: white;
@@ -251,7 +252,7 @@ form input[type="submit"] {
     transition: background-color 0.3s;
 }
 
-form input[type="submit"]:hover {
+.enrollForm  input[type="submit"]:hover {
     background-color: tomato;
 }
 

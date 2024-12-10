@@ -39,8 +39,16 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
             $_SESSION['logged_in'] = 'yes';
             $_SESSION['user_data'] = $row; // Storing admin details in the session
-            header("location: ../index.php?content=admin-index");
-            exit();
+
+            // Get the latest semester
+            $semester_query = "SELECT * FROM `semester` ORDER BY `date_created` DESC LIMIT 1";
+            $semester_result = $db->db->query($semester_query);
+            if ($semester_result && $semester_result->num_rows > 0) {
+                $semester_row = $semester_result->fetch_assoc();
+                $semester_id = $semester_row['semester_ID'];
+                header("location: ../index.php?content=admin-index&semester=$semester_id");
+                exit();
+            }
         }
     }
 
@@ -53,7 +61,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         if ($pword == $row["pass_student"]) {
 
             $_SESSION['logged_in'] = 'yes';
-            $_SESSION['user_data'] = $row; // Storing admin details in the session
+            $_SESSION['user_data'] = $row; // Storing student details in the session
             header("location: ../index.php?content=student-index");
             exit();
         }

@@ -58,7 +58,7 @@ $semester = $db->db->query($query);
     ?>
 </tbody>
 </table>
-
+<button id="create-term-btn">Start a New Term</button>
 
 </div>
 </div>
