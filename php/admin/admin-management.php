@@ -7,24 +7,22 @@ if (session_status() == PHP_SESSION_NONE) {
 require_once "././php/db-conn.php";
 $db = new Database();
 
-// Query to fetch students data
-$query = "SELECT id_student, pass_student, lastname_student, firstname_student, year_student FROM student";
+$query = "SELECT id_admin, pass_admin, role_admin, lastname_admin, firstname_admin FROM admins";
 $students = $db->db->query($query);
 
 // Handle form submission to enroll a new student
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    $id_student = htmlspecialchars($_POST['id_student']);
-    $pass_student = htmlspecialchars($_POST['pass_student']);
-    $lastname_student = htmlspecialchars($_POST['lastname_student']);
-    $firstname_student = htmlspecialchars($_POST['firstname_student']);
-    $role_student = htmlspecialchars($_POST['role_student']);
-    $year_student = htmlspecialchars($_POST['year_student']);
+    $id_admin = htmlspecialchars($_POST['id_admin']);
+    $pass_admin = htmlspecialchars($_POST['pass_admin']);
+    $role_admin = htmlspecialchars($_POST['role_admin']);
+    $lastname_admin = htmlspecialchars($_POST['lastname_admin']);
+    $firstname_admin = htmlspecialchars($_POST['firstname_admin']);
     
     // Insert the new student data into the database
-    $insertQuery = "INSERT INTO student (id_student, pass_student, lastname_student, firstname_student, role_student, year_student) 
-                    VALUES ('$id_student', '$pass_student', '$lastname_student', '$firstname_student', '$role_student', '$year_student')";
+    $insertQuery = "INSERT INTO admins (id_admin, pass_admin, role_admin, lastname_admin, firstname_admin) 
+                    VALUES ('$id_admin', '$pass_admin','$role_admin', '$lastname_admin', '$firstname_admin')";
     if ($db->db->query($insertQuery) === TRUE) {
-        header("Location: ?content=admin-index&admin=student-management");
+        header("Location: ?content=admin-index&admin=admin-management");
         exit();
     } else {
         echo "<script>alert('Error enrolling student: " . $db->db->error . "');</script>";
@@ -34,58 +32,49 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 // Handle student deletion
 if (isset($_GET['delete_id'])) {
     $delete_id = htmlspecialchars($_GET['delete_id']);
-    $deleteQuery = "DELETE FROM student WHERE id_student = '$delete_id'";
+    $deleteQuery = "DELETE FROM admins WHERE id_admin = '$delete_id'";
 
     if ($db->db->query($deleteQuery) === TRUE) {
-        header("Location: ?content=admin-index&admin=student-management");
+        header("Location: ?content=admin-index&admin=admin-management");
         exit();
     } else {
         echo "<script>alert('Error deleting student: " . $db->db->error . "');</script>";
     }
 }
 
-// Get the selected semester from the URL or session
-if (isset($_GET['semester'])) {
-    $_SESSION['selected_semester'] = $_GET['semester'];
-}
-$selected_semester = isset($_SESSION['selected_semester']) ? $_SESSION['selected_semester'] : '';
-
 // Initialize pagination variables
 $limit = 10; // Records per page
-$page = isset($_GET['page']) ? max(1, (int)$_GET['page']) : (isset($_SESSION['page']) ? $_SESSION['page'] : 1); // Current page, default to 1
+$page = isset($_GET['page']) ? max(1, (int)$_GET['page']) : 1; // Current page, default to 1
 $_SESSION['page'] = $page; // Store page in session
 $offset = ($page - 1) * $limit;
 
-// Fetch total records and calculate total pages for the selected semester
-$countQuery = "SELECT COUNT(*) as total FROM student WHERE semester_ID = ?";
+// Fetch total records and calculate total pages
+$countQuery = "SELECT COUNT(*) as total FROM admins";
 $stmt = $db->db->prepare($countQuery);
-$stmt->bind_param("s", $selected_semester);
 $stmt->execute();
 $totalResult = $stmt->get_result();
 $row = $totalResult->fetch_assoc();
 $totalRecords = $row ? (int)$row['total'] : 0; // Ensure totalRecords is assigned
 $totalPages = $totalRecords > 0 ? ceil($totalRecords / $limit) : 1;
 
-// Fetch records for the current page for the selected semester
+// Fetch records for the current page
 if (isset($_GET['show_all']) && $_GET['show_all'] == 'true') {
-    // Query to fetch all records for the selected semester (no pagination)
-    $query = "SELECT id_student, pass_student, lastname_student, firstname_student, year_student 
-              FROM student WHERE semester_ID = ?";
+    // Query to fetch all student records (no pagination)
+    $query = "SELECT id_admin, pass_admin, role_admin, lastname_admin, firstname_admin FROM admins";
     $stmt = $db->db->prepare($query);
-    $stmt->bind_param("s", $selected_semester);
     $stmt->execute();
     $students = $stmt->get_result();
-    $totalPages = 1;
-    $page = 1;
+    $totalPages = 1; // Only one page when showing all records
+    $page = 1; // Reset to the first page
 } else {
-    // Query to fetch paginated records for the selected semester
-    $query = "SELECT id_student, pass_student, lastname_student, firstname_student, year_student 
-              FROM student WHERE semester_ID = ? LIMIT $limit OFFSET $offset";
+    // Query to fetch paginated student records
+    $query = "SELECT id_admin, pass_admin, role_admin, lastname_admin, firstname_admin
+              FROM admins LIMIT $limit OFFSET $offset";
     $stmt = $db->db->prepare($query);
-    $stmt->bind_param("s", $selected_semester);
     $stmt->execute();
     $students = $stmt->get_result();
 }
+
 
 ob_end_flush();  // End output buffering and send output to the browser
 ?>
@@ -98,16 +87,16 @@ ob_end_flush();  // End output buffering and send output to the browser
 <div class="student-management-body">
         <div class="student-table-con">
         <div class="student-management-header">
-        <span>Manage Student</span>
+        <span>Manage Admin</span>
         <div class="location">
             <a href="?content=admin-index&admin=dashboard">Dashboard</a>
             /
-            <span>Manage Students</span>
+            <span>Manage Admins</span>
         </div>
     </div>
             
             <!-- Enroll button to trigger modal -->
-            <button id="enrollButton" onclick="openEnrollForm()">Add Student</button>
+            <button id="enrollButton" onclick="openEnrollForm()">Add a new admin</button>
 
             <div class="search-students">
             <input type="text" id="searchInput" onkeyup="searchTable()" placeholder="Search for students..." title="Type to search" style="padding-left: 30px;">
@@ -118,9 +107,9 @@ ob_end_flush();  // End output buffering and send output to the browser
                 <tr>
                     <th title="Click to sort" onclick="sortTable(0)">Identification Number <i class="fas fa-arrow-down sort-arrow"></i></th>
                     <th title="Click to sort" onclick="sortTable(1)">Password <i class="fas fa-arrow-down sort-arrow"></i></th>
-                    <th title="Click to sort" onclick="sortTable(2)">Last Name <i class="fas fa-arrow-down sort-arrow"></i></th>
-                    <th title="Click to sort" onclick="sortTable(3)">First Name <i class="fas fa-arrow-down sort-arrow"></i></th>
-                    <th title="Click to sort" onclick="sortTable(4)">Year <i class="fas fa-arrow-down sort-arrow"></i></th>
+                    <th title="Click to sort" onclick="sortTable(2)">Role <i class="fas fa-arrow-down sort-arrow"></i></th>
+                    <th title="Click to sort" onclick="sortTable(3)">Last Name <i class="fas fa-arrow-down sort-arrow"></i></th>
+                    <th title="Click to sort" onclick="sortTable(4)">First Name <i class="fas fa-arrow-down sort-arrow"></i></th>
                     <th>Actions</th>
                 </tr>
             </thead>
@@ -134,20 +123,20 @@ ob_end_flush();  // End output buffering and send output to the browser
         if ($students->num_rows > 0) {
             while ($row = $students->fetch_assoc()) {
                 echo "<tr>";
-                echo "<td>" . htmlspecialchars($row['id_student']) . "</td>";
+                echo "<td>" . htmlspecialchars($row['id_admin']) . "</td>";
                 echo "<td>
-                    <span class='password-mask'>" . str_repeat('•', strlen($row['pass_student'])) . "</span>
-                    <span class='password-full' style='display:none;'>" . htmlspecialchars($row['pass_student']) . "</span>
+                    <span class='password-mask'>" . str_repeat('•', strlen($row['pass_admin'])) . "</span>
+                    <span class='password-full' style='display:none;'>" . htmlspecialchars($row['pass_admin']) . "</span>
                     <button class='toggle-password-btn' onclick='togglePassword(this)' title='Show Password'>
                         <i class='fas fa-eye'></i>
                     </button>
                 </td>";
-                echo "<td>" . htmlspecialchars($row['lastname_student']) . "</td>";
-                echo "<td>" . htmlspecialchars($row['firstname_student']) . "</td>";
-                echo "<td>" . htmlspecialchars($row['year_student']) . "</td>";
+                echo "<td>" . htmlspecialchars($row['role_admin']) . "</td>";
+                echo "<td>" . htmlspecialchars($row['lastname_admin']) . "</td>";
+                echo "<td>" . htmlspecialchars($row['firstname_admin']) . "</td>";
                 echo "<td>
-                    <a href='?content=admin-index&admin=student-management&edit_id=" . htmlspecialchars($row['id_student']) . "' class='edit-btn'><i class='fas fa-edit'></i></a>
-                    <a href='?content=admin-index&admin=student-management&delete_id=" . htmlspecialchars($row['id_student']) . "' class='delete-btn'><i class='fas fa-trash'></i></a>
+                    <a href='?content=admin-index&admin=admin-management&edit_id=" . htmlspecialchars($row['id_admin']) . "' class='edit-btn'><i class='fas fa-edit'></i></a>
+                    <a href='?content=admin-index&admin=admin-management&delete_id=" . htmlspecialchars($row['id_admin']) . "' class='delete-btn'><i class='fas fa-trash'></i></a>
                 </td>";
                 echo "</tr>";
             }
@@ -193,12 +182,12 @@ ob_end_flush();  // End output buffering and send output to the browser
 
     <script>
     function navigateToPage(page) {
-        window.location.href = '?content=admin-index&admin=student-management&page=' + page;
+        window.location.href = '?content=admin-index&admin=admin-management&page=' + page;
     }
 
     // Function for Show All button to remove pagination limit
     function showAll() {
-        window.location.href = '?content=admin-index&admin=student-management&show_all=true';
+        window.location.href = '?content=admin-index&admin=admin-management&show_all=true';
     }
     </script>
 </div>
@@ -210,34 +199,29 @@ ob_end_flush();  // End output buffering and send output to the browser
 <div id="enrollFormModal" class="modal">
     <div class="modal-content">
         <span class="close" onclick="closeEnrollForm()">&times;</span>
-        <h2>Add Student</h2>
+        <h2>Add New Admin</h2>
         <form class="enrollForm" method="POST" action="">
-            <label for="id_student">Identification Number (ID):</label>
-            <input type="text" id="id_student" name="id_student" required>
+            <label for="id_admin">Identification Number (ID):</label>
+            <input type="text" id="id_admin" name="id_admin" required>
 
-            <input type="hidden" id="semester_ID" name="role_student" value="Student" required>
+            <label for="pass_admin">Password:</label>
+            <input type="password" id="pass_admin" name="pass_admin" required>
 
-            <label for="pass_student">Password:</label>
-            <input type="password" id="pass_student" name="pass_student" required>
-
-            <label for="lastname_student">Lastname:</label>
-            <input type="text" id="lastname_student" name="lastname_student" required>
-
-            <label for="firstname_student">Firstname:</label>
-            <input type="text" id="firstname_student" name="firstname_student" required>
-            
-            <input type="hidden" id="role_student" name="role_student" value="Student" required>
-
-
-            <label for="year_student">Year:</label>
-                <select id="year_student" name="year_student" required>
-                <option value="" disabled selected>Select Year</option>
-                <option value="1">1st Year</option>
-                <option value="2">2nd Year</option>
-                <option value="3">3rd Year</option>
-                <option value="4">4th Year</option>
+            <label for="role_admin">Role:</label>
+            <select id="role_admin" name="role_admin" required>
+                <option value="" disabled selected>Select Role</option>
+                <option value="Governor">Governor</option>
+                <option value="Dean">Dean</option>
+                <option value="Secretary">Secretary</option>
+                <option value="Treasurer">Treasurer</option>
                 </select>
 
+            <label for="lastname_admin">Lastname:</label>
+            <input type="text" id="lastname_admin" name="lastname_admin" required>
+
+            <label for="firstname_amdin">Firstname:</label>
+            <input type="text" id="firstname_admin" name="firstname_admin" required>
+            
 
             <input type="submit" value="Add Student">
         </form>
@@ -273,7 +257,7 @@ document.querySelectorAll('.delete-btn').forEach(function(button) {
         if (!confirm("Are you sure you want to delete this student?")) {
             e.preventDefault(); // Prevent the link from being followed
         }
-    });
+    }); 
 });
 
 </script>

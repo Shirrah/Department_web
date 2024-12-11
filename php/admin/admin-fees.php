@@ -74,25 +74,48 @@
         }
     }
 
-    // Fetch payments from the payments table
-    $query = "SELECT id_payment, payment_name, payment_amount, date_payment FROM payments";
-    $result = $db->db->query($query);
+    // Check if a semester is selected in the GET request
+if (isset($_GET['semester'])) {
+    $_SESSION['selected_semester'] = $_GET['semester'];
+}
+$selected_semester = isset($_SESSION['selected_semester']) ? $_SESSION['selected_semester'] : '';
 
-
-    // Initialize pagination variables
+// Initialize pagination variables
 $limit = 7; // Records per page
-$page = isset($_GET['page']) ? max(1, (int)$_GET['page']) : 1; // Current page, default to 1
+$page = isset($_GET['page']) ? max(1, (int)$_GET['page']) : (isset($_SESSION['page']) ? $_SESSION['page'] : 1); // Default to page 1 if not set
+$_SESSION['page'] = $page; // Store page number in session
 $offset = ($page - 1) * $limit;
 
-// Fetch total records and calculate total pages
-$countQuery = "SELECT COUNT(*) as total FROM payments";
-$totalResult = $db->db->query($countQuery);
-$totalRecords = ($totalResult && $row = $totalResult->fetch_assoc()) ? (int)$row['total'] : 0;
+// Fetch total records and calculate total pages for the selected semester
+$countQuery = "SELECT COUNT(*) as total FROM payments WHERE semester_ID = ?";
+$stmt = $db->db->prepare($countQuery);
+$stmt->bind_param("s", $selected_semester);
+$stmt->execute();
+$totalResult = $stmt->get_result();
+$row = $totalResult->fetch_assoc();
+$totalRecords = $row ? (int)$row['total'] : 0; // Ensure totalRecords is assigned
 $totalPages = $totalRecords > 0 ? ceil($totalRecords / $limit) : 1;
 
-// Fetch records for the current page
-$query = "SELECT id_payment, payment_name, payment_amount, date_payment FROM payments LIMIT $limit OFFSET $offset";
-$result = $db->db->query($query);
+// Fetch payments for the current page for the selected semester
+if (isset($_GET['show_all']) && $_GET['show_all'] == 'true') {
+    // Query to fetch all payments for the selected semester (no pagination)
+    $query = "SELECT id_payment, payment_name, payment_amount, date_payment FROM payments WHERE semester_ID = ?";
+    $stmt = $db->db->prepare($query);
+    $stmt->bind_param("s", $selected_semester);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    $totalPages = 1; // Only one page when showing all records
+    $page = 1; // Reset to the first page
+} else {
+    // Query to fetch paginated payments for the selected semester
+    $query = "SELECT id_payment, payment_name, payment_amount, date_payment 
+              FROM payments WHERE semester_ID = ? LIMIT $limit OFFSET $offset";
+    $stmt = $db->db->prepare($query);
+    $stmt->bind_param("s", $selected_semester);
+    $stmt->execute();
+    $result = $stmt->get_result();
+}
+
 
     if ($result && mysqli_num_rows($result) > 0) {
         while ($row = mysqli_fetch_assoc($result)) {

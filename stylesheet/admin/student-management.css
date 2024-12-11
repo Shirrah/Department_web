@@ -288,3 +288,61 @@
         font-size: 18px;
     }
 }
+
+
+.sort-arrow {
+    margin-left: 5px;
+    font-size: 14px;
+    opacity: 0.5;
+}
+
+.sort-arrow.asc {
+    transform: rotate(180deg); /* Flip the arrow for ascending */
+}
+
+.sort-arrow.desc {
+    transform: rotate(0deg); /* Default, downward arrow for descending */
+}
+
+            .arrow {
+    margin-left: 5px;
+    font-size: 12px;
+    color: #aaa;
+}
+
+.arrow-up::after {
+    content: "▲"; /* Up arrow */
+}
+
+.arrow-down::after {
+    content: "▼"; /* Down arrow */
+}
+
+th {
+    cursor: pointer;
+}
+
+th:hover .arrow-up, th:hover .arrow-down {
+    color: #333; /* Change color on hover */
+}
+
+.password-mask,
+.password-full {
+    margin-right: 5px;
+}
+
+.toggle-password-btn {
+    border: none;
+    background: none;
+    cursor: pointer;
+    font-size: 16px;
+}
+
+.toggle-password-btn i {
+    color: #007bff;
+}
+
+.toggle-password-btn:hover i {
+    color: #0056b3;
+}
+
