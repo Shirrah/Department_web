@@ -1,15 +1,11 @@
 <?php
-ob_start();  // Start output buffering
+ob_start();
 if (session_status() == PHP_SESSION_NONE) {
-    session_start(); // Start the session if it's not already started
+    session_start();
 }
 
 require_once "././php/db-conn.php";
 $db = new Database();
-
-// Query to fetch students data
-$query = "SELECT id_student, pass_student, lastname_student, firstname_student, year_student FROM student";
-$students = $db->db->query($query);
 
 // Handle form submission to enroll a new student
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
@@ -17,13 +13,15 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $pass_student = htmlspecialchars($_POST['pass_student']);
     $lastname_student = htmlspecialchars($_POST['lastname_student']);
     $firstname_student = htmlspecialchars($_POST['firstname_student']);
-    $role_student = htmlspecialchars($_POST['role_student']);
     $year_student = htmlspecialchars($_POST['year_student']);
     
-    // Insert the new student data into the database
+    // Insert query
     $insertQuery = "INSERT INTO student (id_student, pass_student, lastname_student, firstname_student, role_student, year_student) 
-                    VALUES ('$id_student', '$pass_student', '$lastname_student', '$firstname_student', '$role_student', '$year_student')";
-    if ($db->db->query($insertQuery) === TRUE) {
+                    VALUES (?, ?, ?, ?, 'Student', ?)";
+    $stmt = $db->db->prepare($insertQuery);
+    $stmt->bind_param("sssss", $id_student, $pass_student, $lastname_student, $firstname_student, $year_student);
+
+    if ($stmt->execute()) {
         header("Location: ?content=admin-index&admin=student-management");
         exit();
     } else {
@@ -31,12 +29,14 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     }
 }
 
-// Handle student deletion
+// Handle deletion
 if (isset($_GET['delete_id'])) {
     $delete_id = htmlspecialchars($_GET['delete_id']);
-    $deleteQuery = "DELETE FROM student WHERE id_student = '$delete_id'";
+    $deleteQuery = "DELETE FROM student WHERE id_student = ?";
+    $stmt = $db->db->prepare($deleteQuery);
+    $stmt->bind_param("s", $delete_id);
 
-    if ($db->db->query($deleteQuery) === TRUE) {
+    if ($stmt->execute()) {
         header("Location: ?content=admin-index&admin=student-management");
         exit();
     } else {
@@ -44,120 +44,202 @@ if (isset($_GET['delete_id'])) {
     }
 }
 
-// Get the selected semester from the URL or session
-if (isset($_GET['semester'])) {
-    $_SESSION['selected_semester'] = $_GET['semester'];
-}
-$selected_semester = isset($_SESSION['selected_semester']) ? $_SESSION['selected_semester'] : '';
+// Get semester and search parameters
+$selected_semester = isset($_GET['semester']) ? $_GET['semester'] : (isset($_SESSION['selected_semester']) ? $_SESSION['selected_semester'] : '');
+$_SESSION['selected_semester'] = $selected_semester;
+$search = isset($_GET['search']) ? htmlspecialchars($_GET['search']) : '';
+$show_all = isset($_GET['show_all']) && $_GET['show_all'] === 'true';
 
-// Initialize pagination variables
-$limit = 10; // Records per page
-$page = isset($_GET['page']) ? max(1, (int)$_GET['page']) : (isset($_SESSION['page']) ? $_SESSION['page'] : 1); // Current page, default to 1
-$_SESSION['page'] = $page; // Store page in session
+// Pagination settings
+$limit = 10;
+$page = isset($_GET['page']) ? max(1, (int)$_GET['page']) : 1;
 $offset = ($page - 1) * $limit;
 
-// Fetch total records and calculate total pages for the selected semester
-$countQuery = "SELECT COUNT(*) as total FROM student WHERE semester_ID = ?";
+// Query based on "Show All" state
+$search_term = "%$search%";
+if ($show_all) {
+    $query = "SELECT id_student, pass_student, lastname_student, firstname_student, year_student 
+              FROM student 
+              WHERE semester_ID = ? AND 
+                    (id_student LIKE ? OR lastname_student LIKE ? OR firstname_student LIKE ?)";
+    $stmt = $db->db->prepare($query);
+    $stmt->bind_param("ssss", $selected_semester, $search_term, $search_term, $search_term);
+} else {
+    $query = "SELECT id_student, pass_student, lastname_student, firstname_student, year_student 
+              FROM student 
+              WHERE semester_ID = ? AND 
+                    (id_student LIKE ? OR lastname_student LIKE ? OR firstname_student LIKE ?)
+              LIMIT ? OFFSET ?";
+    $stmt = $db->db->prepare($query);
+    $stmt->bind_param("ssssii", $selected_semester, $search_term, $search_term, $search_term, $limit, $offset);
+}
+$stmt->execute();
+$students = $stmt->get_result();
+
+// Total records for pagination
+$countQuery = "SELECT COUNT(*) as total FROM student WHERE semester_ID = ? AND 
+                (id_student LIKE ? OR lastname_student LIKE ? OR firstname_student LIKE ?)";
 $stmt = $db->db->prepare($countQuery);
-$stmt->bind_param("s", $selected_semester);
+$stmt->bind_param("ssss", $selected_semester, $search_term, $search_term, $search_term);
 $stmt->execute();
 $totalResult = $stmt->get_result();
 $row = $totalResult->fetch_assoc();
-$totalRecords = $row ? (int)$row['total'] : 0; // Ensure totalRecords is assigned
+$totalRecords = $row['total'] ?? 0;
 $totalPages = $totalRecords > 0 ? ceil($totalRecords / $limit) : 1;
 
-// Fetch records for the current page for the selected semester
-if (isset($_GET['show_all']) && $_GET['show_all'] == 'true') {
-    // Query to fetch all records for the selected semester (no pagination)
-    $query = "SELECT id_student, pass_student, lastname_student, firstname_student, year_student 
-              FROM student WHERE semester_ID = ?";
-    $stmt = $db->db->prepare($query);
-    $stmt->bind_param("s", $selected_semester);
-    $stmt->execute();
-    $students = $stmt->get_result();
-    $totalPages = 1;
-    $page = 1;
-} else {
-    // Query to fetch paginated records for the selected semester
-    $query = "SELECT id_student, pass_student, lastname_student, firstname_student, year_student 
-              FROM student WHERE semester_ID = ? LIMIT $limit OFFSET $offset";
-    $stmt = $db->db->prepare($query);
-    $stmt->bind_param("s", $selected_semester);
-    $stmt->execute();
-    $students = $stmt->get_result();
-}
-
-ob_end_flush();  // End output buffering and send output to the browser
+ob_end_flush();
 ?>
 
+<!-- Styles and Scripts -->
 <link rel="stylesheet" href=".//.//stylesheet/admin/student-management.css">
-<!-- Add Font Awesome for icons if it's not already included -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 
-
+<!-- HTML Content -->
 <div class="student-management-body">
-        <div class="student-table-con">
+    <div class="student-table-con">
         <div class="student-management-header">
-        <span>Manage Student</span>
-        <div class="location">
-            <a href="?content=admin-index&admin=dashboard">Dashboard</a>
-            /
             <span>Manage Students</span>
-        </div>
-    </div>
-            
-            <!-- Enroll button to trigger modal -->
-            <button id="enrollButton" onclick="openEnrollForm()">Add Student</button>
-
-            <div class="search-students">
-            <input type="text" id="searchInput" onkeyup="searchTable()" placeholder="Search for students..." title="Type to search" style="padding-left: 30px;">
+            <div class="location">
+                <a href="?content=admin-index&admin=dashboard">Dashboard</a> / <span>Manage Students</span>
             </div>
-       
-            <table class="student-table" id="studentTable">
+        </div>
+        
+        <!-- Enroll Form -->
+        <button id="enrollButton" onclick="openEnrollForm()">Add Student</button>
+
+        <!-- Search & Show All -->
+        <div class="search-students">
+            <form method="GET" action="">
+                <input type="hidden" name="content" value="admin-index">
+                <input type="hidden" name="admin" value="student-management">
+                <input type="text" name="search" placeholder="Search..." value="<?= htmlspecialchars($search) ?>" />
+                <button type="submit">Search</button>
+                <label>
+                    <input type="checkbox" name="show_all" value="true" <?= $show_all ? 'checked' : '' ?> onchange="this.form.submit()"> Show All
+                </label>
+            </form>
+            <div class="import-container">
+                <h2>Import Students</h2>
+                <!-- Hidden file input -->
+                <input type="file" id="studentFile" name="studentFile" accept=".csv, .xlsx" required>
+                <!-- Import Button that triggers the file input -->
+                <button class="btn-import" id="importButton">Import</button>
+                <div id="response"></div>
+            </div>
+            <style>
+        body {
+            font-family: Arial, sans-serif;
+        }
+        .import-container {
+            margin: 50px auto;
+            width: 400px;
+            text-align: center;
+        }
+        input[type="file"] {
+            display: none; /* Hide the file input */
+        }
+        .btn-import {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            cursor: pointer;
+        }
+        .btn-import:hover {
+            background-color: #45a049;
+        }
+        #response {
+            margin-top: 20px;
+        }
+    </style>
+        <script>
+        document.getElementById('importButton').addEventListener('click', function() {
+            // Trigger the file input click when the import button is clicked
+            document.getElementById('studentFile').click();
+        });
+
+        document.getElementById('studentFile').addEventListener('change', function(event) {
+            // Automatically submit the form after the file is selected
+            const formData = new FormData();
+            formData.append('studentFile', event.target.files[0]);
+
+            fetch('upload-students.php', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.text())
+            .then(result => {
+                document.getElementById('response').innerHTML = result;
+            })
+            .catch(error => {
+                document.getElementById('response').innerHTML = 'Error uploading file: ' + error;
+            });
+        });
+    </script>
+        </div>
+
+        <!-- Student Table -->
+        <table class="student-table" id="studentTable">
             <thead>
                 <tr>
-                    <th title="Click to sort" onclick="sortTable(0)">Identification Number <i class="fas fa-arrow-down sort-arrow"></i></th>
-                    <th title="Click to sort" onclick="sortTable(1)">Password <i class="fas fa-arrow-down sort-arrow"></i></th>
-                    <th title="Click to sort" onclick="sortTable(2)">Last Name <i class="fas fa-arrow-down sort-arrow"></i></th>
-                    <th title="Click to sort" onclick="sortTable(3)">First Name <i class="fas fa-arrow-down sort-arrow"></i></th>
-                    <th title="Click to sort" onclick="sortTable(4)">Year <i class="fas fa-arrow-down sort-arrow"></i></th>
+                    <th onclick="sortTable(0)">ID</th>
+                    <th>Password</th>
+                    <th onclick="sortTable(2)">Last Name</th>
+                    <th onclick="sortTable(3)">First Name</th>
+                    <th onclick="sortTable(4)">Year</th>
                     <th>Actions</th>
                 </tr>
             </thead>
+            <tbody>
+                <?php if ($students->num_rows > 0): ?>
+                    <?php while ($row = $students->fetch_assoc()): ?>
+                        <tr>
+                            <td><?= htmlspecialchars($row['id_student']) ?></td>
+                            <td>
+                                <span class="password-mask"><?= str_repeat('•', strlen($row['pass_student'])) ?></span>
+                                <span class="password-full" style="display:none;"><?= htmlspecialchars($row['pass_student']) ?></span>
+                                <button class="toggle-password-btn" onclick="togglePassword(this)"><i class="fas fa-eye"></i></button>
+                            </td>
+                            <td><?= htmlspecialchars($row['lastname_student']) ?></td>
+                            <td><?= htmlspecialchars($row['firstname_student']) ?></td>
+                            <td><?= htmlspecialchars($row['year_student']) ?></td>
+                            <td>
+                                <a href="?content=admin-index&admin=student-management&edit_id=<?= $row['id_student'] ?>"><i class="fas fa-edit"></i></a>
+                                <a href="?content=admin-index&admin=student-management&delete_id=<?= $row['id_student'] ?>" class="delete-btn"><i class="fas fa-trash"></i></a>
+                            </td>
+                        </tr>
+                    <?php endwhile; ?>
+                <?php else: ?>
+                    <tr><td colspan="6">No students found</td></tr>
+                <?php endif; ?>
+            </tbody>
+        </table>
 
-    <tbody>
+        <!-- Pagination -->
+        <?php if (!$show_all): ?>
+            <div class="pagination">
+                <button <?= $page <= 1 ? 'disabled' : '' ?> onclick="navigateToPage(1)">First</button>
+                <button <?= $page <= 1 ? 'disabled' : '' ?> onclick="navigateToPage(<?= $page - 1 ?>)">Previous</button>
+                <span>Page <?= $page ?> of <?= $totalPages ?></span>
+                <button <?= $page >= $totalPages ? 'disabled' : '' ?> onclick="navigateToPage(<?= $page + 1 ?>)">Next</button>
+                <button <?= $page >= $totalPages ? 'disabled' : '' ?> onclick="navigateToPage(<?= $totalPages ?>)">Last</button>
+            </div>
+        <?php endif; ?>
+    </div>
+</div>
 
-    <style>
-        </style>
-        <?php
-        // Display each student in a table row
-        if ($students->num_rows > 0) {
-            while ($row = $students->fetch_assoc()) {
-                echo "<tr>";
-                echo "<td>" . htmlspecialchars($row['id_student']) . "</td>";
-                echo "<td>
-                    <span class='password-mask'>" . str_repeat('•', strlen($row['pass_student'])) . "</span>
-                    <span class='password-full' style='display:none;'>" . htmlspecialchars($row['pass_student']) . "</span>
-                    <button class='toggle-password-btn' onclick='togglePassword(this)' title='Show Password'>
-                        <i class='fas fa-eye'></i>
-                    </button>
-                </td>";
-                echo "<td>" . htmlspecialchars($row['lastname_student']) . "</td>";
-                echo "<td>" . htmlspecialchars($row['firstname_student']) . "</td>";
-                echo "<td>" . htmlspecialchars($row['year_student']) . "</td>";
-                echo "<td>
-                    <a href='?content=admin-index&admin=student-management&edit_id=" . htmlspecialchars($row['id_student']) . "' class='edit-btn'><i class='fas fa-edit'></i></a>
-                    <a href='?content=admin-index&admin=student-management&delete_id=" . htmlspecialchars($row['id_student']) . "' class='delete-btn'><i class='fas fa-trash'></i></a>
-                </td>";
-                echo "</tr>";
-            }
-        } else {
-            echo "<tr><td colspan='6'>No students found</td></tr>";
-        }
-        ?>
-    </tbody>
-</table>
+    <script>
+    function navigateToPage(page) {
+        window.location.href = '?content=admin-index&admin=student-management&page=' + page;
+    }
 
+    // Function for Show All button to remove pagination limit
+    function showAll() {
+        window.location.href = '?content=admin-index&admin=student-management&show_all=true';
+    }
+    </script>
+
+    
 <script>
     function togglePassword(button) {
         const passwordMask = button.parentElement.querySelector('.password-mask');
@@ -177,30 +259,6 @@ ob_end_flush();  // End output buffering and send output to the browser
         }
     }
 </script>
-
-
-            <!-- No records found message -->
-            <p id="noRecordMsg" style="display:none;">No records found</p>
-            <div class="pagination">
-    <button <?php if($page <= 1) echo 'disabled'; ?> onclick="navigateToPage(1)">First</button>
-    <button <?php if($page <= 1) echo 'disabled'; ?> onclick="navigateToPage(<?php echo $page - 1; ?>)">Previous</button>
-    <span>Page <?php echo $page; ?> of <?php echo $totalPages; ?></span>
-    <button <?php if($page >= $totalPages) echo 'disabled'; ?> onclick="navigateToPage(<?php echo $page + 1; ?>)">Next</button>
-    <button <?php if($page >= $totalPages) echo 'disabled'; ?> onclick="navigateToPage(<?php echo $totalPages; ?>)">Last</button>
-
-    <!-- Show All Button -->
-    <button onclick="showAll()">Show All</button>
-
-    <script>
-    function navigateToPage(page) {
-        window.location.href = '?content=admin-index&admin=student-management&page=' + page;
-    }
-
-    // Function for Show All button to remove pagination limit
-    function showAll() {
-        window.location.href = '?content=admin-index&admin=student-management&show_all=true';
-    }
-    </script>
 </div>
 
         </div>
@@ -344,39 +402,4 @@ function sortTable(columnIndex) {
     }
 }
 
-
-
-// JavaScript function to search the table
-function searchTable() {
-    var input, filter, table, tr, td, i, j, txtValue, visibleRowCount = 0;
-    input = document.getElementById("searchInput");
-    filter = input.value.toLowerCase();
-    table = document.getElementById("studentTable");
-    tr = table.getElementsByTagName("tr");
-
-    // Loop through all table rows (except the first, which contains table headers)
-    for (i = 1; i < tr.length; i++) {
-        tr[i].style.display = "none"; // Hide all rows initially
-        td = tr[i].getElementsByTagName("td");
-
-        // Loop through each cell in the row
-        for (j = 0; j < td.length; j++) {
-            if (td[j]) {
-                txtValue = td[j].textContent || td[j].innerText;
-                if (txtValue.toLowerCase().indexOf(filter) > -1) {
-                    tr[i].style.display = ""; // Show the row if any cell matches the search query
-                    visibleRowCount++; // Count visible rows
-                    break;
-                }
-            }
-        }
-    }
-
-    // Show "No records found" message if no rows are visible
-    if (visibleRowCount === 0) {
-        document.getElementById("noRecordMsg").style.display = "block";
-    } else {
-        document.getElementById("noRecordMsg").style.display = "none";
-    }
-}
 </script>
