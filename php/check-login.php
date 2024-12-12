@@ -41,14 +41,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $_SESSION['user_data'] = $row; // Storing admin details in the session
 
             // Get the latest semester
-            $semester_query = "SELECT * FROM `semester` ORDER BY `date_created` DESC LIMIT 1";
-            $semester_result = $db->db->query($semester_query);
-            if ($semester_result && $semester_result->num_rows > 0) {
-                $semester_row = $semester_result->fetch_assoc();
-                $semester_id = $semester_row['semester_ID'];
                 header("location: ../index.php?content=admin-index&semester=$semester_id");
                 exit();
-            }
         }
     }
 
