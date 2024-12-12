@@ -41,7 +41,6 @@ if (session_status() == PHP_SESSION_NONE) {
                 <button class="dropbtn" onclick="toggleDropdown()">
                     <img src=".//.//assets/images/user.png" alt="">
                     ' . htmlspecialchars($role) . ' - ' . htmlspecialchars($lastname) . '
-                    <span id="arrow" class="arrow-down">&#9661;</span>
                 </button>
                 <div id="logout-Dropdown" class="logout-Dropdown">
                     <a href="?content=logout">Logout</a>
@@ -62,12 +61,12 @@ function toggleDropdown() {
     var dropdown = document.getElementById("logout-Dropdown");
     dropdown.classList.toggle("show");
     
-    var arrow = document.getElementById("arrow");
-    if (dropdown.classList.contains("show")) {
-        arrow.innerHTML = "&#9651;"; // Arrow up
-    } else {
-        arrow.innerHTML = "&#9661;"; // Arrow down
-    }
+    // var arrow = document.getElementById("arrow");
+    // if (dropdown.classList.contains("show")) {
+    //     arrow.innerHTML = "&#9651;"; // Arrow up
+    // } else {
+    //     arrow.innerHTML = "&#9661;"; // Arrow down
+    // }
 }
 
 // Close the dropdown if the user clicks outside of it

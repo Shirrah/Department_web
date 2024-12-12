@@ -1,6 +1,6 @@
 <?php
-require_once '..//..//php/db-conn.php'; // Include the database connection file
 
+require_once '..//..//php/db-conn.php'; // Include the database connection file
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_FILES['studentFile'])) {
     $file = $_FILES['studentFile'];
     $allowedExtensions = ['csv', 'xlsx'];
@@ -16,8 +16,14 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_FILES['studentFile'])) {
 
     require '..//..//vendor/autoload.php'; // Include PHPSpreadsheet library for Excel files
 
-
     $db = new Database();
+
+    // Get selected semester from session
+    session_start();
+    if (!isset($_SESSION['selected_semester'])) {
+        die("No semester selected. Please select a semester before importing students.");
+    }
+    $selected_semester = $_SESSION['selected_semester'];
 
     if ($fileExtension == 'csv') {
         $fileHandle = fopen($filePath, 'r');
@@ -25,21 +31,21 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_FILES['studentFile'])) {
 
         while (($row = fgetcsv($fileHandle, 1000, ',')) !== FALSE) {
             $id_student = $row[0];
-            $semester_ID = $row[1];
-            $pass_student = $row[2];
-            $lastname_student = $row[3];
-            $firstname_student = $row[4];
-            $role_student = $row[5];
-            $year_student = $row[6];
+            $pass_student = $row[1];
+            $lastname_student = $row[2];
+            $firstname_student = $row[3];
+            $role_student = $row[4];
+            $year_student = $row[5];
 
             $query = "INSERT INTO student (id_student, semester_ID, pass_student, lastname_student, firstname_student, role_student, year_student)
                       VALUES (?, ?, ?, ?, ?, ?, ?)";
             $stmt = $db->db->prepare($query);
-            $stmt->bind_param("sssssss", $id_student, $semester_ID, $pass_student, $lastname_student, $firstname_student, $role_student, $year_student);
+            $stmt->bind_param("sssssss", $id_student, $selected_semester, $pass_student, $lastname_student, $firstname_student, $role_student, $year_student);
             $stmt->execute();
         }
         fclose($fileHandle);
-        echo "CSV file imported successfully!";
+        header("Location: ?content=admin-index&admin=student-management");
+        exit();
     } elseif ($fileExtension == 'xlsx') {
         $spreadsheet = \PhpOffice\PhpSpreadsheet\IOFactory::load($filePath);
         $sheet = $spreadsheet->getActiveSheet();
@@ -49,22 +55,23 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_FILES['studentFile'])) {
             if ($index == 0) continue; // Skip header row
 
             $id_student = $row[0];
-            $semester_ID = $row[1];
-            $pass_student = $row[2];
-            $lastname_student = $row[3];
-            $firstname_student = $row[4];
-            $role_student = $row[5];
-            $year_student = $row[6];
+            $pass_student = $row[1];
+            $lastname_student = $row[2];
+            $firstname_student = $row[3];
+            $role_student = $row[4];
+            $year_student = $row[5];
 
             $query = "INSERT INTO student (id_student, semester_ID, pass_student, lastname_student, firstname_student, role_student, year_student)
                       VALUES (?, ?, ?, ?, ?, ?, ?)";
             $stmt = $db->db->prepare($query);
-            $stmt->bind_param("sssssss", $id_student, $semester_ID, $pass_student, $lastname_student, $firstname_student, $role_student, $year_student);
+            $stmt->bind_param("sssssss", $id_student, $selected_semester, $pass_student, $lastname_student, $firstname_student, $role_student, $year_student);
             $stmt->execute();
         }
-        echo "Excel file imported successfully!";
+        exit();
     } else {
         echo "Unsupported file format.";
     }
+    header("Location: ?content=admin-index&admin=student-management");
+    exit();
 }
 ?>

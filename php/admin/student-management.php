@@ -9,18 +9,21 @@ $db = new Database();
 
 // Handle form submission to enroll a new student
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
+    // Capture form data
     $id_student = htmlspecialchars($_POST['id_student']);
     $pass_student = htmlspecialchars($_POST['pass_student']);
     $lastname_student = htmlspecialchars($_POST['lastname_student']);
     $firstname_student = htmlspecialchars($_POST['firstname_student']);
     $year_student = htmlspecialchars($_POST['year_student']);
-    
-    // Insert query
-    $insertQuery = "INSERT INTO student (id_student, pass_student, lastname_student, firstname_student, role_student, year_student) 
-                    VALUES (?, ?, ?, ?, 'Student', ?)";
-    $stmt = $db->db->prepare($insertQuery);
-    $stmt->bind_param("sssss", $id_student, $pass_student, $lastname_student, $firstname_student, $year_student);
+    $semester_ID = htmlspecialchars($_POST['semester_ID']); // Capture the semester_ID from the form
 
+    // Insert query to include semester_ID
+    $insertQuery = "INSERT INTO student (id_student, semester_ID, pass_student, lastname_student, firstname_student, role_student, year_student) 
+                    VALUES (?, ?, ?, ?, ? , 'Student', ?)";
+    $stmt = $db->db->prepare($insertQuery);
+    $stmt->bind_param("sssssi", $id_student, $semester_ID, $pass_student, $lastname_student, $firstname_student, $year_student);
+
+    // Execute the query and handle success or failure
     if ($stmt->execute()) {
         header("Location: ?content=admin-index&admin=student-management");
         exit();
@@ -28,6 +31,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         echo "<script>alert('Error enrolling student: " . $db->db->error . "');</script>";
     }
 }
+
 
 // Handle deletion
 if (isset($_GET['delete_id'])) {
@@ -87,6 +91,7 @@ $row = $totalResult->fetch_assoc();
 $totalRecords = $row['total'] ?? 0;
 $totalPages = $totalRecords > 0 ? ceil($totalRecords / $limit) : 1;
 
+
 ob_end_flush();
 ?>
 
@@ -108,74 +113,61 @@ ob_end_flush();
         <button id="enrollButton" onclick="openEnrollForm()">Add Student</button>
 
         <!-- Search & Show All -->
+         <div class="manage-student-menu">
         <div class="search-students">
             <form method="GET" action="">
+                <div class="search-student-con">
                 <input type="hidden" name="content" value="admin-index">
                 <input type="hidden" name="admin" value="student-management">
-                <input type="text" name="search" placeholder="Search..." value="<?= htmlspecialchars($search) ?>" />
+                <input class="search-student-input" type="text" name="search" placeholder="Search..." value="<?= htmlspecialchars($search) ?>" />
                 <button type="submit">Search</button>
+                </div>
                 <label>
-                    <input type="checkbox" name="show_all" value="true" <?= $show_all ? 'checked' : '' ?> onchange="this.form.submit()"> Show All
+                    <input type="checkbox" name="show_all" value="true" <?= $show_all ? 'checked' : '' ?> onchange="this.form.submit()"> Show all records
                 </label>
             </form>
-            <div class="import-container">
-                <h2>Import Students</h2>
-                <!-- Hidden file input -->
-                <input type="file" id="studentFile" name="studentFile" accept=".csv, .xlsx" required>
-                <!-- Import Button that triggers the file input -->
-                <button class="btn-import" id="importButton">Import</button>
-                <div id="response"></div>
-            </div>
-            <style>
-        body {
-            font-family: Arial, sans-serif;
-        }
-        .import-container {
-            margin: 50px auto;
-            width: 400px;
-            text-align: center;
-        }
-        input[type="file"] {
-            display: none; /* Hide the file input */
-        }
-        .btn-import {
-            background-color: #4CAF50;
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            cursor: pointer;
-        }
-        .btn-import:hover {
-            background-color: #45a049;
-        }
-        #response {
-            margin-top: 20px;
-        }
-    </style>
-        <script>
-        document.getElementById('importButton').addEventListener('click', function() {
-            // Trigger the file input click when the import button is clicked
-            document.getElementById('studentFile').click();
-        });
+</div>
+<div class="manage-student-menu-list">
+<div class="import-container">
+    <!-- Hidden file input -->
+    <input type="file" id="studentFile" name="studentFile" accept=".csv, .xlsx" required>
+    <!-- Import Button that triggers the file input -->
+    <button title="Import (xlsx, csv)" class="btn-import" id="importButton"><i class="fas fa-file-excel"></i>Import</button>
+    <div id="response"></div>
+</div>
+</div>
 
-        document.getElementById('studentFile').addEventListener('change', function(event) {
-            // Automatically submit the form after the file is selected
-            const formData = new FormData();
-            formData.append('studentFile', event.target.files[0]);
+<style>
+   
+</style>
 
-            fetch('upload-students.php', {
-                method: 'POST',
-                body: formData
-            })
-            .then(response => response.text())
-            .then(result => {
-                document.getElementById('response').innerHTML = result;
-            })
-            .catch(error => {
-                document.getElementById('response').innerHTML = 'Error uploading file: ' + error;
-            });
+<script>
+    document.getElementById('importButton').addEventListener('click', function() {
+        // Trigger the file input click when the import button is clicked
+        document.getElementById('studentFile').click();
+    });
+
+    document.getElementById('studentFile').addEventListener('change', function(event) {
+        // Automatically submit the form after the file is selected
+        const formData = new FormData();
+        formData.append('studentFile', event.target.files[0]);
+
+        fetch('php/admin/upload-students.php', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.text())
+        .then(result => {
+            document.getElementById('response').innerHTML = result;
+            // Reload the page after successful upload
+            location.reload();
+        })
+        .catch(error => {
+            document.getElementById('response').innerHTML = 'Error uploading file: ' + error;
         });
-    </script>
+    });
+</script>
+
         </div>
 
         <!-- Student Table -->
@@ -207,6 +199,7 @@ ob_end_flush();
                                 <a href="?content=admin-index&admin=student-management&edit_id=<?= $row['id_student'] ?>"><i class="fas fa-edit"></i></a>
                                 <a href="?content=admin-index&admin=student-management&delete_id=<?= $row['id_student'] ?>" class="delete-btn"><i class="fas fa-trash"></i></a>
                             </td>
+
                         </tr>
                     <?php endwhile; ?>
                 <?php else: ?>
@@ -273,7 +266,7 @@ ob_end_flush();
             <label for="id_student">Identification Number (ID):</label>
             <input type="text" id="id_student" name="id_student" required>
 
-            <input type="hidden" id="semester_ID" name="role_student" value="Student" required>
+            <input type="text" id="semester_ID" name="semester_ID" value="<?php echo htmlspecialchars($selected_semester); ?>" required>
 
             <label for="pass_student">Password:</label>
             <input type="password" id="pass_student" name="pass_student" required>

@@ -26,13 +26,37 @@
 
 .search-students{
     display: flex;
-    flex-direction: row;
-    align-items: center;
+    flex-direction: column;
+    width: 50%;
+}
+.manage-student-menu{
+    display: flex;
     background-color: #ebebeb;
     padding: 10px;
     border-radius: 5px;
     border-color: inherit;
     filter: drop-shadow(2px 2px 2px rgba(0,0,0,0.3));
+}
+.search-students .search-student-input{
+    width: 250px;
+    margin-top: 10px;
+    padding: 12px 10px;
+    margin-bottom: 20px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 16px;
+    background-image: url('http://localhost/department_web/assets/images/search-interface-symbol.png'); 
+    background-position: 10px center; /* Position the icon */
+    background-repeat: no-repeat; /* Prevent the icon from repeating */
+    padding-left: 30px; /* Add padding so text doesn't overlap with icon */
+    background-size: 16px; /* Adjust icon size */
+}
+
+.search-students button{
+    padding: 10px;
+    border: none;
+    border: 1px solid rgb(196, 196, 196);
+    border-radius: 5px;
 }
 
 .location{
@@ -52,30 +76,8 @@
     margin-left: 5px;
     font-size: 14px;
 }
-/* Search bar styling */
-#searchInput {
-    width: 300px;
-    margin-top: 10px;
-    padding: 12px 10px;
-    margin-bottom: 20px;
-    border: 1px solid #ccc;
-    border-radius: 4px;
-    font-size: 16px;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-    float: right;
-    background-image: url('http://localhost/department_web/assets/images/search-interface-symbol.png'); /* Path to the search icon */
-    background-position: 10px center; /* Position the icon */
-    background-repeat: no-repeat; /* Prevent the icon from repeating */
-    padding-left: 30px; /* Add padding so text doesn't overlap with icon */
-    background-size: 16px; /* Adjust icon size */
-}
 
 
-#searchInput:focus {
-    outline: none;
-    border-color: #007BFF;
-    box-shadow: 0 0 5px rgba(0, 123, 255, 0.5);
-}
 
 /* Table styling */
 .student-table {
@@ -351,3 +353,27 @@ th:hover .arrow-up, th:hover .arrow-down {
     color: #0056b3;
 }
 
+.import-container {
+}
+input[type="file"] {
+    display: none; /* Hide the file input */
+}
+.btn-import {
+    border: none;
+    cursor: pointer;
+    color: #000000;
+    padding: 5px;
+    height: 0px;
+    text-decoration: underline;
+}
+
+.btn-import i{
+    color: green;
+}
+
+.manage-student-menu-list{
+    height: 100px;
+    display: flex;
+    align-items: end;
+    width: 50%;
+}

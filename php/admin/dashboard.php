@@ -9,13 +9,23 @@ if (session_status() == PHP_SESSION_NONE) {
 require_once "././php/db-conn.php";
 $db = new Database();
 
-// Check if a semester is selected and store it in the session
-if (isset($_GET['semester'])) {
-    $_SESSION['selected_semester'] = $_GET['semester'];
-}
+// Query to get the latest semester (the one with the highest semester_ID or based on other logic)
+$query = "SELECT semester_ID, academic_year, semester_type FROM semester ORDER BY semester_ID DESC LIMIT 1";
+$result = $db->db->query($query);
 
-// Get the selected semester from the session
-$selected_semester = isset($_SESSION['selected_semester']) ? $_SESSION['selected_semester'] : '';
+// Fetch the latest semester data
+if ($result && $row = $result->fetch_assoc()) {
+    $selected_semester = $row['semester_ID'];
+    $_SESSION['selected_semester'] = $selected_semester; // Store it in session
+
+    $academic_year = $row['academic_year'];
+    $semester_type = $row['semester_type'];
+} else {
+    // If no semester is found, handle error
+    $selected_semester = '';
+    $academic_year = '';
+    $semester_type = '';
+}
 
 // Query to count students in the selected semester
 $query = "SELECT COUNT(*) AS student_count FROM student WHERE semester_ID = ?";
@@ -62,10 +72,11 @@ if ($result) {
     echo "<p>Error retrieving fee count.</p>";
 }
 
-// Fetch semester data from the database
+// Fetch all semester data to populate the dropdown
 $sql = "SELECT semester_ID, academic_year, semester_type FROM semester";
 $result = $db->db->query($sql);
 ?>
+
 
 <link rel="stylesheet" href=".//.//stylesheet/admin/dashboard.css">
 
@@ -75,11 +86,11 @@ $result = $db->db->query($sql);
             <span>Report Summary</span>
         </div>
         <div class="semester-select">
-            <form method="GET" action="index.php">
+            <form method="GET" action="index.php" id="semesterForm">
                 <input type="hidden" name="content" value="admin-index">
                 <input type="hidden" name="admin" value="dashboard">
                 <label for="semester">Select Semester</label>
-                <select name="semester" id="semester" onchange="this.form.submit()">  
+                <select name="semester" id="semester">  
                     <?php
                     // Loop through the results and populate the dropdown
                     if ($result->num_rows > 0) {
@@ -129,6 +140,14 @@ $result = $db->db->query($sql);
 </div>
 
 <script>
+  window.addEventListener('load', function () {
+    // Automatically submit the form once when the page loads
+    if (!sessionStorage.getItem('formSubmitted')) {
+      document.getElementById('semesterForm').submit(); // Submit the form
+      sessionStorage.setItem('formSubmitted', 'true'); // Mark that the form has been submitted
+    }
+  });
+
   window.addEventListener('unload', function () {
     navigator.sendBeacon('http://localhost/Department_web//php/logout.php'); // Sends a logout request when the tab is closed
   });

@@ -99,7 +99,7 @@ ob_end_flush();  // End output buffering and send output to the browser
             <button id="enrollButton" onclick="openEnrollForm()">Add a new admin</button>
 
             <div class="search-students">
-            <input type="text" id="searchInput" onkeyup="searchTable()" placeholder="Search for students..." title="Type to search" style="padding-left: 30px;">
+            <input class="search-student-input" type="text" id="searchInput" onkeyup="searchTable()" placeholder="Search for admins" title="Type to search" style="padding-left: 30px;">
             </div>
        
             <table class="student-table" id="studentTable">
