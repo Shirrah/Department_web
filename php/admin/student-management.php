@@ -201,15 +201,19 @@ ob_end_flush();
         </table>
 
         <!-- Pagination -->
-        <?php if (!$show_all): ?>
-            <div class="pagination">
-                <button <?= $page <= 1 ? 'disabled' : '' ?> onclick="navigateToPage(1)">First</button>
-                <button <?= $page <= 1 ? 'disabled' : '' ?> onclick="navigateToPage(<?= $page - 1 ?>)">Previous</button>
-                <span>Page <?= $page ?> of <?= $totalPages ?></span>
-                <button <?= $page >= $totalPages ? 'disabled' : '' ?> onclick="navigateToPage(<?= $page + 1 ?>)">Next</button>
-                <button <?= $page >= $totalPages ? 'disabled' : '' ?> onclick="navigateToPage(<?= $totalPages ?>)">Last</button>
-            </div>
-        <?php endif; ?>
+        <div class="pagination">
+            <ul>
+                <?php if ($page > 1): ?>
+                    <li><a href="?content=admin-index&admin=student-management&page=1&search=<?= urlencode($search) ?>">First</a></li>
+                    <li><a href="?content=admin-index&admin=student-management&page=<?= $page - 1 ?>&search=<?= urlencode($search) ?>">Prev</a></li>
+                <?php endif; ?>
+                <li>Page <?= $page ?> of <?= $totalPages ?></li>
+                <?php if ($page < $totalPages): ?>
+                    <li><a href="?content=admin-index&admin=student-management&page=<?= $page + 1 ?>&search=<?= urlencode($search) ?>">Next</a></li>
+                    <li><a href="?content=admin-index&admin=student-management&page=<?= $totalPages ?>&search=<?= urlencode($search) ?>">Last</a></li>
+                <?php endif; ?>
+            </ul>
+        </div>
     </div>
 </div>
 
