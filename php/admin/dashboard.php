@@ -1,31 +1,46 @@
 <?php
-// Start the session
-$error = '';
-if (session_status() == PHP_SESSION_NONE) {
-    session_start();
-}
-
 // Include the database connection
 require_once "././php/db-conn.php";
 $db = new Database();
 
-// Query to get the latest semester (the one with the highest semester_ID or based on other logic)
-$query = "SELECT semester_ID, academic_year, semester_type FROM semester ORDER BY semester_ID DESC LIMIT 1";
-$result = $db->db->query($query);
 
-// Fetch the latest semester data
-if ($result && $row = $result->fetch_assoc()) {
-    $selected_semester = $row['semester_ID'];
-    $_SESSION['selected_semester'] = $selected_semester; // Store it in session
-
-    $academic_year = $row['academic_year'];
-    $semester_type = $row['semester_type'];
-} else {
-    // If no semester is found, handle error
-    $selected_semester = '';
-    $academic_year = '';
-    $semester_type = '';
+// Check if the user is logged in
+if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] != 'yes') {
+    // Redirect to login if not logged in
+    header("location: ../index.php?content=log-in");
+    exit();
 }
+
+// Get the user ID from the session (either admin or student)
+$user_id = $_SESSION['user_data']['id_admin'] ?? $_SESSION['user_data']['id_student'];
+
+// Handle the semester selection from GET request and store it in session for this user
+if (isset($_GET['semester']) && !empty($_GET['semester'])) {
+    // Store the selected semester for the user in session
+    $_SESSION['selected_semester'][$user_id] = $_GET['semester'];
+}
+
+// Use the selected semester from the session or default to the latest semester
+if (isset($_SESSION['selected_semester'][$user_id]) && !empty($_SESSION['selected_semester'][$user_id])) {
+    $selected_semester = $_SESSION['selected_semester'][$user_id];
+} else {
+    // Get the latest semester from the database
+    $query = "SELECT semester_ID, academic_year, semester_type FROM semester ORDER BY semester_ID DESC LIMIT 1";
+    $stmt = $db->db->prepare($query);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    if ($result && $row = $result->fetch_assoc()) {
+        $selected_semester = $row['semester_ID'];
+    } else {
+        $selected_semester = null;
+    }
+}
+
+// Fetch all semesters for dropdown
+$sql = "SELECT semester_ID, academic_year, semester_type FROM semester";
+$stmt = $db->db->prepare($sql);
+$stmt->execute();
+$allSemesters = $stmt->get_result();
 
 // Query to count students in the selected semester
 $query = "SELECT COUNT(*) AS student_count FROM student WHERE semester_ID = ?";
@@ -75,6 +90,7 @@ if ($result) {
 // Fetch all semester data to populate the dropdown
 $sql = "SELECT semester_ID, academic_year, semester_type FROM semester";
 $result = $db->db->query($sql);
+
 ?>
 
 
@@ -86,29 +102,29 @@ $result = $db->db->query($sql);
             <span>Report Summary</span>
         </div>
         <div class="semester-select">
-            <form method="GET" action="index.php" id="semesterForm">
-                <input type="hidden" name="content" value="admin-index">
-                <input type="hidden" name="admin" value="dashboard">
-                <label for="semester">Select Semester</label>
-                <select name="semester" id="semester">  
-                    <?php
-                    // Loop through the results and populate the dropdown
-                    if ($result->num_rows > 0) {
-                        while ($row = $result->fetch_assoc()) {
-                            $semester_id = $row['semester_ID'];
-                            $academic_year = $row['academic_year'];
-                            $semester_type = $row['semester_type'];
+        <form method="GET" action="index.php" id="semesterForm">
+    <input type="hidden" name="content" value="admin-index">
+    <input type="hidden" name="admin" value="dashboard">
+    <label for="semester">Select Semester</label>
+    <select name="semester" id="semester" onchange="this.form.submit()">
+        <?php
+        if ($result->num_rows > 0) {
+            while ($row = $result->fetch_assoc()) {
+                $semester_id = $row['semester_ID'];
+                $academic_year = $row['academic_year'];
+                $semester_type = $row['semester_type'];
 
-                            // Check if this semester is the selected one
-                            $selected = ($semester_id == $selected_semester) ? 'selected' : '';
-                            echo "<option value='$semester_id' $selected>$semester_type - $academic_year</option>";
-                        }
-                    } else {
-                        echo "<option value=''>No semesters available</option>";
-                    }
-                    ?>
-                </select>
-            </form>
+                // Check if this semester is the selected one
+                $selected = ($semester_id == $selected_semester) ? 'selected' : '';
+                echo "<option value='$semester_id' $selected>$semester_type - $academic_year</option>";
+            }
+        } else {
+            echo "<option value=''>No semesters available</option>";
+        }
+        ?>
+    </select>
+</form>
+
         </div>
         <div class="dashcard-item">
             <div class="dashboard-card">

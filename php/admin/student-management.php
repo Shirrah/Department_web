@@ -7,34 +7,64 @@ if (session_status() == PHP_SESSION_NONE) {
 require_once "././php/db-conn.php";
 $db = new Database();
 
+// Get the user ID from the session (either admin or student)
+$user_id = $_SESSION['user_data']['id_admin'] ?? $_SESSION['user_data']['id_student'];
+
+// Handle the semester selection from GET request and store it in session for this user
+if (isset($_GET['semester']) && !empty($_GET['semester'])) {
+    // Store the selected semester for the user in session
+    $_SESSION['selected_semester'][$user_id] = $_GET['semester'];
+}
+
+// Use the selected semester from the session or default to the latest semester
+if (isset($_SESSION['selected_semester'][$user_id]) && !empty($_SESSION['selected_semester'][$user_id])) {
+    $selected_semester = $_SESSION['selected_semester'][$user_id];
+} else {
+    // Get the latest semester from the database
+    $query = "SELECT semester_ID, academic_year, semester_type FROM semester ORDER BY semester_ID DESC LIMIT 1";
+    $stmt = $db->db->prepare($query);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    if ($result && $row = $result->fetch_assoc()) {
+        $selected_semester = $row['semester_ID'];
+    } else {
+        $selected_semester = null;
+    }
+}
+
+// Fetch all semesters for dropdown
+$sql = "SELECT semester_ID, academic_year, semester_type FROM semester";
+$stmt = $db->db->prepare($sql);
+$stmt->execute();
+$allSemesters = $stmt->get_result();
+
 // Handle form submission to enroll a new student
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    // Capture form data
+    // Sanitize and validate user inputs to prevent SQL injection and XSS
     $id_student = htmlspecialchars($_POST['id_student']);
     $pass_student = htmlspecialchars($_POST['pass_student']);
     $lastname_student = htmlspecialchars($_POST['lastname_student']);
     $firstname_student = htmlspecialchars($_POST['firstname_student']);
     $year_student = htmlspecialchars($_POST['year_student']);
-    $semester_ID = htmlspecialchars($_POST['semester_ID']); // Capture the semester_ID from the form
+    $semester_ID = htmlspecialchars($_POST['semester_ID']);
 
-    // Insert query to include semester_ID
+    // Use parameterized queries to prevent SQL injection
     $insertQuery = "INSERT INTO student (id_student, semester_ID, pass_student, lastname_student, firstname_student, role_student, year_student) 
-                    VALUES (?, ?, ?, ?, ? , 'Student', ?)";
+                    VALUES (?, ?, ?, ?, ?, 'Student', ?)";
     $stmt = $db->db->prepare($insertQuery);
     $stmt->bind_param("sssssi", $id_student, $semester_ID, $pass_student, $lastname_student, $firstname_student, $year_student);
 
-    // Execute the query and handle success or failure
     if ($stmt->execute()) {
         header("Location: ?content=admin-index&admin=student-management");
         exit();
     } else {
-        echo "<script>alert('Error enrolling student: " . $db->db->error . "');</script>";
+        echo "<script>alert('Error enrolling student: " . $stmt->error . "');</script>";
     }
 }
 
-
 // Handle deletion
 if (isset($_GET['delete_id'])) {
+    // Sanitize the delete ID
     $delete_id = htmlspecialchars($_GET['delete_id']);
     $deleteQuery = "DELETE FROM student WHERE id_student = ?";
     $stmt = $db->db->prepare($deleteQuery);
@@ -44,22 +74,18 @@ if (isset($_GET['delete_id'])) {
         header("Location: ?content=admin-index&admin=student-management");
         exit();
     } else {
-        echo "<script>alert('Error deleting student: " . $db->db->error . "');</script>";
+        echo "<script>alert('Error deleting student: " . $stmt->error . "');</script>";
     }
 }
 
-// Get semester and search parameters
-$selected_semester = isset($_GET['semester']) ? $_GET['semester'] : (isset($_SESSION['selected_semester']) ? $_SESSION['selected_semester'] : '');
-$_SESSION['selected_semester'] = $selected_semester;
+// Pagination and filtering logic
 $search = isset($_GET['search']) ? htmlspecialchars($_GET['search']) : '';
 $show_all = isset($_GET['show_all']) && $_GET['show_all'] === 'true';
-
-// Pagination settings
 $limit = 10;
 $page = isset($_GET['page']) ? max(1, (int)$_GET['page']) : 1;
 $offset = ($page - 1) * $limit;
 
-// Query based on "Show All" state
+// Query students with parameterized search to prevent SQL injection
 $search_term = "%$search%";
 if ($show_all) {
     $query = "SELECT id_student, pass_student, lastname_student, firstname_student, year_student 
@@ -80,20 +106,19 @@ if ($show_all) {
 $stmt->execute();
 $students = $stmt->get_result();
 
-// Total records for pagination
+// Total records with parameterized query
 $countQuery = "SELECT COUNT(*) as total FROM student WHERE semester_ID = ? AND 
                 (id_student LIKE ? OR lastname_student LIKE ? OR firstname_student LIKE ?)";
 $stmt = $db->db->prepare($countQuery);
 $stmt->bind_param("ssss", $selected_semester, $search_term, $search_term, $search_term);
 $stmt->execute();
 $totalResult = $stmt->get_result();
-$row = $totalResult->fetch_assoc();
-$totalRecords = $row['total'] ?? 0;
+$totalRecords = $totalResult->fetch_assoc()['total'] ?? 0;
 $totalPages = $totalRecords > 0 ? ceil($totalRecords / $limit) : 1;
-
 
 ob_end_flush();
 ?>
+
 
 <!-- Styles and Scripts -->
 <link rel="stylesheet" href=".//.//stylesheet/admin/student-management.css">
@@ -108,66 +133,34 @@ ob_end_flush();
                 <a href="?content=admin-index&admin=dashboard">Dashboard</a> / <span>Manage Students</span>
             </div>
         </div>
-        
+
         <!-- Enroll Form -->
         <button id="enrollButton" onclick="openEnrollForm()">Add Student</button>
 
         <!-- Search & Show All -->
          <div class="manage-student-menu">
-        <div class="search-students">
-            <form method="GET" action="">
-                <div class="search-student-con">
-                <input type="hidden" name="content" value="admin-index">
-                <input type="hidden" name="admin" value="student-management">
-                <input class="search-student-input" type="text" name="search" placeholder="Search..." value="<?= htmlspecialchars($search) ?>" />
-                <button type="submit">Search</button>
+            <div class="search-students">
+                <form method="GET" action="">
+                    <div class="search-student-con">
+                    <input type="hidden" name="content" value="admin-index">
+                    <input type="hidden" name="admin" value="student-management">
+                    <input class="search-student-input" type="text" name="search" placeholder="Search..." value="<?= htmlspecialchars($search) ?>" />
+                    <button type="submit">Search</button>
+                    </div>
+                    <label>
+                        <input type="checkbox" name="show_all" value="true" <?= $show_all ? 'checked' : '' ?> onchange="this.form.submit()"> Show all records
+                    </label>
+                </form>
+            </div>
+            <div class="manage-student-menu-list">
+                <div class="import-container">
+                    <!-- Hidden file input -->
+                    <input type="file" id="studentFile" name="studentFile" accept=".csv, .xlsx" required>
+                    <!-- Import Button that triggers the file input -->
+                    <button title="Import (xlsx, csv)" class="btn-import" id="importButton"><i class="fas fa-file-excel"></i>Import</button>
+                    <div id="response"></div>
                 </div>
-                <label>
-                    <input type="checkbox" name="show_all" value="true" <?= $show_all ? 'checked' : '' ?> onchange="this.form.submit()"> Show all records
-                </label>
-            </form>
-</div>
-<div class="manage-student-menu-list">
-<div class="import-container">
-    <!-- Hidden file input -->
-    <input type="file" id="studentFile" name="studentFile" accept=".csv, .xlsx" required>
-    <!-- Import Button that triggers the file input -->
-    <button title="Import (xlsx, csv)" class="btn-import" id="importButton"><i class="fas fa-file-excel"></i>Import</button>
-    <div id="response"></div>
-</div>
-</div>
-
-<style>
-   
-</style>
-
-<script>
-    document.getElementById('importButton').addEventListener('click', function() {
-        // Trigger the file input click when the import button is clicked
-        document.getElementById('studentFile').click();
-    });
-
-    document.getElementById('studentFile').addEventListener('change', function(event) {
-        // Automatically submit the form after the file is selected
-        const formData = new FormData();
-        formData.append('studentFile', event.target.files[0]);
-
-        fetch('php/admin/upload-students.php', {
-            method: 'POST',
-            body: formData
-        })
-        .then(response => response.text())
-        .then(result => {
-            document.getElementById('response').innerHTML = result;
-            // Reload the page after successful upload
-            location.reload();
-        })
-        .catch(error => {
-            document.getElementById('response').innerHTML = 'Error uploading file: ' + error;
-        });
-    });
-</script>
-
+            </div>
         </div>
 
         <!-- Student Table -->
@@ -199,7 +192,6 @@ ob_end_flush();
                                 <a href="?content=admin-index&admin=student-management&edit_id=<?= $row['id_student'] ?>"><i class="fas fa-edit"></i></a>
                                 <a href="?content=admin-index&admin=student-management&delete_id=<?= $row['id_student'] ?>" class="delete-btn"><i class="fas fa-trash"></i></a>
                             </td>
-
                         </tr>
                     <?php endwhile; ?>
                 <?php else: ?>
@@ -220,6 +212,38 @@ ob_end_flush();
         <?php endif; ?>
     </div>
 </div>
+
+
+<script>
+    document.getElementById('importButton').addEventListener('click', function() {
+        // Trigger the file input click when the import button is clicked
+        document.getElementById('studentFile').click();
+    });
+
+   document.getElementById('studentFile').addEventListener('change', function(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    const formData = new FormData();
+    formData.append('studentFile', file);
+
+    document.getElementById('response').innerHTML = 'Uploading...';
+
+    fetch('php/admin/upload-students.php', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.text())
+    .then(result => {
+        document.getElementById('response').innerHTML = `<span style="color: green;">${result}</span>`;
+        location.reload(); // Reload page on successful upload
+    })
+    .catch(error => {
+        document.getElementById('response').innerHTML = `<span style="color: red;">Error: ${error.message}</span>`;
+    });
+});
+
+</script>
 
     <script>
     function navigateToPage(page) {
