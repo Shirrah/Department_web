@@ -12,10 +12,8 @@ body, html{
 
 .content{
     width: 100%;
-    flex-grow: 1; /* Ensures the content takes up remaining space between header and footer */
+    height: 100%;
     display: flex;
-    justify-content: center;
-    align-items: center;
     text-align: center;
 }
 

@@ -153,6 +153,10 @@ iframe {
   justify-content: center;
   align-items: center;
   text-align: center;
+  background-image: url(..//assets//images/login-bg.jpg);
+  background-attachment: fixed;
+  background-size: cover;
+  background-position: center;
 }
 
 .container-login100 {
@@ -167,10 +171,6 @@ iframe {
   justify-content: center;
   align-items: center;
   padding: 15px;
-  background-image: url(..//assets//images/login-bg.jpg);
-  background-attachment: fixed;
-  background-size: cover;
-  background-position: center;
   z-index: 1; /* Ensure content inside this container appears above the overlay */
 }
 
