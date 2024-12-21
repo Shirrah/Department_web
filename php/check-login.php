@@ -1,6 +1,7 @@
 <?php
-session_set_cookie_params(0); 
+session_set_cookie_params(0);
 session_start();
+
 // Set session timeout in seconds (e.g., 180 for 3 minutes)
 $timeout = 180;
 
@@ -40,9 +41,22 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $_SESSION['logged_in'] = 'yes';
             $_SESSION['user_data'] = $row; // Storing admin details in the session
 
-            // Get the latest semester
-                header("location: ../index.php?content=admin-index&semester=$semester_id");
+            // Fetch the latest semester
+            $semester_query = "SELECT * FROM `semester` ORDER BY `date_created` DESC LIMIT 1";
+            $semester_result = $db->db->query($semester_query);
+
+            if ($semester_result && $semester_result->num_rows > 0) {
+                $semester_row = $semester_result->fetch_assoc();
+                $semester_id = $semester_row['semester_ID'];
+                $_SESSION['semester_data'] = $semester_row; // Optional: Store semester details in session
+            } else {
+                $_SESSION['error_msg'] = 'No semester found.';
+                header("location: ../index.php?content=log-in");
                 exit();
+            }
+
+            header("location: ../index.php?content=admin-index&semester=$semester_id");
+            exit();
         }
     }
 
