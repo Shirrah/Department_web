@@ -1,8 +1,8 @@
-*{
+* {
     margin: 0;
     padding: 0;
+    box-sizing: border-box;
 }
-
 body, html{
     height: 100%;
     display: flex;
@@ -12,6 +12,10 @@ body, html{
 
 .content{
     width: 100%;
+    flex-grow: 1; /* Ensures the content takes up remaining space between header and footer */
+    display: flex;
+    justify-content: center;
+    align-items: center;
     text-align: center;
 }
 

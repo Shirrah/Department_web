@@ -33,12 +33,6 @@
 	padding: 0px; 
 	box-sizing: border-box;
 }
-
-body, html {
-	height: 100%;
-	font-family: Poppins-Regular, sans-serif;
-}
-
 /*---------------------------------------------*/
 a {
 	font-family: Poppins-Regular;
@@ -154,16 +148,16 @@ iframe {
 .limiter {
   width: 100%;
   margin: 0 auto;
+  flex-grow: 1; /* Ensures the content takes up remaining space between header and footer */
   display: flex;
-  flex-grow: 1;
   justify-content: center;
   align-items: center;
+  text-align: center;
 }
 
 .container-login100 {
   position: relative; /* Ensure that the pseudo-element positions relative to the container */
   width: 100%;
-  min-height: 100vh;
   display: -webkit-box;
   display: -webkit-flex;
   display: -moz-box;
@@ -186,7 +180,6 @@ iframe {
   top: 0;
   left: 0;
   width: 100%;
-  height: 100%;
   background-color: rgba(0, 0, 0, 0.5); /* Adjust the color and transparency of the overlay */
   z-index: -1; /* Ensure the overlay appears behind the content */
 }
