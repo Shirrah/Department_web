@@ -11,6 +11,7 @@
     <title>SJC - College of Computer Studies</title>
     <link rel="icon" href="assets/images/ccslogo.png" type="image/icon type">
     <link rel="stylesheet" href="stylesheet/index.css">
+    <link rel="manifest" href="manifest.json">
 </head>
 <body>
     <div class="header">

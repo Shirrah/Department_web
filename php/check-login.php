@@ -16,7 +16,7 @@ if (isset($_SESSION['LAST_ACTIVITY']) && (time() - $_SESSION['LAST_ACTIVITY']) >
 $_SESSION['LAST_ACTIVITY'] = time(); // Update last activity timestamp
 
 // Define the maximum allowed login attempts and lockout time (5 minutes)
-$max_attempts = 3;
+$max_attempts = 5;
 $lockout_time = 5 * 60; // 5 minutes in seconds
 
 // Check if the form is submitted and process login

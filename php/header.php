@@ -6,13 +6,14 @@ if (session_status() == PHP_SESSION_NONE) {
 ?>
 
 <link rel="stylesheet" href="stylesheet/header.css">
-
 <div class="headerbody">
     <div class="header_logo">
         <img src=".//.//assets/images/SJC-LOGO-NEWER-1536x1024.png" alt="Logo of the Saint Joseph College" class="sjclogo" loading="lazy">
         <img src="assets/images/ccslogo.png" alt="" class="logo">
         <span><p class="school-name">SAINT JOSEPH COLLEGE</p>
         <p class="dept-name">College of Computer Studies</p>
+
+        <button id="installBtn" style="display:none;">Install App</button>
         </span>
     </div>
 
@@ -85,4 +86,38 @@ window.onclick = function(event) {
         arrow.innerHTML = "&#9660;"; // Reset arrow to down
     }
 }
+</script>
+
+<script>
+let deferredPrompt; // To store the beforeinstallprompt event
+const installBtn = document.getElementById('installBtn');
+
+// Listen for the beforeinstallprompt event
+window.addEventListener('beforeinstallprompt', (event) => {
+  // Prevent the default mini-infobar from appearing on mobile
+  event.preventDefault();
+  // Store the event so it can be triggered later
+  deferredPrompt = event;
+  // Show the install button
+  installBtn.style.display = 'block';
+});
+
+// Add click listener to the install button
+installBtn.addEventListener('click', () => {
+  // Make sure the deferredPrompt is available
+  if (deferredPrompt) {
+    // Show the install prompt
+    deferredPrompt.prompt();
+    // Wait for the user to respond to the prompt
+    deferredPrompt.userChoice.then((choiceResult) => {
+      if (choiceResult.outcome === 'accepted') {
+        console.log('User accepted the install prompt');
+      } else {
+        console.log('User dismissed the install prompt');
+      }
+      // Clear the deferredPrompt so it can't be reused
+      deferredPrompt = null;
+    });
+  }
+});
 </script>
