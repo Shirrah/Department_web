@@ -25,9 +25,13 @@ if (session_status() == PHP_SESSION_NONE) {
     session_start();
 }
 
-if (isset($_SESSION['error_msg'])){
-	$error = $_SESSION['error_msg'];
+if (isset($_SESSION['error_msg'])) {
+    $error = $_SESSION['error_msg'];
+    unset($_SESSION['error_msg']); // Clear the session after using it
+} else {
+    $error = ''; // No error
 }
+
 ?>
 	<div class="limiter">
 		<div class="container-login100">
@@ -56,7 +60,19 @@ if (isset($_SESSION['error_msg'])){
 							<i class="fa fa-lock" aria-hidden="true"></i>
 						</span>
 					</div>
-					
+						<!-- Display the error message if there is one -->
+						<?php if ($error): ?>
+							<div class="error-message"><?php echo $error; ?></div>
+						<?php endif; ?>
+
+						<style>
+							.error-message {
+								color: red;
+								background-color: #f8d7da;
+								border: 1px solid #f5c6cb;
+								border-radius: 10px;
+							}
+						</style>
 					<div class="container-login100-form-btn">
 						<button class="login100-form-btn">
 							Login
