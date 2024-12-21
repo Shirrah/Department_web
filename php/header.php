@@ -16,7 +16,7 @@ if (session_status() == PHP_SESSION_NONE) {
         </span>
     </div>
 
-    <div class="navbar">
+    <div class="navbar-con">
         <?php
         require_once "db-conn.php";
         // Get the database connection instance

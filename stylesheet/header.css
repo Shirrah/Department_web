@@ -42,23 +42,23 @@
     content: "College of Computer Studies";
     visibility: visible;
 }
-.navbar{
+.navbar-con{
     width: auto;
     display: flex;
     align-items: center;
 }
 
-.navbar button{
+.navbar-con button{
     border: 0px;
 }
 
-.navbar button img{
+.navbar-con button img{
     width: 15px;
     margin-right: 5px;
     filter: invert(100%);
 }
 
-.navbar button a{
+.navbar-con button a{
     display: flex;
     align-items: center;
     text-decoration: none;
@@ -71,7 +71,7 @@
     font-family: tahoma;
 }
 
-.navbar button a:hover{
+.navbar-con button a:hover{
     border-bottom: 2px solid white;
 }
 
