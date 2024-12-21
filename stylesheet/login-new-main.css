@@ -393,10 +393,10 @@ iframe {
 @media (max-width: 768px) {
   .wrap-login100 {
     padding: 100px;
+    justify-content: center;
   }
 
   .login100-pic {
-    display: none;
   }
 
   .login100-form {
