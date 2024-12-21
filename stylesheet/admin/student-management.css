@@ -164,25 +164,49 @@
     }
 }
 
+/* Pagination Styles */
 .pagination {
     display: flex;
     justify-content: center;
-    gap: 10px;
-    margin-top: 20px;
+    align-items: center;
+    margin: 20px 0;
 }
 
-.pagination button {
-    padding: 10px;
-    cursor: pointer;
-    background-color: #007BFF;
-    color: white;
-    border: none;
+.pagination ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+}
+
+.pagination li {
+    margin: 0 5px;
+}
+
+.pagination a {
+    text-decoration: none;
+    color: #007bff;
+    font-size: 16px;
+    padding: 8px 12px;
     border-radius: 4px;
+    border: 1px solid #ccc;
+    transition: background-color 0.3s, color 0.3s;
 }
 
-.pagination button:disabled {
-    background-color: #ccc;
-    cursor: not-allowed;
+.pagination a:hover {
+    background-color: #007bff;
+    color: white;
+}
+
+.pagination li.disabled {
+    color: #ccc;
+    pointer-events: none;
+}
+
+.pagination .active a {
+    background-color: #007bff;
+    color: white;
+    border-color: #007bff;
 }
 
 
@@ -353,8 +377,6 @@ th:hover .arrow-up, th:hover .arrow-down {
     color: #0056b3;
 }
 
-.import-container {
-}
 input[type="file"] {
     display: none; /* Hide the file input */
 }

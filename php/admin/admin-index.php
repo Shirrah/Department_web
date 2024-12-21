@@ -2,6 +2,8 @@
 
 <?php
 
+require_once "php/auth-check.php";
+
 // Include the database connection class
 include_once('php/db-conn.php');
 
@@ -26,7 +28,7 @@ $db = $db_instance->db; // Access the $db property for the connection
                 <a href="?content=admin-index&admin=event-management&admin_events=admin-events" class="dropdown-link"> > Manage Events </a>
                 <a href="?content=admin-index&admin=event-management&admin_events=admin-fees" class="dropdown-link"> > Manage Fees</a>
             </div>
-            <a href="?content=admin-index&admin=notifications" class="admin-nav-dashboard">Notifications</a>
+            <a href="?content=admin-index&admin=notifications" class="admin-nav-dashboard">History</a>
         </div>
 
         <div class="admin-navbar-display">
@@ -61,6 +63,9 @@ $db = $db_instance->db; // Access the $db property for the connection
                     break;
                 case "attendance-records":
                     include 'php/admin/show-attendance-records.php';
+                    break;
+                case "fee-records":
+                    include 'php/admin/show-fee-records.php';
                     break;
                 default:
                     include 'php/admin/dashboard.php'; // Fallback to default

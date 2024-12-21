@@ -1,9 +1,4 @@
 <?php
-
-// Include the database connection
-require_once "././php/db-conn.php";
-$db = new Database();
-
 // Start the session
 $error = '';
 if (session_status() == PHP_SESSION_NONE) {
@@ -13,55 +8,77 @@ if (session_status() == PHP_SESSION_NONE) {
 // Include the database connection
 require_once "././php/db-conn.php";
 $db = new Database();
+    
+
+// Get the user ID from the session (either admin or student)
+$user_id = $_SESSION['user_data']['id_admin'] ?? $_SESSION['user_data']['id_student'];
+
+// Handle the semester selection from GET request and store it in session for this user
+if (isset($_GET['semester']) && !empty($_GET['semester'])) {
+    // Store the selected semester for the user in session
+    $_SESSION['selected_semester'][$user_id] = $_GET['semester'];
+}
 
 // Handle event creation
 if (isset($_POST['create_event'])) {
     $name_event = $_POST['name_event'];
     $date_event = $_POST['date_event'];
+    $event_start_time = $_POST['event_start_time'];
+    $event_end_time = $_POST['event_end_time'];
     $event_desc = $_POST['event_desc'];
 
-    // Insert into the events table
-    $stmt = $db->db->prepare("INSERT INTO events (name_event, date_event, event_desc) VALUES (?, ?, ?)");
-    $stmt->bind_param("sss", $name_event, $date_event, $event_desc);
+    // Get the selected semester ID from the session
+    $semester_ID = isset($_SESSION['selected_semester'][$user_id]) ? $_SESSION['selected_semester'][$user_id] : null;
 
-    if ($stmt->execute()) {
-        // Get the last inserted event ID
-        $event_id = $db->db->insert_id;
+    // Validate that the semester ID exists
+    if (empty($semester_ID)) {
+        $error = "No semester selected. Please select a semester to create an event.";
+    } else {
+        // Insert into the events table
+        $stmt = $db->db->prepare("INSERT INTO events (name_event, date_event, event_start_time,event_end_time, event_desc, semester_ID) VALUES (?,?,?, ?, ?, ?)");
+        $stmt->bind_param("ssssss", $name_event, $date_event, $event_start_time, $event_end_time, $event_desc, $semester_ID);
 
-        // Insert attendances if they were submitted
-        if (!empty($_POST['type_attendance'])) {
-            $attendance_stmt = $db->db->prepare("INSERT INTO attendances (id_event, type_attendance, time_in, time_out, fine_amount) VALUES (?, ?, ?, ?, ?)");
-            foreach ($_POST['type_attendance'] as $key => $type) {
-                $time_in = $_POST['time_in'][$key];
-                $time_out = $_POST['time_out'][$key];
-                $fine_amount = $_POST['fine_amount'][$key]; // Get fine amount from form input
+        if ($stmt->execute()) {
+            // Get the last inserted event ID
+            $event_id = $db->db->insert_id;
 
-                // Bind the parameters
-                $attendance_stmt->bind_param("issss", $event_id, $type, $time_in, $time_out, $fine_amount);
-                $attendance_stmt->execute();
+            // Insert attendances if they were submitted
+            if (!empty($_POST['type_attendance'])) {
+                $attendance_stmt = $db->db->prepare("INSERT INTO attendances (id_event, type_attendance, time_in, time_out) VALUES (?, ?, ?, ?)");
+                foreach ($_POST['type_attendance'] as $key => $type) {
+                    $time_in = $_POST['time_in'][$key];
+                    $time_out = $_POST['time_out'][$key];
 
-                // Fetch the last inserted attendance ID
-                $id_attendance = $db->db->insert_id;
+                    // Bind the parameters
+                    $attendance_stmt->bind_param("isss", $event_id, $type, $time_in, $time_out);
+                    $attendance_stmt->execute();
 
-                // Fetch all student IDs and insert them into student_attendance
-                $student_stmt = $db->db->prepare("SELECT id_student FROM student");
-                $student_stmt->execute();
-                $student_result = $student_stmt->get_result();
+                    // Fetch the last inserted attendance ID
+                    $id_attendance = $db->db->insert_id;
 
-                while ($student = $student_result->fetch_assoc()) {
-                    $insert_student_attendance = $db->db->prepare("INSERT INTO student_attendance (id_attendance, id_student, date_attendance, status_attendance, fine_amount) VALUES (?, ?, NOW(), 'Absent', ?)");
-                    $insert_student_attendance->bind_param("iis", $id_attendance, $student['id_student'], $fine_amount);
-                    $insert_student_attendance->execute();
+                    // Fetch all student IDs and insert them into student_attendance
+                    $student_stmt = $db->db->prepare("SELECT id_student FROM student");
+                    $student_stmt->execute();
+                    $student_result = $student_stmt->get_result();
+
+                    while ($student = $student_result->fetch_assoc()) {
+                        // Insert student attendance with semester_ID
+                        $insert_student_attendance = $db->db->prepare("INSERT INTO student_attendance (id_attendance, id_student, semester_ID, date_attendance, status_attendance) VALUES (?, ?, ?, NOW(), 'Absent')");
+                        $insert_student_attendance->bind_param("iis", $id_attendance, $student['id_student'], $semester_ID); // Include semester_ID
+                        $insert_student_attendance->execute();                    
+                    }
+
                 }
             }
-        }
 
-        // Redirect or display success message
-        echo "<script>window.location.href='';</script>";
-    } else {
-        $error = "Error creating event: " . $stmt->error;
+            // Redirect or display success message
+            echo "<script>window.location.href='';</script>";
+        } else {
+            $error = "Error creating event: " . $stmt->error;
+        }
     }
 }
+
 
 
 // Handle showing attendances
@@ -163,11 +180,8 @@ if (isset($_GET['id'])) {
 }
 
 
-// Check if a semester is selected in the GET request
-if (isset($_GET['semester'])) {
-    $_SESSION['selected_semester'] = $_GET['semester'];
-}
-$selected_semester = isset($_SESSION['selected_semester']) ? $_SESSION['selected_semester'] : '';
+// Initialize the selected semester variable
+$selected_semester = isset($_SESSION['selected_semester'][$user_id]) ? $_SESSION['selected_semester'][$user_id] : '';
 
 // Initialize pagination variables
 $limit = 7; // Number of records per page
@@ -188,7 +202,7 @@ $totalPages = $totalRecords > 0 ? ceil($totalRecords / $limit) : 1;
 // Fetch events for the current page for the selected semester
 if (isset($_GET['show_all']) && $_GET['show_all'] == 'true') {
     // Query to fetch all events for the selected semester (no pagination)
-    $query = "SELECT id_event, name_event, date_event, event_desc, date_created FROM events WHERE semester_ID = ?";
+    $query = "SELECT id_event, name_event, date_event, event_start_time, event_end_time, event_desc FROM events WHERE semester_ID = ?";
     $stmt = $db->db->prepare($query);
     $stmt->bind_param("s", $selected_semester);
     $stmt->execute();
@@ -197,22 +211,20 @@ if (isset($_GET['show_all']) && $_GET['show_all'] == 'true') {
     $page = 1; // Reset to the first page
 } else {
     // Query to fetch paginated events for the selected semester
-    $query = "SELECT id_event, name_event, date_event, event_desc, date_created 
+    $query = "SELECT id_event, name_event, date_event,event_start_time, event_end_time, event_desc
               FROM events WHERE semester_ID = ? LIMIT $limit OFFSET $offset";
     $stmt = $db->db->prepare($query);
     $stmt->bind_param("s", $selected_semester);
     $stmt->execute();
     $events = $stmt->get_result();
 }
-
-
 ?>
 
 <link rel="stylesheet" href=".//.//stylesheet/admin/admin-events.css">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 
 <div class="event-management-con">
-<div class="event-management-header">
+    <div class="event-management-header">
         <span>Manage Events</span>
         <div class="location">
             <a href="?content=admin-index&admin=dashboard">Dashboard</a>
@@ -222,53 +234,63 @@ if (isset($_GET['show_all']) && $_GET['show_all'] == 'true') {
             <span>Manage Events</span>
         </div>
     </div>
+
     <div class="list-events-con">
-    <?php if ($events->num_rows > 0): ?>
-        <?php while($event = $events->fetch_assoc()): ?>
-            <div class="event">
-                <div class="name-date">
-                    <h4><?php echo $event['name_event']; ?></h4>
-                    <p><?php echo date("F j, Y", strtotime($event['date_event'])); ?></p>
-                </div>
-                <div class="date-created">
-                    <p>Date created: <?php echo date("F j, Y g:i a", strtotime($event['date_created'])); ?></p>
-                </div>
-                <div class="action-btn">
-                    <div class="dropdown-content">
-                        <a href="#" onclick="openEditModal(
-                            '<?php echo $event['id_event']; ?>',
-                            '<?php echo addslashes($event['name_event']); ?>',
-                            '<?php echo date('Y-m-d', strtotime($event['date_event'])); ?>',
-                            '<?php echo addslashes($event['event_desc']); ?>'
-                        )"><i class='fas fa-edit'></i></a>
-                        <a href="#" onclick="confirmDelete(<?php echo $event['id_event']; ?>)"><i class='fas fa-trash'></i></a>
-                        <a href="?content=admin-index&admin=attendance-records&id=<?php echo $event['id_event']; ?>"><i class="fas fa-database"></i></a>
-                    </div>
-                </div>
-            </div>
-        <?php endwhile; ?>
-    <?php else: ?>
-        <p>No events found.</p>
-    <?php endif; ?>
-</div>
+        <?php if ($events->num_rows > 0): ?>
+            <table class="events-table">
+                <thead>
+                    <tr>
+                        <th>Event Name</th>
+                        <th>Event Date</th>
+                        <th>Start Time</th>
+                        <th>End Time</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php while($event = $events->fetch_assoc()): ?>
+                        <tr>
+                            <td><?php echo $event['name_event']; ?></td>
+                            <td><?php echo date("F j, Y", strtotime($event['date_event'])); ?></td>
+                            <td><?php echo date("h:i A", strtotime($event['event_start_time'])); ?></td>
+                            <td><?php echo date("h:i A", strtotime($event['event_end_time'])); ?></td>
+                            <td>
+                                <div class="dropdown-content">
+                                    <a href="#" onclick="openEditModal(
+                                        '<?php echo $event['id_event']; ?>',
+                                        '<?php echo addslashes($event['name_event']); ?>',
+                                        '<?php echo date('Y-m-d', strtotime($event['date_event'])); ?>',
+                                    )"><i class='fas fa-edit'></i></a>
+                                    <a href="#" onclick="confirmDelete(<?php echo $event['id_event']; ?>)"><i class='fas fa-trash'></i></a>
+                                    <a href="?content=admin-index&admin=attendance-records&id=<?php echo $event['id_event']; ?>"><i class="fas fa-database"></i></a>
+                                </div>
+                            </td>
+                        </tr>
+                    <?php endwhile; ?>
+                </tbody>
+            </table>
+        <?php else: ?>
+            <p>No events found.</p>
+        <?php endif; ?>
+    </div>
 
-<!-- Pagination Controls -->
-<div class="pagination">
-    <button <?php if($page <= 1) echo 'disabled'; ?> onclick="navigateToPage(1)">First</button>
-    <button <?php if($page <= 1) echo 'disabled'; ?> onclick="navigateToPage(<?php echo $page - 1; ?>)">Previous</button>
-    <span>Page <?php echo $page; ?> of <?php echo $totalPages; ?></span>
-    <button <?php if($page >= $totalPages) echo 'disabled'; ?> onclick="navigateToPage(<?php echo $page + 1; ?>)">Next</button>
-    <button <?php if($page >= $totalPages) echo 'disabled'; ?> onclick="navigateToPage(<?php echo $totalPages; ?>)">Last</button>
-</div>
-<script>
-function navigateToPage(page) {
-    window.location.href = '?content=admin-index&admin=event-management&page=' + page;
-}
-</script>
+    <!-- Pagination Controls -->
+    <div class="pagination">
+        <button <?php if($page <= 1) echo 'disabled'; ?> onclick="navigateToPage(1)">First</button>
+        <button <?php if($page <= 1) echo 'disabled'; ?> onclick="navigateToPage(<?php echo $page - 1; ?>)">Previous</button>
+        <span>Page <?php echo $page; ?> of <?php echo $totalPages; ?></span>
+        <button <?php if($page >= $totalPages) echo 'disabled'; ?> onclick="navigateToPage(<?php echo $page + 1; ?>)">Next</button>
+        <button <?php if($page >= $totalPages) echo 'disabled'; ?> onclick="navigateToPage(<?php echo $totalPages; ?>)">Last</button>
+    </div>
 
-<button id="create-event-btn">Create event</button>
-        <button class="start-attendance-btn"><a href="./Barcode" target="_blank">Start Attendance</a></button>
+    <script>
+        function navigateToPage(page) {
+            window.location.href = '?content=admin-index&admin=event-management&page=' + page;
+        }
+    </script>
 
+    <button id="create-event-btn">Create event</button>
+    <button class="start-attendance-btn"><a href="./Barcode" target="_blank">Start Attendance</a></button>
 </div>
 
 <!-- Edit Event Modal -->
@@ -285,9 +307,6 @@ function navigateToPage(page) {
             <label for="date_event">Event Date</label>
             <input type="date" id="edit-date_event" name="date_event" required>
 
-            <label for="event_desc">Event Description</label>
-            <textarea id="edit-event_desc" name="event_desc" required></textarea>
-
             <button type="submit" name="edit_event">Update Event</button>
         </form>
     </div>
@@ -300,7 +319,6 @@ function navigateToPage(page) {
         document.getElementById('edit-event-id').value = eventId;
         document.getElementById('edit-name_event').value = name;
         document.getElementById('edit-date_event').value = date;
-        document.getElementById('edit-event_desc').value = desc;
         
         // Show the modal
         document.getElementById('edit-event-modal').style.display = 'block';
@@ -351,27 +369,35 @@ function confirmDelete(eventId) {
             <label for="date_event">Event Date</label>
             <input type="date" id="date_event" name="date_event" required>
 
+            <label for="event_start_time">Start Time: </label>
+            <input type="time" id="event_start_timet" name="event_start_time" required>
+
+            <label for="event_end_time">End Time: </label>
+            <input type="time" id="event_end_timet" name="event_end_time" required>
+
             <label for="event_desc">Event Description</label>
             <textarea id="event_desc" name="event_desc" required></textarea>
 
             <button type="button" id="add-attendance-btn">Add Attendance</button>
             
             <div id="attendance-container" style="display: none;">
-    <div class="attendance-entry">
-        <label for="type_attendance">Attendance Type</label>
-        <input type="text" name="type_attendance[]" required>
-        
-        <label for="time_in">Time In</label>
-        <input type="time" name="time_in[]" required>
+            <div class="attendance-entry">
 
-        <label for="time_out">Time Out</label>
-        <input type="time" name="time_out[]" required>
+                <label for="type_attendance">Attendance Type</label>
+                <select name="type_attendance[]" required>
+                    <option value="" disabled selected>Select Attendance Type</option>
+                    <option value="IN">IN</option>
+                    <option value="OUT">OUT</option>
+                    <option value="SA">SA(Surprise Attendance)</option>
+                </select>
+                
+                <label for="time_in">Time In</label>
+                <input type="time" name="time_in[]" required>
 
-        <label for="fine_amount">Fine Amount</label>
-        <input type="number" step="0.01" name="fine_amount[]" placeholder="0.00" required>
-    </div>
-</div>
-
+                <label for="time_out">Time Out</label>
+                <input type="time" name="time_out[]" required>
+            </div>
+        </div>
 
             <button type="button" id="add-more-attendance-btn" style="display: none;">Add More Attendance</button>
             <button type="submit" name="create_event">Create Event</button>
@@ -414,16 +440,18 @@ document.getElementById('add-more-attendance-btn').onclick = function() {
 
     entry.innerHTML = `
         <label for="type_attendance">Attendance Type</label>
-        <input type="text" name="type_attendance[]" required>
+        <select name="type_attendance[]" required>
+        <option value="" disabled selected>Select Attendance Type</option>
+        <option value="IN">IN</option>
+        <option value="OUT">OUT</option>
+        <option value="SA">SA(Surprise Attendance)</option>
+        </select>
         
         <label for="time_in">Time In</label>
         <input type="time" name="time_in[]" required>
 
         <label for="time_out">Time Out</label>
         <input type="time" name="time_out[]" required>
-
-        <label for="fine_amount">Fine Amount</label>
-        <input type="number" step="0.01" name="fine_amount[]" placeholder="0.00" required>
     `;
     
     container.appendChild(entry);

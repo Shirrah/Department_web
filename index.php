@@ -32,7 +32,7 @@
                     include 'php/default.php';
                     break;
                 case "log-in":
-                    include 'php/log-in.php';
+                    include 'php/login-new.php';
                     break;
                 case "admin-index":
                     include 'php/admin/admin-index.php';

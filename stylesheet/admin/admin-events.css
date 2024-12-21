@@ -139,7 +139,7 @@
     }
 
     /* Style form inputs */
-    form input, form textarea, form button {
+    form input, form textarea, form button, form select {
         display: block;
         width: 100%;
         margin: 10px 0;
@@ -218,3 +218,55 @@
     .event-management-con button:hover, .event-management-con button a:hover, #create-event-btn:hover{
         background-color: #ff7b00;
     }
+
+    /* Table styling */
+.events-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+    border: 1px solid #e8ecf1;
+}
+
+.events-table th,
+.events-table td {
+    padding: 12px;
+    text-align: left;
+    font-size: 14px;
+    border-bottom: 1px solid #e8ecf1;
+    font-family: "Open Sans", sans-serif;
+}
+
+.events-table th {
+    background-color: #f2f2f2;
+    color: black;
+    font-weight: bold;
+    cursor: pointer;
+    position: sticky;
+    user-select: none;
+    top: 0;
+}
+
+.events-table th:hover {
+    background-color: #e1e1e1;
+}
+
+.events-table tr:nth-child(even) {
+    background-color: #f9f9f9;
+}
+
+.events-table tr:hover {
+    background-color: #f1f1f1;
+}
+
+.events-table td {
+    color: black;
+}
+
+.events-table td a {
+    color: #007BFF;
+    text-decoration: none;
+}
+
+.events-table td a:hover {
+    text-decoration: underline;
+}

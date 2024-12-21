@@ -7,6 +7,16 @@ ob_start(); // Start output buffering
 require_once "././php/db-conn.php";
 $db = new Database();
 
+// Get the user ID from the session (either admin or student)
+$user_id = $_SESSION['user_data']['id_admin'] ?? $_SESSION['user_data']['id_student'];
+
+// Handle the semester selection from GET request and store it in session for this user
+if (isset($_GET['semester']) && !empty($_GET['semester'])) {
+    // Store the selected semester for the user in session
+    $_SESSION['selected_semester'][$user_id] = $_GET['semester'];
+}
+
+// Fetch the semesters from the database
 $query = "SELECT semester_ID, academic_year, semester_type FROM semester";
 $semester = $db->db->query($query);
 
@@ -35,7 +45,6 @@ if (isset($_GET['delete_id'])) {
         echo "<script>alert('Error deleting students: " . $db->db->error . "');</script>";
     }
 }
-
 
 // Edit functionality
 $editData = null;
@@ -80,7 +89,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $stmt = $db->db->prepare("INSERT INTO semester (semester_ID, academic_year, semester_type) VALUES (?, ?, ?)");
         $stmt->bind_param("sss", $generated_semester_id, $academic_year, $semester_type);
         if ($stmt->execute()) {
-            header("Location: ?content=admin-index&admin=dashboard");
+            header("Location: ?content=admin-index&admin=ay-dashboard");
             exit();
         } else {
             echo "<script>alert('Error adding new term: " . $stmt->error . "');</script>";

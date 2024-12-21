@@ -1,91 +1,67 @@
 <?php
-// Start session and include database connection
-if (session_status() == PHP_SESSION_NONE) {
-    session_start();
-}
-
-require "../../php/db-conn.php";
+// Include the database connection
+require_once "../../php/db-conn.php";
 $db = new Database();
 
-if (isset($_GET['id_attendance'])) {
-    $id_attendance = $_GET['id_attendance'];
+// Get the id_attendance from the GET request
+$id_attendance = isset($_GET['id_attendance']) ? $_GET['id_attendance'] : null;
 
-    // Query to fetch students from student_attendance and student tables
-    $stmt = $db->db->prepare("
-        SELECT sa.id_student, s.lastname_student, s.firstname_student, s.year_student, sa.date_attendance, sa.status_attendance, sa.fine_amount
-        FROM student_attendance sa 
-        INNER JOIN student s ON sa.id_student = s.id_student 
-        WHERE sa.id_attendance = ?
-    ");
-    $stmt->bind_param("i", $id_attendance);
+if ($id_attendance) {
+    // Query to fetch student attendance details based on the id_attendance, ordered by id_attendance DESC
+    $stmt = $db->db->prepare("SELECT id_student, semester_ID, date_attendance, status_attendance FROM student_attendance WHERE id_attendance = ? ORDER BY id_attendance DESC");
+    $stmt->bind_param("i", $id_attendance);  // Bind the id_attendance to the query
     $stmt->execute();
     $result = $stmt->get_result();
 
-    // Start table output
-    echo '<table class="attendance-table">';
-    echo '<thead>';
-    echo '<tr>';
-    echo '<th>ID</th>';
-    echo '<th>Last Name</th>';
-    echo '<th>First Name</th>';
-    echo '<th>Year</th>';
-    echo '<th>Date and Time</th>'; // Updated header
-    echo '<th>Status</th>'; // New header for status
-    echo '<th>Fine Amount</th>'; // New header for fine amount
-    echo '</tr>';
-    echo '</thead>';
-    echo '<tbody>';
-
+    // Check if records are found
     if ($result->num_rows > 0) {
+        // Output the student attendance records
+        echo '<h3>Attendance Details for ID: ' . htmlspecialchars($id_attendance) . '</h3>';
+        echo '<table class="attendance-table">';
+        echo '<thead>';
+        echo '<tr>';
+        echo '<th>ID Attendance</th>';
+        echo '<th>Student ID</th>';
+        echo '<th>Semester ID</th>';
+        echo '<th>Date</th>';
+        echo '<th>Status</th>';
+        echo '</tr>';
+        echo '</thead>';
+        echo '<tbody>';
+        
         while ($row = $result->fetch_assoc()) {
+            // Fetch student details for each id_student
+            $student_stmt = $db->db->prepare("SELECT lastname_student, firstname_student FROM student WHERE id_student = ?");
+            $student_stmt->bind_param("i", $row['id_student']);
+            $student_stmt->execute();
+            $student_result = $student_stmt->get_result();
+            
+            // Check if student record is found
+            if ($student_result->num_rows > 0) {
+                $student = $student_result->fetch_assoc();
+                $lastname = htmlspecialchars($student['lastname_student']);
+                $firstname = htmlspecialchars($student['firstname_student']);
+            } else {
+                $lastname = 'Unknown';
+                $firstname = 'Unknown';
+            }
+
+            // Output the attendance details
             echo '<tr>';
+            echo '<td>' . htmlspecialchars($id_attendance) . '</td>';
             echo '<td>' . htmlspecialchars($row['id_student']) . '</td>';
-            echo '<td>' . htmlspecialchars($row['lastname_student']) . '</td>';
-            echo '<td>' . htmlspecialchars($row['firstname_student']) . '</td>';
-            echo '<td>' . htmlspecialchars($row['year_student']) . '</td>';
-            // Format date and time to 12-hour format
-            echo '<td>' . date("Y-m-d h:i A", strtotime($row['date_attendance'])) . '</td>';
-            // Display status and fine amount
+            echo '<td>' . htmlspecialchars($row['semester_ID']) . '</td>';
+            echo '<td>' . date("Y-m-d", strtotime($row['date_attendance'])) . '</td>';
             echo '<td>' . htmlspecialchars($row['status_attendance']) . '</td>';
-            echo '<td>' . htmlspecialchars($row['fine_amount']) . '</td>';
             echo '</tr>';
         }
-    } else {
-        echo '<tr><td colspan="7">No students found for this attendance.</td></tr>'; // Updated colspan
-    }
 
-    echo '</tbody>';
-    echo '</table>';
+        echo '</tbody>';
+        echo '</table>';
+    } else {
+        echo "<p>No student records found for this attendance ID.</p>";
+    }
+} else {
+    echo "<p>Invalid or missing attendance ID.</p>";
 }
 ?>
-
-<style>
-    .attendance-table {
-        width: 100%;
-        border-collapse: collapse;
-        margin: 20px 0;
-    }
-
-    .attendance-table th, .attendance-table td {
-        border: 1px solid #ddd;
-        padding: 8px;
-        text-align: left;
-    }
-
-    .attendance-table th {
-        background-color: #f2f2f2;
-        color: #333;
-    }
-
-    .attendance-table tr:nth-child(even) {
-        background-color: #f9f9f9;
-    }
-
-    .attendance-table tr:hover {
-        background-color: #f1f1f1;
-    }
-
-    .attendance-table td {
-        vertical-align: middle;
-    }
-</style>

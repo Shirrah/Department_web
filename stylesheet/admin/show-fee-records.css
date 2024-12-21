@@ -1,0 +1,61 @@
+ .fee-management-list-con{
+    margin-top: 20px;
+    background: white;
+    font-family: "Open Sans", sans-serif;
+    width: auto;
+    height: auto;
+    padding: 1.8rem;
+    margin: 1.8rem;
+ }
+ 
+ /* Table styling */
+ .student-records-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+    border: 1px solid #e8ecf1;
+}
+
+.student-records-table th,
+.student-records-table td {
+    padding: 12px;
+    text-align: left;
+    font-size: 14px;
+    border-bottom: 1px solid #e8ecf1;
+    font-family: "Open Sans", sans-serif;
+}
+
+.student-records-table th {
+    background-color: #f2f2f2;
+    color: black;
+    font-weight: bold;
+    cursor: pointer;
+    position: sticky;
+    user-select: none;
+    top: 0;
+}
+
+.student-records-table th:hover {
+    background-color: #e1e1e1;
+}
+
+.student-records-table tr:nth-child(even) {
+    background-color: #f9f9f9;
+}
+
+.student-records-table tr:hover {
+    background-color: #f1f1f1;
+}
+
+.student-records-table td {
+    color: black;
+}
+
+.student-records-table td a {
+    color: #007BFF;
+    text-decoration: none;
+}
+
+.student-records-table td a:hover {
+    text-decoration: underline;
+}

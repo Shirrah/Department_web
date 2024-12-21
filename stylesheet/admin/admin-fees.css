@@ -129,3 +129,55 @@
     background-color: #ccc;
     cursor: not-allowed;
 }
+
+ /* Table styling */
+ .fees-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+    border: 1px solid #e8ecf1;
+}
+
+.fees-table th,
+.fees-table td {
+    padding: 12px;
+    text-align: left;
+    font-size: 14px;
+    border-bottom: 1px solid #e8ecf1;
+    font-family: "Open Sans", sans-serif;
+}
+
+.fees-table th {
+    background-color: #f2f2f2;
+    color: black;
+    font-weight: bold;
+    cursor: pointer;
+    position: sticky;
+    user-select: none;
+    top: 0;
+}
+
+.fees-table th:hover {
+    background-color: #e1e1e1;
+}
+
+.fees-table tr:nth-child(even) {
+    background-color: #f9f9f9;
+}
+
+.fees-table tr:hover {
+    background-color: #f1f1f1;
+}
+
+.fees-table td {
+    color: black;
+}
+
+.fees-table td a {
+    color: #007BFF;
+    text-decoration: none;
+}
+
+.feee-table td a:hover {
+    text-decoration: underline;
+}
