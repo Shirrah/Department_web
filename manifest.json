@@ -1,6 +1,6 @@
 {
-    "name": "EFMS",
-    "short_name": "App",
+    "name": "CCS EFMS",
+    "short_name": "CCS EFMS",
     "description": "A brief description of your app",
     "start_url": "/",
     "display": "standalone",
