@@ -3,9 +3,14 @@ self.addEventListener('install', (event) => {
       caches.open('your-app-cache').then((cache) => {
         return cache.addAll([
           '/',
-          '/index.html',
-          '/styles.css',
-          '/script.js',
+          'index.php',
+          '/header.php',
+          '/footer.php',
+          '/footer.css',
+          '/index.css',
+          '/header.css',
+          '/main.js',
+          '/default.css',
           'assets/images/sys-logo.png',
           'assets/images/sys-logo.png'
         ]);
