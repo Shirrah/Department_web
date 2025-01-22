@@ -1,62 +1,59 @@
-<?php
+<link rel="stylesheet" href=".//.//stylesheet/header.css">
 
-if (session_status() == PHP_SESSION_NONE) {
-    session_start();
-}
-?>
-
-<link rel="stylesheet" href="stylesheet/header.css">
-<div class="headerbody">
-    <div class="header_logo">
-        <img src=".//.//assets/images/SJC-LOGO-NEWER-1536x1024.png" alt="Logo of the Saint Joseph College" class="sjclogo" loading="lazy">
-        <img src="assets/images/ccslogo.png" alt="" class="logo">
-        <span><p class="school-name">SAINT JOSEPH COLLEGE</p>
-        <p class="dept-name">College of Computer Studies</p>
-
-        <button id="installBtn" style="display:none;">Install App</button>
-        </span>
-    </div>
-
-    <div class="navbar-con">
-        <?php
-        require_once "db-conn.php";
-        // Get the database connection instance
-        $db = new Database();
-
-        if (isset($_SESSION['logged_in']) && $_SESSION['logged_in'] == 'yes') {
-            // Fetch user details from session
-            $user_data = $_SESSION['user_data'];
-
-            // Check if expected keys exist
-            $role = isset($user_data['role_admin']) ? $user_data['role_admin'] : (isset($user_data['role_student']) ? $user_data['role_student'] : 'Unknown Role');
-            $lastname = isset($user_data['lastname_admin']) ? $user_data['lastname_admin'] : (isset($user_data['lastname_student']) ? $user_data['lastname_student'] : 'Unknown Lastname');
-            $id = isset($user_data['id_admin']) ? $user_data['id_admin'] : (isset($user_data['id_student']) ? $user_data['id_student'] : 'Unknown ID');
-
-            // Display "Administrator" link only for admins
-            if ($role == 'Admin') {
-
-            }
-
-            // Display user role, last name, and ID with a dropdown for logout
-            echo '
-            <div class="logout-btn-dropdown">
-                <button class="dropbtn" onclick="toggleDropdown()">
-                    <img src=".//.//assets/images/user.png" alt="">
-                    ' . htmlspecialchars($role) . ' - ' . htmlspecialchars($lastname) . '
-                </button>
-                <div id="logout-Dropdown" class="logout-Dropdown">
-                    <a href="?content=logout">Logout</a>
-                </div>
-            </div>';
-            
-        } else {
-            // No session, only "Home" and "Login" are accessible
-            echo '<button><a href="?content=default"><img src=".//.//assets/images/home.png" alt="">Home</a></button>';
-            echo '<button><a href="?content=log-in"><img src=".//.//assets/images/user.png" alt="">Login</a></button>';
-        }
+<!-- Header Section -->
+ <nav class="navbar navbar-expand-lg navbar-light">
+  <div class="container-fluid">
+    <!-- Logo and Brand -->
+    <a class="navbar-brand d-flex align-items-center" href="#">
+      <img src="./assets/images/sys-logo.png" alt="Logo" class="me-2" style="height: 40px;">
+      <div class="container d-flex flex-column align-items-start text-start py-4">
+        <span class="h4" id="college-name"></span>
+        <span class="h5 text-muted" id="app-name"></span>
+      </div>
+    </a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="header-nav-con collapse navbar-collapse" id="navbarNav">
+      <ul class="navbar-nav ms-auto">
+        
+        <!-- Install PWA Button -->
+        <li class="nav-item">
+          <a id="installBtn" role="button" title="Progress Web App" class="btn btn-primary"><i class="bi bi-download me-1"></i>Install PWA App</a>
+        </li>
+        <?php 
+                require_once "php/db-conn.php";
+                // Get the database connection instance
+                $db = new Database();
+        
+                if (isset($_SESSION['logged_in']) && $_SESSION['logged_in'] == 'yes') {
+                    // Fetch user details from session
+                    $user_data = $_SESSION['user_data'];
+        
+                    // Check if expected keys exist
+                    $role = isset($user_data['role_admin']) ? $user_data['role_admin'] : (isset($user_data['role_student']) ? $user_data['role_student'] : 'Unknown Role');
+                    $lastname = isset($user_data['lastname_admin']) ? $user_data['lastname_admin'] : (isset($user_data['lastname_student']) ? $user_data['lastname_student'] : 'Unknown Lastname');
+                    $id = isset($user_data['id_admin']) ? $user_data['id_admin'] : (isset($user_data['id_student']) ? $user_data['id_student'] : 'Unknown ID');
+        
+                    // Display "Administrator" link only for admins
+                    if ($role == 'Admin') {
+        
+                    }
+                    
+                } else {
+                    // No session, only "Home" and "Login" are accessible
+                    echo '<li class="nav-item">
+                          <a class="nav-link active" aria-current="page" href="?content=default">Home</a>
+                          </li>';
+                    echo '<li class="nav-item">
+                            <a class="nav-link" href="?content=log-in">Login</a>
+                          </li>';
+                }
         ?>
+      </ul>
     </div>
-</div>
+  </div>
+</nav>
 
 <script>
 function toggleDropdown() {

@@ -1,4 +1,5 @@
 <?php
+
 session_set_cookie_params(0);
 session_start();
 
@@ -64,7 +65,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $_SESSION['logged_in'] = 'yes';
             $_SESSION['user_data'] = $row; // Storing admin details in the session
 
-            // Fetch the latest semester
+            // Fetch the latest semester (if it exists)
             $semester_query = "SELECT * FROM `semester` ORDER BY `date_created` DESC LIMIT 1";
             $semester_result = $db->db->query($semester_query);
 
@@ -72,13 +73,12 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 $semester_row = $semester_result->fetch_assoc();
                 $semester_id = $semester_row['semester_ID'];
                 $_SESSION['semester_data'] = $semester_row; // Optional: Store semester details in session
+                header("location: ../index.php?content=admin-index&semester=$semester_id");
             } else {
-                $_SESSION['error_msg'] = 'No semester found.';
-                header("location: ../index.php?content=log-in");
-                exit();
+                // Proceed even if no semester is found
+                $_SESSION['error_msg'] = 'No semester found, you can still proceed without a semester.';
+                header("location: ../index.php?content=admin-index");
             }
-
-            header("location: ../index.php?content=admin-index&semester=$semester_id");
             exit();
         }
     }

@@ -1,6 +1,7 @@
 <link rel="stylesheet" href=".//.//stylesheet/admin/admin-index.css">
 
 <?php
+ob_start(); 
 
 require_once "php/auth-check.php";
 

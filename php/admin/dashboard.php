@@ -105,8 +105,7 @@ $result = $db->db->query($sql);
         <form method="GET" action="index.php" id="semesterForm">
     <input type="hidden" name="content" value="admin-index">
     <input type="hidden" name="admin" value="dashboard">
-    <label for="semester">Select Semester</label>
-    <select name="semester" id="semester" onchange="this.form.submit()">
+    <select class="form-select" style="width: min-content;" name="semester" id="semester" onchange="this.form.submit()">
         <?php
         if ($result->num_rows > 0) {
             while ($row = $result->fetch_assoc()) {

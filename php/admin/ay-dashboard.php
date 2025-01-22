@@ -79,6 +79,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $stmt = $db->db->prepare("UPDATE semester SET semester_ID = ?, academic_year = ?, semester_type = ? WHERE semester_ID = ?");
         $stmt->bind_param("ssss", $generated_semester_id, $academic_year, $semester_type, $semester_id);
         if ($stmt->execute()) {
+            // Store the selected semester in session after updating
+            $_SESSION['selected_semester'][$user_id] = $generated_semester_id;
             header("Location: ?content=admin-index&admin=ay-dashboard");
             exit();
         } else {
@@ -89,6 +91,12 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $stmt = $db->db->prepare("INSERT INTO semester (semester_ID, academic_year, semester_type) VALUES (?, ?, ?)");
         $stmt->bind_param("sss", $generated_semester_id, $academic_year, $semester_type);
         if ($stmt->execute()) {
+            // Get the newly inserted semester ID
+            $newSemesterID = $db->db->insert_id;
+
+            // Store the selected semester in session
+            $_SESSION['selected_semester'][$user_id] = $newSemesterID;
+
             header("Location: ?content=admin-index&admin=ay-dashboard");
             exit();
         } else {
@@ -96,6 +104,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         }
     }
 }
+
 
 $current_year = date("Y");
 

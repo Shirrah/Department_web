@@ -1,8 +1,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-
-	<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
-	<link rel="stylesheet" type="text/css" href="stylesheet/login-new-main.css">
+	<link rel="icon" type="image/png" href="../../assets/images/icons/favicon.ico"/>
+	<link rel="stylesheet" type="text/css" href="login-new-main.css">
 	<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
 
@@ -24,10 +23,9 @@ if (isset($_SESSION['error_msg'])) {
 ?>
 	<div class="limiter">
 		<div class="container-login100">
-			<div class="close-login-form"><a href="http://localhost/Department_web/index.php" class="btn-close btn-close-white rounded-circle bg-warning p-3" aria-label="Close"></a></div>
 			<div class="wrap-login100">
 				<div class="login100-pic js-tilt" data-tilt>
-					<img src="./assets/images/sys-logo.png" alt="IMG">
+					<img src="../../assets/images/sys-logo.png" alt="IMG">
 				</div>
 
 				<form class="login100-form validate-form" action="php/check-login.php" method="post">
@@ -79,7 +77,6 @@ if (isset($_SESSION['error_msg'])) {
 					</div>
 				</form>
 			</div>
-			
 		</div>
 	</div>
 	
@@ -102,11 +99,7 @@ if (isset($_SESSION['error_msg'])) {
 		})
 	</script>
 <!--===============================================================================================-->
-	<script src="./js/login-main.js"></script>
+	<script src="../../js/login-main.js"></script>
 
 </body>
 </html>
-
-<?php
-ob_end_flush();
-?>

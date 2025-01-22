@@ -61,10 +61,7 @@
 .date-created{
     width: 30%;
 }
-.action-btn{
-    width: 30%;
-    display: flex;
-}
+
 
 .action-btn a{
     text-decoration: none;
@@ -98,108 +95,6 @@
     background-color: #ccc;
     cursor: not-allowed;
 }
-
-    /* Modal styles */
-    .modal {
-        display: none;
-        position: fixed;
-        z-index: 1;
-        left: 0;
-        top: 0;
-        width: 100%;
-        height: 100%;
-        overflow: auto;
-        background-color: rgba(0, 0, 0, 0.4);
-    }
-
-    .modal-content {
-        background-color: #fefefe;
-        margin: 15% auto;
-        padding: 20px;
-        border: 1px solid #888;
-        width: 80%;
-        max-width: 500px;
-    }
-
-    .close, 
-    .close-edit{
-        color: #aaa;
-        float: right;
-        font-size: 28px;
-        font-weight: bold;
-    }
-
-    .close:hover,
-    .close:focus,
-    .close-edit:hover,
-    .close-edit:focus {
-        color: black;
-        text-decoration: none;
-        cursor: pointer;
-    }
-
-    /* Style form inputs */
-    form input, form textarea, form button, form select {
-        display: block;
-        width: 100%;
-        margin: 10px 0;
-        padding: 10px 0px 10px 0px;
-    }
-
-    form button {
-        background-color: #f94316;
-        color: white;
-        border: none;
-        cursor: pointer;
-    }
-
-    form button:hover {
-        background-color: #f94316;
-    }
-
-    .dots {
-        font-size: 14px;
-        cursor: pointer;
-        padding: 5px;
-        user-select: none;
-        border-radius: 5px;
-        color: #f94316;
-        font-weight: bold;
-        font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
-    }
-
-    .dots:hover{
-        text-decoration: underline;
-    }
-
-    
-    /* Hide the dropdown content by default */
-    .dropdown-content {
-        display: flex;
-        flex-direction: row;
-    }
-    
-    .dropdown-content a {
-        text-decoration: none;
-        display: flex;
-        align-items: center;
-    }
-
-    .dropdown-content a img{
-        width: 20px;
-    }
-    
-    /* Hover effect for dropdown links */
-    .event-management-con #create-event-btn{
-        border: none;
-        padding: 10px;
-        font-size: 14px;
-        font-weight: 600;
-        background-color: #f94316;
-        color: white;
-        border-radius: 5px;
-    }
-
     .start-attendance-btn{
         border: none;
         user-select: none;
