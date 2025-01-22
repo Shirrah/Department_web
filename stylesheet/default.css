@@ -74,8 +74,4 @@
     .default-ccs, .web-name {
         margin: 10px 0; /* Add spacing for touch comfort */
     }
-
-    .default-content {
-        height: 80vh;
-    }
 }
