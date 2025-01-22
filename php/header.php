@@ -56,36 +56,6 @@
 </nav>
 
 <script>
-function toggleDropdown() {
-    var dropdown = document.getElementById("logout-Dropdown");
-    dropdown.classList.toggle("show");
-    
-    // var arrow = document.getElementById("arrow");
-    // if (dropdown.classList.contains("show")) {
-    //     arrow.innerHTML = "&#9651;"; // Arrow up
-    // } else {
-    //     arrow.innerHTML = "&#9661;"; // Arrow down
-    // }
-}
-
-// Close the dropdown if the user clicks outside of it
-window.onclick = function(event) {
-    if (!event.target.matches('.dropbtn')) {
-        var dropdowns = document.getElementsByClassName("logout-Dropdown");
-        for (var i = 0; i < dropdowns.length; i++) {
-            var openDropdown = dropdowns[i];
-            if (openDropdown.classList.contains('show')) {
-                openDropdown.classList.remove('show');
-            }
-        }
-        
-        var arrow = document.getElementById("arrow");
-        arrow.innerHTML = "&#9660;"; // Reset arrow to down
-    }
-}
-</script>
-
-<script>
 let deferredPrompt; // To store the beforeinstallprompt event
 const installBtn = document.getElementById('installBtn');
 

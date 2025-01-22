@@ -23,10 +23,10 @@ ob_start(); // Start output buffering
     <div class="header">
             <?php
             // Define pages where header should be excluded
-            $exclude_header_pages = ['log-in', 'admin-index'];
+            $exclude_header_pages = ['log-in', 'admin-index', 'student-index'];
             
             // Define pages where footer should be excluded
-            $exclude_footer_pages = ['admin-index', 'log-in'];
+            $exclude_footer_pages = ['admin-index', 'log-in', 'student-index'];
 
             // Get the current content page
             $content_pg = isset($_GET['content']) ? $_GET['content'] : 'default';
