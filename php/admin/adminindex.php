@@ -122,86 +122,76 @@ if (isset($_SESSION['user_data'])) {
 
 <div class="main-content">
 
-        <div class="col-auto col-md-3 col-xl-2 px-sm-2 px-0 bg-dark">
-            <div class="d-flex flex-column align-items-center align-items-sm-start px-3 pt-2 text-white min-vh-100">
-                <a href="/" class="d-flex align-items-center pb-3 mb-md-0 me-md-auto text-white text-decoration-none">
-                    <span class="fs-5 d-none d-sm-inline">Menu</span>
+    <nav class="admin-sidebar-con bg-dark text-white vh-100 p-3" style="padding: 15px;">
+        <ul class="nav nav-pills flex-column mb-auto">
+            <li class="nav-item">
+                <a href="?content=admin-index&admin=dashboard" class="nav-link text-white action-btn">
+                    <i class="bi bi-speedometer2"></i>
+                    <span class="ms-1 d-none d-sm-inline">Dashboard</span>
                 </a>
-                <ul class="nav nav-pills flex-column mb-sm-auto mb-0 align-items-center align-items-sm-start" id="menu">
-                    <li class="nav-item">
-                        <a href="?content=admin-index&admin=dashboard" class="nav-link align-middle px-0 text-white">
-                            <i class="bi bi-speedometer2"></i>
-                            <span class="ms-1 d-none d-sm-inline">Dashboard</span>
-                        </a>
-                    </li>
-                    <li>
-                        <a href="#studentsMenu" data-bs-toggle="collapse" class="nav-link px-0 align-middle text-white d-flex justify-content-between">
-                            <span>
-                                <i class="bi bi-person"></i>
-                                <span class="ms-1 d-none d-sm-inline">Students</span>
-                            </span>
-                            <i class="bi bi-chevron-down"></i>
-                        </a>
-                        <ul class="collapse nav flex-column ms-1" id="studentsMenu">
-                            <li>
-                                <a href="?content=admin-index&admin=student-management" class="nav-link px-0 text-white">
-                                    <i class="bi bi-chevron-right"></i>
-                                    <span class="d-none d-sm-inline">Manage Students</span>
-                                </a>
-                            </li>
-                        </ul>
-                    </li>
-                    <li>
-                        <a href="#adminsMenu" data-bs-toggle="collapse" class="nav-link px-0 align-middle text-white d-flex justify-content-between">
-                            <span>
-                                <i class="bi bi-person"></i>
-                                <span class="ms-1 d-none d-sm-inline">Admins</span>
-                            </span>
-                            <i class="bi bi-chevron-down"></i>
-                        </a>
-                        <ul class="collapse nav flex-column ms-1" id="adminsMenu">
-                            <li>
-                                <a href="?content=admin-index&admin=admin-management" class="nav-link px-0 text-white">
-                                    <i class="bi bi-chevron-right"></i>
-                                    <span class="d-none d-sm-inline">Manage Admins</span>
-                                </a>
-                            </li>
-                        </ul>
-                    </li>
-                    <li>
-                        <a href="#eventsFeesMenu" data-bs-toggle="collapse" class="nav-link px-0 align-middle text-white d-flex justify-content-between">
-                            <span>
-                                <i class="bi bi-cash-coin"></i>
-                                <span class="ms-1 d-none d-sm-inline">Events & Fees</span>
-                            </span>
-                            <i class="bi bi-chevron-down"></i>
-                        </a>
-                        <ul class="collapse nav flex-column ms-1" id="eventsFeesMenu">
-                            <li>
-                                <a href="?content=admin-index&admin=event-management&admin_events=admin-events" class="nav-link px-0 text-white">
-                                    <i class="bi bi-chevron-right"></i>
-                                    <span class="d-none d-sm-inline">Manage Events</span>
-                                </a>
-                            </li>
-                            <li>
-                                <a href="?content=admin-index&admin=event-management&admin_events=admin-fees" class="nav-link px-0 text-white">
-                                    <i class="bi bi-chevron-right"></i>
-                                    <span class="d-none d-sm-inline">Manage Fees</span>
-                                </a>
-                            </li>
-                        </ul>
-                    </li>
-                    <li>
-                        <a href="?content=admin-index&admin=ay-dashboard" class="nav-link px-0 align-middle text-white">
-                            <i class="bi bi-calendar"></i>
-                            <span class="ms-1 d-none d-sm-inline">Academic Year</span>
-                        </a>
-                    </li>
-                </ul>
-                <hr>
-            </div>
-        </div>
+            </li>
+            <li>
+                <a href="#studentsMenu" class="nav-link text-white d-flex justify-content-between align-items-center collapsed" data-bs-toggle="collapse" role="button" aria-expanded="false">
+                    <span>
+                        <i class="bi bi-person"></i>
+                        <span class="ms-1 d-none d-sm-inline">Students</span>
+                    </span>
+                    <i class="bi bi-chevron-down"></i>
+                </a>
+                <div class="collapse" id="studentsMenu">
+                    <ul class="nav flex-column ps-3">
+                        <li>
+                            <a href="?content=admin-index&admin=student-management" class="nav-link text-white"><i class="bi bi-chevron-right"></i> <span class="d-none d-sm-inline">Manage Students</span></a>
+                        </li>
+                    </ul>
+                </div>
+            </li>
 
+            <li>    
+                <a href="#adminsMenu" class="nav-link text-white d-flex justify-content-between align-items-center collapsed" data-bs-toggle="collapse" role="button" aria-expanded="false">
+                    <span>
+                        <i class="bi bi-person"></i>
+                        <span class="ms-1 d-none d-sm-inline">Admins</span>
+                    </span>
+                    <i class="bi bi-chevron-down"></i>
+                </a>
+                <div class="collapse" id="adminsMenu">
+                    <ul class="nav flex-column ps-3">
+                        <li>
+                            <a href="?content=admin-index&admin=admin-management" class="nav-link text-white"><i class="bi bi-chevron-right"></i>  <span class="d-none d-sm-inline">Manage Admins</span></a>
+                        </li>
+                    </ul>
+                </div>
+            </li>
+
+            <li>
+                <a href="#eventsFeesMenu" class="nav-link text-white d-flex justify-content-between align-items-center collapsed" data-bs-toggle="collapse" role="button" aria-expanded="false">
+                    <span>
+                        <i class="bi bi-cash-coin"></i>
+                        <span class="ms-1 d-none d-sm-inline">Events & Fees</span>
+                    </span>
+                    <i class="bi bi-chevron-down"></i>
+                </a>
+                <div class="collapse" id="eventsFeesMenu">
+                    <ul class="nav flex-column ps-3">
+                        <li>
+                            <a href="?content=admin-index&admin=event-management&admin_events=admin-events" class="nav-link text-white"><i class="bi bi-chevron-right"></i>   <span class="d-none d-sm-inline">Manage Events</span></a>
+                        </li>
+                        <li>
+                            <a href="?content=admin-index&admin=event-management&admin_events=admin-fees" class="nav-link text-white"><i class="bi bi-chevron-right"></i>   <span class="d-none d-sm-inline">Manage Fees</span></a>
+                        </li>
+                    </ul>
+                </div>
+            </li>
+
+            <li>
+                <a href="?content=admin-index&admin=ay-dashboard" class="nav-link text-white">
+                    <i class="bi bi-calendar"></i>
+                    <span class="ms-1 d-none d-sm-inline">Academic Year</span>
+                </a>
+            </li>
+        </ul>
+    </nav>
 
 <script>
    window.onload = function() {
