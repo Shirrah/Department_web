@@ -23,7 +23,6 @@ if (isset($_SESSION['user_data'])) {
 }
 
 ?>
-<img src="Department_web/..//../php/" alt="">
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -32,7 +31,7 @@ if (isset($_SESSION['user_data'])) {
     <title>Document</title>
 </head>
 <body>
-<link rel="stylesheet" href="././stylesheet/admin/admin-index.css">
+<link rel="stylesheet" href="http://localhost/Department_web/stylesheet/admin/admin-index.css">
 
 <style>
     /* Ensure the whole page takes the full height */
@@ -123,26 +122,26 @@ if (isset($_SESSION['user_data'])) {
 
 <div class="main-content">
 
-    <nav class="bg-dark text-white vh-100 p-3" style="width: 250px; padding: 15px;">
+    <nav class="amdin-sidebar-con bg-dark text-white vh-100 p-3 "   style="width: 250px;">
         <ul class="nav nav-pills flex-column mb-auto">
             <li class="nav-item">
                 <a href="?content=admin-index&admin=dashboard" class="nav-link text-white action-btn">
                     <i class="bi bi-speedometer2"></i>
-                    <span class="ms-2">Dashboard</span>
+                    <span class="ms-1 d-none d-sm-inline">Dashboard</span>
                 </a>
             </li>
             <li>
                 <a href="#studentsMenu" class="nav-link text-white d-flex justify-content-between align-items-center collapsed" data-bs-toggle="collapse" role="button" aria-expanded="false">
                     <span>
                         <i class="bi bi-person"></i>
-                        <span class="ms-2">Students</span>
+                        <span class="ms-1 d-none d-sm-inline">Students</span>
                     </span>
                     <i class="bi bi-chevron-down"></i>
                 </a>
                 <div class="collapse" id="studentsMenu">
                     <ul class="nav flex-column ps-3">
                         <li>
-                            <a href="?content=admin-index&admin=student-management" class="nav-link text-white"><i class="bi bi-chevron-right"></i>  Manage Students</a>
+                            <a href="?content=admin-index&admin=student-management" class="nav-link text-white"><i class="bi bi-chevron-right"></i> Manage Students</a>
                         </li>
                     </ul>
                 </div>
@@ -152,7 +151,7 @@ if (isset($_SESSION['user_data'])) {
                 <a href="#adminsMenu" class="nav-link text-white d-flex justify-content-between align-items-center collapsed" data-bs-toggle="collapse" role="button" aria-expanded="false">
                     <span>
                         <i class="bi bi-person"></i>
-                        <span class="ms-2">Admins</span>
+                        <span class="ms-1 d-none d-sm-inline">Admins</span>
                     </span>
                     <i class="bi bi-chevron-down"></i>
                 </a>
@@ -169,7 +168,7 @@ if (isset($_SESSION['user_data'])) {
                 <a href="#eventsFeesMenu" class="nav-link text-white d-flex justify-content-between align-items-center collapsed" data-bs-toggle="collapse" role="button" aria-expanded="false">
                     <span>
                         <i class="bi bi-cash-coin"></i>
-                        <span class="ms-2">Events & Fees</span>
+                        <span class="ms-1 d-none d-sm-inline">Events & Fees</span>
                     </span>
                     <i class="bi bi-chevron-down"></i>
                 </a>
@@ -188,7 +187,7 @@ if (isset($_SESSION['user_data'])) {
             <li>
                 <a href="?content=admin-index&admin=ay-dashboard" class="nav-link text-white">
                     <i class="bi bi-calendar"></i>
-                    <span class="ms-2">Academic Year</span>
+                    <span class="ms-1 d-none d-sm-inline">Academic Year</span>
                 </a>
             </li>
         </ul>
