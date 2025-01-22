@@ -214,6 +214,7 @@ ob_end_flush();  // End output buffering and send output to the browser
                 <option value="Dean">Dean</option>
                 <option value="Secretary">Secretary</option>
                 <option value="Treasurer">Treasurer</option>
+                <option value="Secretary">Guest Admin</option>
                 </select>
 
             <label for="lastname_admin">Lastname:</label>
