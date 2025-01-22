@@ -24,7 +24,7 @@ if (isset($_SESSION['error_msg'])) {
 ?>
 	<div class="limiter">
 		<div class="container-login100">
-			<div class="close-login-form"><a href="http://localhost/Department_web/index.php" class="btn-close btn-close-white rounded-circle bg-warning p-3" aria-label="Close"></a></div>
+			<div class="close-login-form"><a href="index.php" class="btn-close btn-close-white rounded-circle bg-warning p-3" aria-label="Close"></a></div>
 			<div class="wrap-login100">
 				<div class="login100-pic js-tilt" data-tilt>
 					<img src="./assets/images/sys-logo.png" alt="IMG">
