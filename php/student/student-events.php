@@ -36,51 +36,113 @@ if (isset($_GET['show_attendances'])) {
     </div>
 
     <div class="list-events-con">
-        <?php if ($events->num_rows > 0): ?>
-            <?php while($event = $events->fetch_assoc()): ?>
-                <div class="event">
-                    <div class="name-date">
-                        <h4><?php echo $event['name_event']; ?></h4>
-                        <p><?php echo date("F j, Y", strtotime($event['date_event'])); ?></p>
-                    </div>
-                    <div class="date-created">
-                        <p>Date created: <?php echo date("F j, Y g:i a", strtotime($event['date_created'])); ?></p>
-                    </div>
-                    <div class="action-btn">
-                        <div class="dropdown">
-                            <span class="dots">Options</span>
-                            <div class="dropdown-content">
-                            <a href="?content=student-index&student=student-attendance-records&show_attendances=true&id=<?php echo $event['id_event']; ?>">
-    <img src=".//.//assets/images/attendance.png" alt="">Show Attendance
-</a>
+    <div class="accordion" id="accordionExample">
+        <?php 
+        // Updated query to fetch creator details
+        $eventQuery = "
+            SELECT 
+                events.*, 
+                COALESCE(admins.firstname_admin, student.firstname_student) AS creator_firstname,
+                COALESCE(admins.lastname_admin, student.lastname_student) AS creator_lastname
+            FROM events
+            LEFT JOIN admins ON events.created_by = admins.id_admin
+            LEFT JOIN student ON events.created_by = student.id_student
+            ORDER BY events.date_event DESC
+        ";
+        $events = $db->db->query($eventQuery);
 
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            <?php endwhile; ?>
-        <?php else: ?>
-            <p>No events found.</p>
-        <?php endif; ?>
-    </div>
+        while ($event = $events->fetch_assoc()): 
+        ?>
+            <div class="accordion-item">
+                <h2 class="accordion-header" id="heading<?php echo $event['id_event']; ?>">
+                    <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapse<?php echo $event['id_event']; ?>" aria-expanded="true" aria-controls="collapse<?php echo $event['id_event']; ?>">
+                       <strong><?php echo $event['name_event']; ?> - <?php echo date("F j, Y", strtotime($event['date_event'])); ?></strong> 
+                    </button>
+                </h2>
+                <div id="collapse<?php echo $event['id_event']; ?>" class="accordion-collapse collapse" data-bs-parent="#accordionExample">
+                    <div class="accordion-body">
+                        <p><strong>Event Name:</strong> <?php echo $event['name_event']; ?></p>
+                        <p><strong>Event Date:</strong> <?php echo date("F j, Y", strtotime($event['date_event'])); ?></p>
+                        <p><strong>Start Time:</strong> <?php echo date("h:i A", strtotime($event['event_start_time'])); ?></p>
+                        <p><strong>End Time:</strong> <?php echo date("h:i A", strtotime($event['event_end_time'])); ?></p>
+                        <p><strong>Created By:</strong> <?php echo $event['creator_firstname'] . ' ' . $event['creator_lastname']; ?></p>
+                        <p><strong>Actions:</strong></p>
+                        <a href="#" data-bs-toggle="tooltip" data-bs-placement="top" title="Edit" onclick="openEditModal(
+                            '<?php echo $event['id_event']; ?>',
+                            '<?php echo addslashes($event['name_event']); ?>',
+                            '<?php echo date('Y-m-d', strtotime($event['date_event'])); ?>',
+                        )"><i class='fas fa-edit'></i></a>
+                        <a href="#" data-bs-toggle="tooltip" data-bs-placement="top" title="Delete" onclick="confirmDelete(<?php echo $event['id_event']; ?>)"><i class='fas fa-trash'></i></a>
+                        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#attendanceModal" onclick="document.getElementById('id_event').value='<?php echo $event['id_event']; ?>';">Add Attendance</button>
+                        <h5>Attendances:</h5>
+                        <script>
+                              const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]')
+                              const tooltipList = [...tooltipTriggerList].map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl))
+                      </script>
+<div class="table-responsive">
+  <table class="table table-sm table-striped">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Status</th>
+        <th>Start Time</th>
+        <th>End Time</th>
+        <th>Penalty Type</th>
+        <th>Penalty Requirements</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      <?php 
+      // Fetch attendances associated with the current event (using event ID)
+      $attendanceQuery = "SELECT id_attendance, type_attendance, attendance_status, penalty_type, penalty_requirements, start_time, end_time FROM attendances WHERE id_event = ?";
+      $attendanceStmt = $db->db->prepare($attendanceQuery);
+      $attendanceStmt->bind_param("i", $event['id_event']);
+      $attendanceStmt->execute();
+      $attendances = $attendanceStmt->get_result();
+
+      // Display attendance records
+      if ($attendances->num_rows > 0):
+          while ($attendance = $attendances->fetch_assoc()): 
+      ?>
+        <tr>
+          <td><?php echo $attendance['type_attendance']; ?></td>
+          <td>
+            <?php 
+            if ($attendance['attendance_status'] == 'Ongoing') {
+                echo '<span class="badge bg-primary">Ongoing</span>';
+            } elseif ($attendance['attendance_status'] == 'Ended') {
+                echo '<span class="badge bg-secondary">Ended</span>';
+            } else {
+                echo '<span class="badge bg-warning text-dark">Pending</span>';
+            }
+            ?>
+          </td>
+          <td><?php echo date("h:i A", strtotime($attendance['start_time'])); ?></td>
+          <td><?php echo date("h:i A", strtotime($attendance['end_time'])); ?></td>
+          <td><span class="badge bg-info"><?php echo $attendance['penalty_type']; ?></span></td>
+          <td><?php echo $attendance['penalty_requirements']; ?></td>
+          <td><button class="btn btn-primary btn-sm">Show Records</button></td>
+          <!-- <a href="?content=admin-index&admin=attendance-records&id=<?php //echo $event['id_event']; ?>"><i class="fas fa-database"></i></a> -->
+        </tr>
+      <?php 
+          endwhile;
+      else: 
+      ?>
+        <tr>
+          <td colspan="7" class="text-center">No attendance records yet</td>
+        </tr>
+      <?php endif; ?>
+    </tbody>
+  </table>
+
 </div>
 
-<script>
-window.onload = function() {
-    // Dropdown functionality
-    document.querySelectorAll('.dropdown').forEach(function(dropdown) {
-        dropdown.querySelector('.dots').addEventListener('click', function() {
-            dropdown.classList.toggle('show');
-        });
-    });
 
-    // Close dropdown if clicked outside of dots
-    window.onclick = function(event) {
-        if (!event.target.matches('.dots')) {
-            document.querySelectorAll('.dropdown.show').forEach(function(dropdown) {
-                dropdown.classList.remove('show');
-            });
-        }
-    }
-};
-</script>
+                    </div>
+                </div>
+            </div>
+        <?php endwhile; ?>
+    </div>
+    </div>
+</div>
