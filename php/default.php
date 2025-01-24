@@ -17,7 +17,7 @@ if (session_status() == PHP_SESSION_NONE) {
                 <img src=".//.//assets/images/ccslogo.png" alt="Logo of College of Computer Studies" class="ccslogo" loading="lazy"> 
                 
                 
-               
+
                 <span class="web-name">Event & Fee Management System (EFMS)</span>
             </div>
         </div>
