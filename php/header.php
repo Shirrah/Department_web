@@ -87,4 +87,17 @@ installBtn.addEventListener('click', () => {
     });
   }
 });
+
+// Listen for the appinstalled event
+window.addEventListener('appinstalled', () => {
+  console.log('App has been installed');
+  // Hide the install button after installation
+  installBtn.style.display = 'none';
+});
+
+// Optionally, check if the app is already installed
+if (window.matchMedia('(display-mode: standalone)').matches) {
+  installBtn.style.display = 'none';
+}
+
 </script>
