@@ -1,39 +1,62 @@
-<div class="list-events-con">
-    <div class="accordion" id="accordionExample">
-        <?php while($event = $events->fetch_assoc()): ?>
-            <?php
-            // Fetch the creator's name based on the user ID
-            $creatorQuery = "SELECT name FROM users WHERE id_user = ?";
-            $creatorStmt = $db->db->prepare($creatorQuery);
-            $creatorStmt->bind_param("i", $event['created_by']);
-            $creatorStmt->execute();
-            $creatorResult = $creatorStmt->get_result();
-            $creator = $creatorResult->fetch_assoc();
-            ?>
-            <div class="accordion-item">
-                <h2 class="accordion-header" id="heading<?php echo $event['id_event']; ?>">
-                    <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapse<?php echo $event['id_event']; ?>" aria-expanded="true" aria-controls="collapse<?php echo $event['id_event']; ?>">
-                       <strong><?php echo $event['name_event']; ?> - <?php echo date("F j, Y", strtotime($event['date_event'])); ?></strong> 
-                    </button>
-                </h2>
-                <div id="collapse<?php echo $event['id_event']; ?>" class="accordion-collapse collapse" data-bs-parent="#accordionExample">
-                    <div class="accordion-body">
-                        <p><strong>Event Name:</strong> <?php echo $event['name_event']; ?></p>
-                        <p><strong>Event Date:</strong> <?php echo date("F j, Y", strtotime($event['date_event'])); ?></p>
-                        <p><strong>Start Time:</strong> <?php echo date("h:i A", strtotime($event['event_start_time'])); ?></p>
-                        <p><strong>End Time:</strong> <?php echo date("h:i A", strtotime($event['event_end_time'])); ?></p>
-                        <p><strong>Created By:</strong> <?php echo $creator['name']; ?></p> <!-- Display the creator's name -->
-                        <p><strong>Actions:</strong></p>
-                        <a href="#" data-bs-toggle="tooltip" data-bs-placement="top" title="Edit" onclick="openEditModal(
-                            '<?php echo $event['id_event']; ?>',
-                            '<?php echo addslashes($event['name_event']); ?>',
-                            '<?php echo date('Y-m-d', strtotime($event['date_event'])); ?>',
-                        )"><i class='fas fa-edit'></i></a>
-                        <a href="#" data-bs-toggle="tooltip" data-bs-placement="top" title="Delete" onclick="confirmDelete(<?php echo $event['id_event']; ?>)"><i class='fas fa-trash'></i></a>
-                        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#attendanceModal" onclick="document.getElementById('id_event').value='<?php echo $event['id_event']; ?>';">Add Attendance</button>
-                    </div>
-                </div>
-            </div>
-        <?php endwhile; ?>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Student Management Navbar</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    .student-management-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.5rem 1rem;
+      background-color: #f8f9fa;
+      border-bottom: 1px solid #dee2e6;
+    }
+    .student-management-header span {
+      font-size: 1.25rem;
+      font-weight: 500;
+    }
+    .location a {
+      text-decoration: none;
+      color: #007bff;
+    }
+    .location span {
+      color: #6c757d;
+    }
+  </style>
+</head>
+<body>
+  <nav class="navbar navbar-expand-lg navbar-light bg-light">
+    <div class="container-fluid">
+      <!-- Toggle Button -->
+      <button class="navbar-toggler me-2" type="button" data-bs-toggle="collapse" data-bs-target="#navbarContent" aria-controls="navbarContent" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+
+      <!-- Navbar Content -->
+      <div class="collapse navbar-collapse" id="navbarContent">
+        <ul class="navbar-nav ms-auto">
+          <li class="nav-item">
+            <a class="nav-link" href="?content=admin-index&admin=dashboard">Dashboard</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="?content=admin-index&admin=manage-students">Manage Students</a>
+          </li>
+        </ul>
+      </div>
     </div>
-</div>
+  </nav>
+
+  <!-- Header Section -->
+  <div class="student-management-header">
+    <span>Manage Students</span>
+    <div class="location">
+      <a href="?content=admin-index&admin=dashboard">Dashboard</a> / <span>Manage Students</span>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

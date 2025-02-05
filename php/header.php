@@ -1,8 +1,10 @@
 <link rel="stylesheet" href=".//.//stylesheet/header.css">
 
+<link rel="stylesheet" href="././stylesheet/header.css">
+
 <!-- Header Section -->
- <nav class="navbar navbar-expand-lg navbar-light">
-  <div class="container-fluid">
+<nav class="navbar navbar-expand-lg navbar-light fixed-top bg-light shadow-sm">
+<div class="container-fluid d-flex align-items-center align-items-center h-100 bg-light" style="height: 100px;">
     <!-- Logo and Brand -->
     <a class="navbar-brand d-flex align-items-center" href="#">
       <img src="./assets/images/sys-logo.png" alt="Logo" class="me-2" style="height: 40px;">
@@ -16,45 +18,29 @@
     </button>
     <div class="header-nav-con collapse navbar-collapse" id="navbarNav">
       <ul class="navbar-nav ms-auto">
-        
-        <!-- Install PWA Button -->
         <li class="nav-item">
           <a id="installBtn" role="button" title="Progress Web App" class="btn btn-primary"><i class="bi bi-download me-1"></i>Install PWA App</a>
         </li>
         <?php 
-                require_once "php/db-conn.php";
-                // Get the database connection instance
-                $db = new Database();
-        
-                if (isset($_SESSION['logged_in']) && $_SESSION['logged_in'] == 'yes') {
-                    // Fetch user details from session
-                    $user_data = $_SESSION['user_data'];
-        
-                    // Check if expected keys exist
-                    $role = isset($user_data['role_admin']) ? $user_data['role_admin'] : (isset($user_data['role_student']) ? $user_data['role_student'] : 'Unknown Role');
-                    $lastname = isset($user_data['lastname_admin']) ? $user_data['lastname_admin'] : (isset($user_data['lastname_student']) ? $user_data['lastname_student'] : 'Unknown Lastname');
-                    $id = isset($user_data['id_admin']) ? $user_data['id_admin'] : (isset($user_data['id_student']) ? $user_data['id_student'] : 'Unknown ID');
-        
-                    // Display "Administrator" link only for admins
-                    if ($role == 'Admin') {
-        
-                    }
-                    
-                } else {
-                    // No session, only "Home" and "Login" are accessible
-                    echo '<li class="nav-item">
-                          <a class="nav-link active" aria-current="page" href="?content=default">Home</a>
-                          </li>';
-                    echo '<li class="nav-item">
-                            <a class="nav-link" href="?content=log-in">Login</a>
-                          </li>';
-                }
+          require_once "php/db-conn.php";
+          $db = new Database();
+          if (isset($_SESSION['logged_in']) && $_SESSION['logged_in'] == 'yes') {
+              $user_data = $_SESSION['user_data'];
+              $role = $user_data['role_admin'] ?? $user_data['role_student'] ?? 'Unknown Role';
+              $lastname = $user_data['lastname_admin'] ?? $user_data['lastname_student'] ?? 'Unknown Lastname';
+              $id = $user_data['id_admin'] ?? $user_data['id_student'] ?? 'Unknown ID';
+          } else {
+              echo '<li class="nav-item"><a class="nav-link active" href="?content=default">Home</a></li>';
+              echo '<li class="nav-item"><a class="nav-link" href="?content=log-in">Login</a></li>';
+          }
         ?>
       </ul>
     </div>
   </div>
 </nav>
-
+<style>
+  
+</style>
 <script>
 let deferredPrompt; // To store the beforeinstallprompt event
 const installBtn = document.getElementById('installBtn');
@@ -87,17 +73,4 @@ installBtn.addEventListener('click', () => {
     });
   }
 });
-
-// Listen for the appinstalled event
-window.addEventListener('appinstalled', () => {
-  console.log('App has been installed');
-  // Hide the install button after installation
-  installBtn.style.display = 'none';
-});
-
-// Optionally, check if the app is already installed
-if (window.matchMedia('(display-mode: standalone)').matches) {
-  installBtn.style.display = 'none';
-}
-
 </script>

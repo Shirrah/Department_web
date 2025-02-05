@@ -4,7 +4,24 @@ if (session_status() == PHP_SESSION_NONE) {
     session_start();
 }
 
-require_once "././php/db-conn.php";
+if (!class_exists('Database')) {
+    class Database {
+        public $db; // Change the visibility to public
+        public $error; // Added property to store connection errors
+
+        public function __construct() {
+            // Establishing a connection to the database
+            //$this->db = new mysqli("auth-db1632.hstgr.io", "u958767601_shirrah", "Shirrah612345", "u958767601_dcs");
+            $this->db = new mysqli("localhost", "root", "", "u958767601_dcs");
+            // Checking for connection errors
+            if ($this->db->connect_error) {
+                $this->error = "Connection failed: " . $this->db->connect_error;
+                die($this->error); // Terminating script execution if connection fails
+            }
+        }
+    }
+}
+
 $db = new Database();
 
 // Get the user ID from the session (either admin or student)
@@ -124,18 +141,52 @@ ob_end_flush();
 <link rel="stylesheet" href=".//.//stylesheet/admin/student-management.css">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 
+
+<style>
+    .navbar-nav .nav-link {
+      display: flex;
+      align-items: center;
+      padding: 0.5rem 1rem;
+    }
+    .navbar-nav .nav-link i {
+      margin-right: 6px;
+    }
+    .divider {
+      border-left: 1px solid #ddd;
+      height: 24px;
+      margin: auto 0;
+    }
+  </style>
+
+  <nav class="navbar navbar-expand-lg navbar-light bg-light">
+    <div class="container-fluid">
+      <!-- Toggle Button on the Left -->
+      <a class="navbar-brand" href="#">Manage Students</a>
+      <button class="navbar-toggler me-2" type="button" data-bs-toggle="collapse" data-bs-target="#navbarContent" aria-controls="navbarContent" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+
+      <!-- Collapsible Navbar Content -->
+      <div class="collapse navbar-collapse" id="navbarContent">
+        <div class="navbar-nav ms-auto">
+          <div class="divider"></div>
+          <a class="nav-link" href="#"><i class="bi bi-box-arrow-down"></i>Export</a>
+          <div class="divider"></div>
+          <a class="nav-link" href="#" ><i class="bi bi-box-arrow-in-up"></i>Import</a>
+          <div class="divider"></div>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+
 <!-- HTML Content -->
 <div class="student-management-body">
     <div class="student-table-con">
-        <div class="student-management-header">
-            <span>Manage Students</span>
-            <div class="location">
-                <a href="?content=admin-index&admin=dashboard">Dashboard</a> / <span>Manage Students</span>
-            </div>
-        </div>
 
         <!-- Enroll Form -->
         <button id="enrollButton" onclick="openEnrollForm()">Add Student</button>
+
 
         <!-- Search & Show All -->
          <div class="manage-student-menu">

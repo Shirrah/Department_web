@@ -42,20 +42,6 @@ $stmt = $db->db->prepare($sql);
 $stmt->execute();
 $allSemesters = $stmt->get_result();
 
-// Query to count students in the selected semester
-$query = "SELECT COUNT(*) AS student_count FROM student WHERE semester_ID = ?";
-$stmt = $db->db->prepare($query);
-$stmt->bind_param("s", $selected_semester);
-$stmt->execute();
-$result = $stmt->get_result();
-
-// Check if the query was successful
-if ($result) {
-    $row = $result->fetch_assoc();
-    $student_count = $row['student_count'];
-} else {
-    echo "<p>Error retrieving student count.</p>";
-}
 
 // Query to count events in the selected semester
 $query = "SELECT COUNT(*) AS events_count FROM events WHERE semester_ID = ?";
@@ -126,14 +112,6 @@ $result = $db->db->query($sql);
 
         </div>
         <div class="dashcard-item">
-            <div class="dashboard-card">
-                <div class="card-details">
-                    <h2>Total students</h2>
-                    <a class="dash-view-count" href=""><?php echo htmlspecialchars($student_count); ?></a>
-                    <a class="dash-view-loc" href="?content=admin-index&admin=student-management">View Students</a>
-                </div>
-                <img src=".//.//assets/images/team.png" alt="">
-            </div>
             <div class="dashboard-card">
                 <div class="card-details">
                     <h2>Total events</h2>

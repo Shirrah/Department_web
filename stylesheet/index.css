@@ -1,37 +1,63 @@
+/* Reset */
 * {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
 }
-body, html{
+
+/* Main layout */
+html, body {
     height: 100%;
+    display: flex;
+    flex-direction: column; /* Stack elements vertically */
+    background-color: #f8f9fa; /* Light background for better contrast */
+}
+
+.main-container {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh; /* Ensure full viewport height */
+}
+
+.header {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    z-index: 1000;
+    background-color: #fff;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
 
 .content{
     display: flex;
     flex-direction: column;
 }
+/* Footer */
+.footer {
+    background-color: #343a40;
+    color: white;
+    text-align: center;
+    padding: 10px;
+    margin-top: auto; /* Push footer to the bottom */
+}
 
-#installBtn{
+/* Buttons */
+#installBtn {
     background-color: #f94415;
     color: white;
-    border-color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 4px;
+    cursor: pointer;
 }
 
-#installBtn:hover{
+#installBtn:hover {
     background-color: green;
-    border-color: green;
 }
 
-
-.logout-btn-dropdown{
-    width: 100%;
+.logout-btn-dropdown {
     display: flex;
-    flex-direction: row;
     justify-content: center;
     align-items: center;
-}
-
-.footer{
-    margin-top: auto; 
 }

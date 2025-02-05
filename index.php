@@ -1,7 +1,25 @@
-<?php 
+
+<?php
 if (session_status() == PHP_SESSION_NONE) {
     session_start();
-}
+}  
+// Include the database connection
+require_once "././php/db-conn.php";
+$db = new Database();
+
+// Capture visit data
+$page_url = $_SERVER['REQUEST_URI'];           // Current page URL
+$visitor_ip = $_SERVER['REMOTE_ADDR'];         // Visitor's IP address
+
+// Insert visit record into the database
+$sql = "INSERT INTO page_visits (page_url, visitor_ip) VALUES (?, ?)";
+$stmt = $db->db->prepare($sql);
+$stmt->bind_param("ss", $page_url, $visitor_ip);
+$stmt->execute();
+$stmt->close();
+
+// Close the database connection
+$db->db->close();
 ob_start(); // Start output buffering
 ?>
 
@@ -16,38 +34,27 @@ ob_start(); // Start output buffering
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
+    <!-- Add jQuery (CDN version) -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
     
     <link rel="manifest" href="manifest.json">
 </head>
 <body>
-    <div class="header">
-            <?php
-            // Define pages where header should be excluded
-            $exclude_header_pages = ['log-in', 'admin-index', 'student-index'];
-            
-            // Define pages where footer should be excluded
-            $exclude_footer_pages = ['admin-index', 'log-in', 'student-index'];
-
-            // Get the current content page
-            $content_pg = isset($_GET['content']) ? $_GET['content'] : 'default';
-
-            // Include header if the current page is not in the exclusion list
-            if (!in_array($content_pg, $exclude_header_pages)) {
-                echo '<div class="header">';
-                require_once "php/header.php";
-                echo '</div>';
-            }
-            ?>
-    </div>
-
-    <div class="content" >
+    <div class="main-container">
         <?php
-        if(isset($_GET['content'])){
-            $content_pg = $_GET['content'];
-        }else{
-                $content_pg = "default";
-            }
+        $exclude_header_pages = ['log-in', 'admin-index', 'student-index'];
+        $exclude_footer_pages = ['admin-index', 'log-in', 'student-index'];
+        $content_pg = isset($_GET['content']) ? $_GET['content'] : 'default';
 
+        // Include header if not excluded
+        if (!in_array($content_pg, $exclude_header_pages)) {
+            require_once "php/header.php";
+        }
+        ?>
+
+        <div class="content">
+            <?php
             switch($content_pg){
                 case "default":
                     include 'php/default.php';
@@ -67,21 +74,22 @@ ob_start(); // Start output buffering
                     exit;
                     break;
                 default:
-                    include 'php/default.php'; // Fallback to default
+                    include 'php/default.php';
                     break;
             }
-        ?>
-    </div>
+            ?>
+        </div>
 
-    <div class="footer">
         <?php
-        // Include footer if the current page is not in the exclusion list
+        // Include footer if not excluded
         if (!in_array($content_pg, $exclude_footer_pages)) {
-            echo '<div class="footer">';
             require_once "php/footer.php";
-            echo '</div>';
         }
         ?>
     </div>
 </body>
+
 </html>
+
+<style>
+</style>

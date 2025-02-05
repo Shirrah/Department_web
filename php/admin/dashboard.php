@@ -3,7 +3,6 @@
 require_once "././php/db-conn.php";
 $db = new Database();
 
-
 // Check if the user is logged in
 if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] != 'yes') {
     // Redirect to login if not logged in

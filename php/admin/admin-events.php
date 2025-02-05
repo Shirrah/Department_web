@@ -51,6 +51,29 @@ if (isset($_POST['create_event'])) {
     }
 }
 
+// Handle event update
+if (isset($_POST['update_event'])) {
+  $event_id = $_POST['edit_event_id'];
+  $name_event = htmlspecialchars($_POST['edit_name_event'], ENT_QUOTES, 'UTF-8');
+  $date_event = htmlspecialchars($_POST['edit_date_event'], ENT_QUOTES, 'UTF-8');
+  $event_start_time = htmlspecialchars($_POST['edit_event_start_time'], ENT_QUOTES, 'UTF-8');
+  $event_end_time = htmlspecialchars($_POST['edit_event_end_time'], ENT_QUOTES, 'UTF-8');
+  $event_desc = htmlspecialchars($_POST['edit_event_desc'], ENT_QUOTES, 'UTF-8');
+
+  // Get user ID from session (admin or student)
+  $user_id = $_SESSION['user_data']['id_admin'] ?? $_SESSION['user_data']['id_student'];
+
+  // Prepare update query
+  $stmt = $db->db->prepare("UPDATE events SET name_event = ?, date_event = ?, event_start_time = ?, event_end_time = ?, event_desc = ? WHERE id_event = ? AND created_by = ?");
+  $stmt->bind_param("ssssssi", $name_event, $date_event, $event_start_time, $event_end_time, $event_desc, $event_id, $user_id);
+
+  if ($stmt->execute()) {
+      // Redirect to refresh the page and show updated event
+      echo "<script>window.location.href='';</script>";
+  } else {
+      $error = "Error updating event: " . $stmt->error;
+  }
+}
 
 
 // Handle adding attendance records
@@ -78,6 +101,32 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['id_event'], $_POST['t
           $error = "Error adding attendance record: " . $stmt->error;
       }
   }
+}
+
+// Handle edit attendance
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['id_attendance'], $_POST['type_attendance'], $_POST['penalty_type'], $_POST['penalty_requirements'], $_POST['start_time'], $_POST['end_time'])) {
+    $id_attendance = $_POST['id_attendance'];
+    $type_attendance = $_POST['type_attendance'];
+    $penalty_type = $_POST['penalty_type'];
+    $penalty_requirements = $_POST['penalty_requirements'];
+    $start_time = $_POST['start_time'];
+    $end_time = $_POST['end_time'];
+
+    // Validate input fields
+    if (empty($id_attendance) || empty($type_attendance) || empty($penalty_type)) {
+        $error = "All fields are required.";
+    } else {
+        // Update the attendance record in the database
+        $stmt = $db->db->prepare("UPDATE attendances SET type_attendance = ?, penalty_type = ?, penalty_requirements = ?, start_time = ?, end_time = ? WHERE id_attendance = ?");
+        $stmt->bind_param("sssssi", $type_attendance, $penalty_type, $penalty_requirements, $start_time, $end_time, $id_attendance);
+
+        if ($stmt->execute()) {
+            // Redirect or display success message
+            echo "<script>window.location.href='?content=admin-index&admin=event-management&admin_events=admin-events';</script>";
+        } else {
+            $error = "Error updating attendance record: " . $stmt->error;
+        }
+    }
 }
 
 
@@ -113,89 +162,26 @@ if (isset($_POST['delete_event'])) {
 }
 
 
+// Handle attendance deletion
+if (isset($_POST['delete_attendance'])) {
+  $id_attendance = $_POST['id_attendance'];
 
+  $delete_attendance_stmt = $db->db->prepare("DELETE FROM attendances WHERE id_attendance = ?");
+  $delete_attendance_stmt->bind_param("i", $id_attendance);
 
-// // Handle event deletion
-// if (isset($_POST['delete_event'])) {
-//     $event_id = $_POST['event_id'];
-
-//     // Step 1: Get the ids of attendances associated with the event
-//     $attendance_stmt = $db->db->prepare("SELECT id_attendance FROM attendances WHERE id_event = ?");
-//     $attendance_stmt->bind_param("i", $event_id);
-//     $attendance_stmt->execute();
-//     $attendance_result = $attendance_stmt->get_result();
-
-//     // Collecting all id_attendance into an array
-//     $attendance_ids = [];
-//     while ($row = $attendance_result->fetch_assoc()) {
-//         $attendance_ids[] = $row['id_attendance'];
-//     }
-
-//     // Step 2: Delete associated attendances
-//     $delete_attendance_stmt = $db->db->prepare("DELETE FROM attendances WHERE id_event = ?");
-//     $delete_attendance_stmt->bind_param("i", $event_id);
-//     $delete_attendance_stmt->execute();
-
-//     // Step 3: Delete from student_attendance for each id_attendance
-//     if (!empty($attendance_ids)) {
-//         // Prepare the statement for deleting from student_attendance
-//         $delete_student_attendance_stmt = $db->db->prepare("DELETE FROM student_attendance WHERE id_attendance = ?");
-        
-//         // Loop through each id_attendance and execute the delete
-//         foreach ($attendance_ids as $id_attendance) {
-//             $delete_student_attendance_stmt->bind_param("i", $id_attendance);
-//             $delete_student_attendance_stmt->execute();
-//         }
-//     }
-
-//     // Step 4: Delete the event after attendances are deleted
-//     $delete_event_stmt = $db->db->prepare("DELETE FROM events WHERE id_event = ?");
-//     $delete_event_stmt->bind_param("i", $event_id);
-
-//     if ($delete_event_stmt->execute()) {
-//         // Redirect or display success message
-//         echo "<script>window.location.href='';</script>";
-//     } else {
-//         $error = "Error deleting event: " . $delete_event_stmt->error;
-//     }
-// }
-
-// Handle event editing
-if (isset($_POST['edit_event'])) {
-    $event_id = $_POST['event_id'];
-    $name_event = $_POST['name_event'];
-    $date_event = $_POST['date_event'];
-    $event_desc = $_POST['event_desc'];
-
-    // Update the event in the database
-    $stmt = $db->db->prepare("UPDATE events SET name_event = ?, date_event = ?, event_desc = ? WHERE id_event = ?");
-    $stmt->bind_param("sssi", $name_event, $date_event, $event_desc, $event_id);
-
-    if ($stmt->execute()) {
-        // Success, reload the page or redirect
-        echo "<script>window.location.href='';</script>";
-    } else {
-        $error = "Error updating event: " . $stmt->error;
-    }
+  if ($delete_attendance_stmt->execute()) {
+      header("Location: " . $_SERVER['PHP_SELF'] . "?content=admin-index&admin=event-management&admin_events=admin-events&status=success&message=Attendance+deleted+successfully.");
+      exit();
+  } else {
+      $error = "Error deleting attendance: " . $delete_attendance_stmt->error;
+      header("Location: " . $_SERVER['PHP_SELF'] . "?content=admin-index&admin=event-management&admin_events=admin-events&status=danger&message=" . urlencode($error));
+      exit();
+  }
 }
 
-// Fetch attendance records when editing an event
-if (isset($_GET['id'])) {
-    $event_id = $_GET['id'];
-
-    // Fetch attendance records associated with the event
-    $attendance_sql = "SELECT id_attendance, type_attendance, time_in, time_out FROM attendances WHERE id_event = ?";
-    $attendance_stmt = $db->db->prepare($attendance_sql);
-    $attendance_stmt->bind_param("i", $event_id);
-    $attendance_stmt->execute();
-    $attendance_result = $attendance_stmt->get_result();
-
-    // Store attendance records in an array
-    $attendances = [];
-    while ($attendance = $attendance_result->fetch_assoc()) {
-        $attendances[] = $attendance;
-    }
-}
+// Check for status messages
+$status = isset($_GET['status']) ? $_GET['status'] : '';
+$message = isset($_GET['message']) ? $_GET['message'] : '';
 
 
 // Initialize the selected semester variable
@@ -241,6 +227,7 @@ if (isset($_GET['show_all']) && $_GET['show_all'] == 'true') {
 <link rel="stylesheet" href=".//.//stylesheet/admin/admin-events.css">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 
+
 <div class="event-management-con">
     <div class="event-management-header">
         <span>Manage Events</span>
@@ -283,20 +270,33 @@ if (isset($_GET['show_all']) && $_GET['show_all'] == 'true') {
                         <p><strong>Event Date:</strong> <?php echo date("F j, Y", strtotime($event['date_event'])); ?></p>
                         <p><strong>Start Time:</strong> <?php echo date("h:i A", strtotime($event['event_start_time'])); ?></p>
                         <p><strong>End Time:</strong> <?php echo date("h:i A", strtotime($event['event_end_time'])); ?></p>
+                        <p><strong>Description:</strong> <?php echo $event['event_desc']; ?></p>
+
                         <p><strong>Created By:</strong> <?php echo $event['creator_firstname'] . ' ' . $event['creator_lastname']; ?></p>
                         <p><strong>Actions:</strong></p>
-                        <a href="#" data-bs-toggle="tooltip" data-bs-placement="top" title="Edit" onclick="openEditModal(
-                            '<?php echo $event['id_event']; ?>',
-                            '<?php echo addslashes($event['name_event']); ?>',
-                            '<?php echo date('Y-m-d', strtotime($event['date_event'])); ?>',
-                        )"><i class='fas fa-edit'></i></a>
-                        <a href="#" data-bs-toggle="tooltip" data-bs-placement="top" title="Delete" onclick="confirmDelete(<?php echo $event['id_event']; ?>)"><i class='fas fa-trash'></i></a>
-                        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#attendanceModal" onclick="document.getElementById('id_event').value='<?php echo $event['id_event']; ?>';">Add Attendance</button>
+                        <!-- Edit Button with Icon -->
+<button type="button" class="btn btn-success btn-sm" data-bs-toggle="tooltip" data-bs-placement="top" title="Edit" onclick="openEditModal(
+                          '<?php echo $event['id_event']; ?>',
+                          '<?php echo addslashes($event['name_event']); ?>',
+                          '<?php echo date('Y-m-d', strtotime($event['date_event'])); ?>',
+                          '<?php echo date('H:i', strtotime($event['event_start_time'])); ?>',
+                          '<?php echo date('H:i', strtotime($event['event_end_time'])); ?>',
+                          '<?php echo addslashes($event['event_desc']); ?>'
+                      )">
+    <i class="fas fa-edit"></i> Edit
+</button>
+
+<!-- Delete Button with Icon -->
+<button type="button" class="btn btn-danger btn-sm" data-bs-toggle="tooltip" data-bs-placement="top" title="Delete" onclick="confirmDelete(<?php echo $event['id_event']; ?>)">
+    <i class="fas fa-trash"></i> Delete
+</button>
+
+<!-- Add Attendance Button with Icon -->
+<button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#attendanceModal" onclick="document.getElementById('id_event').value='<?php echo $event['id_event']; ?>';">
+    <i class="bi bi-calendar-plus"></i> Add Attendance
+</button>
+
                         <h5>Attendances:</h5>
-                        <script>
-                              const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]')
-                              const tooltipList = [...tooltipTriggerList].map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl))
-                      </script>
 <div class="table-responsive">
   <table class="table table-sm table-striped">
     <thead>
@@ -310,51 +310,39 @@ if (isset($_GET['show_all']) && $_GET['show_all'] == 'true') {
         <th>Actions</th>
       </tr>
     </thead>
-    <tbody>
-      <?php 
-      // Fetch attendances associated with the current event (using event ID)
-      $attendanceQuery = "SELECT id_attendance, type_attendance, attendance_status, penalty_type, penalty_requirements, start_time, end_time FROM attendances WHERE id_event = ?";
-      $attendanceStmt = $db->db->prepare($attendanceQuery);
-      $attendanceStmt->bind_param("i", $event['id_event']);
-      $attendanceStmt->execute();
-      $attendances = $attendanceStmt->get_result();
+    <tbody id="attendanceTableBody_<?php echo $event['id_event']; ?>">
+  <!-- Attendance records will be dynamically loaded here -->
+</tbody>
 
-      // Display attendance records
-      if ($attendances->num_rows > 0):
-          while ($attendance = $attendances->fetch_assoc()): 
-      ?>
-        <tr>
-          <td><?php echo $attendance['type_attendance']; ?></td>
-          <td>
-            <?php 
-            if ($attendance['attendance_status'] == 'Ongoing') {
-                echo '<span class="badge bg-primary">Ongoing</span>';
-            } elseif ($attendance['attendance_status'] == 'Ended') {
-                echo '<span class="badge bg-secondary">Ended</span>';
-            } else {
-                echo '<span class="badge bg-warning text-dark">Pending</span>';
-            }
-            ?>
-          </td>
-          <td><?php echo date("h:i A", strtotime($attendance['start_time'])); ?></td>
-          <td><?php echo date("h:i A", strtotime($attendance['end_time'])); ?></td>
-          <td><span class="badge bg-info"><?php echo $attendance['penalty_type']; ?></span></td>
-          <td><?php echo $attendance['penalty_requirements']; ?></td>
-          <td><button class="btn btn-primary btn-sm">Show Records</button></td>
-          <!-- <a href="?content=admin-index&admin=attendance-records&id=<?php //echo $event['id_event']; ?>"><i class="fas fa-database"></i></a> -->
-        </tr>
-      <?php 
-          endwhile;
-      else: 
-      ?>
-        <tr>
-          <td colspan="7" class="text-center">No attendance records yet</td>
-        </tr>
-      <?php endif; ?>
-    </tbody>
   </table>
-
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const eventId = <?php echo $event['id_event']; ?>; 
+    const attendanceTableBody = document.getElementById('attendanceTableBody_<?php echo $event['id_event']; ?>');
+
+    function loadAttendances() {
+        const xhr = new XMLHttpRequest();
+        xhr.open('GET', `././php/admin/fetch-attendances.php?event_id=${eventId}`, true);
+
+        xhr.onload = function () {
+            if (xhr.status === 200) {
+                attendanceTableBody.innerHTML = xhr.responseText;
+            } else {
+                console.error('Error loading attendance data.');
+            }
+        };
+
+        xhr.send();
+    }
+
+    loadAttendances();
+    setInterval(loadAttendances, 30000);
+});
+
+</script>
+
 
 
                     </div>
@@ -363,6 +351,14 @@ if (isset($_GET['show_all']) && $_GET['show_all'] == 'true') {
         <?php endwhile; ?>
     </div>
     </div>
+
+    <!-- Tooltip Initialization Script (outside the loop) -->
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]');
+        const tooltipList = [...tooltipTriggerList].map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl));
+    });
+</script>
 
     <!-- Pagination Controls -->
     <div class="pagination">
@@ -525,8 +521,118 @@ function confirmDelete(eventId) {
       penaltyRequirements.removeAttribute('step');
     }
   }
+
 </script>
 
+<!-- Attendance Edit Modal Structure -->
+<div class="modal fade" id="EditAttendanceModal" tabindex="-1" aria-labelledby="attendanceModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="attendanceModalLabel">Edit Attendance Record</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        
+        <!-- Display Attendance Data Here -->
+        <div id="attendanceDataDisplay" class="mb-4 p-3 border rounded bg-light">
+          <h6>Attendance Details:</h6>
+          <p><strong>ID:</strong> <span id="display_id_attendance"></span></p>
+          <p><strong>Type:</strong> <span id="display_type_attendance"></span></p>
+          <p><strong>Penalty Type:</strong> <span id="display_penalty_type"></span></p>
+          <p><strong>Penalty Requirements:</strong> <span id="display_penalty_requirements"></span></p>
+          <p><strong>Start Time:</strong> <span id="display_start_time"></span></p>
+          <p><strong>End Time:</strong> <span id="display_end_time"></span></p>
+        </div>
+
+        <form method="POST" action="">
+          <input type="hidden" id="id_attendance" name="id_attendance" value="">
+          <div class="mb-3">
+            <label for="type_attendance" class="form-label">Type of Attendance</label>
+            <select class="form-select" id="type_attendance" name="type_attendance" required>
+              <option selected>Select Attendance Type</option>
+              <option value="IN">IN</option>
+              <option value="OUT">OUT</option>
+              <option value="SA">Surprise Attendance</option>
+            </select>
+          </div>
+          <div class="mb-3">
+            <label for="penalty_type" class="form-label">Penalty Type</label>
+            <select class="form-select" id="penalty_type" name="penalty_type" required onchange="updatePenaltyRequirements()">
+              <option selected>Select Penalty Type</option>
+              <option value="Fee">Fee</option>
+              <option value="Community Service">Community Service</option>
+              <option value="Donate">Donate</option>
+            </select>
+          </div>
+          <div class="mb-3">
+            <label for="penalty_requirements" class="form-label">Penalty Requirements</label>
+            <input type="text" class="form-control" id="penalty_requirements" name="penalty_requirements" placeholder="Enter penalty requirements" required>
+          </div>
+          <div class="mb-3">
+            <label for="start_time" class="form-label">Start Time</label>
+            <input type="time" class="form-control" id="start_time" name="start_time" required>
+          </div>
+          <div class="mb-3">
+            <label for="end_time" class="form-label">End Time</label>
+            <input type="time" class="form-control" id="end_time" name="end_time" required>
+          </div>
+          <button type="submit" class="btn btn-primary">Save Attendance</button>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// Function to open the modal and populate it with data for editing
+function openEditAttendanceModal(idAttendance, typeAttendance, penaltyType, penaltyRequirements, startTime, endTime, attendanceDate) {
+    console.log("idAttendance:", idAttendance);
+    console.log("typeAttendance:", typeAttendance);
+    console.log("penaltyType:", penaltyType);
+    console.log("penaltyRequirements:", penaltyRequirements);
+    console.log("startTime:", startTime);  
+    console.log("endTime:", endTime);      
+
+    // Populate modal form fields
+    document.getElementById('id_attendance').value = idAttendance;
+    document.getElementById('type_attendance').value = typeAttendance;
+    document.getElementById('penalty_type').value = penaltyType;
+    document.getElementById('penalty_requirements').value = penaltyRequirements;
+    document.getElementById('start_time').value = startTime;
+    document.getElementById('end_time').value = endTime;
+
+    // Display the data in plain text
+    document.getElementById('display_id_attendance').innerText = idAttendance;
+    document.getElementById('display_type_attendance').innerText = typeAttendance;
+    document.getElementById('display_penalty_type').innerText = penaltyType;
+    document.getElementById('display_penalty_requirements').innerText = penaltyRequirements;
+    document.getElementById('display_start_time').innerText = startTime;
+    document.getElementById('display_end_time').innerText = endTime;
+
+    // Update the penalty requirements input based on the penalty type selected
+    updatePenaltyRequirements();
+}
+
+// Function to update the penalty requirements input based on the selected penalty type
+function updatePenaltyRequirements() {
+    const penaltyType = document.getElementById('penalty_type').value;
+    const penaltyRequirements = document.getElementById('penalty_requirements');
+    
+    if (penaltyType === 'Fee') {
+      penaltyRequirements.type = 'number';
+      penaltyRequirements.placeholder = 'Enter amount (e.g., 4.00)';
+      penaltyRequirements.step = '0.01'; // Allows decimals
+    } else {
+      penaltyRequirements.type = 'text';
+      penaltyRequirements.placeholder = 'Enter penalty requirements';
+      penaltyRequirements.removeAttribute('step');
+    }
+  }
+</script>
 
 <!-- Delete Confirmation Modal -->
 <div class="modal fade" id="deleteEventModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="deleteEventModalLabel" aria-hidden="true">
@@ -549,6 +655,69 @@ function confirmDelete(eventId) {
     </div>
   </div>
 </div>
+
+<!-- Delete Attendance Confirmation Modal -->
+<div class="modal fade" id="deleteAttendanceModal" tabindex="-1" aria-labelledby="deleteAttendanceModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="deleteAttendanceModalLabel">Confirm Delete</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <form method="POST">
+        <div class="modal-body">
+          Are you sure you want to delete this attendance record?
+          <input type="hidden" name="id_attendance" id="delete_attendance_id">
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="submit" name="delete_attendance" class="btn btn-danger">Delete</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<div class="modal fade" id="alertModal" tabindex="-1" aria-labelledby="alertModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="alertModalLabel">Alert</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body" id="modalMessage"></div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<script>
+  function confirmDeleteAttendance(attendanceId) {
+    document.getElementById('delete_attendance_id').value = attendanceId;
+    var deleteModal = new bootstrap.Modal(document.getElementById('deleteAttendanceModal'));
+    deleteModal.show();
+}
+
+// Show alert modal if status and message exist
+const status = '<?php echo $status; ?>';
+const message = '<?php echo $message; ?>';
+
+if (status && message) {
+    const modalMessage = document.getElementById('modalMessage');
+    const modal = new bootstrap.Modal(document.getElementById('alertModal'));
+
+    modalMessage.innerHTML = message;
+    modal.show();
+
+    document.getElementById('alertModal').addEventListener('hidden.bs.modal', function () {
+        window.location.href = '?content=admin-index&admin=event-management&admin_events=admin-events';
+    });
+}
+
+</script>
 
 
 
@@ -610,4 +779,187 @@ $message = isset($_GET['message']) ? $_GET['message'] : '';
       window.location.href = '?content=admin-index&admin=event-management&admin_events=admin-events';
     });
   }
+</script>
+
+
+<!-- Modal Edit Event Structure -->
+<div class="modal fade" id="editEventModal" tabindex="-1" aria-labelledby="editEventModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="editEventModalLabel">Edit Event</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body" style="overflow: hidden;">
+        <form method="POST" action="">
+          <input type="hidden" id="edit_event_id" name="edit_event_id">
+          <div class="mb-3">
+            <label for="edit_name_event" class="form-label">Event Name</label>
+            <input type="text" class="form-control" id="edit_name_event" name="edit_name_event" placeholder="Enter event name" required>
+          </div>
+          <div class="mb-3">
+            <label for="edit_date_event" class="form-label">Event Date</label>
+            <input type="date" class="form-control" id="edit_date_event" name="edit_date_event" required>
+          </div>
+          <div class="mb-3">
+            <label for="edit_event_start_time" class="form-label">Start Time</label>
+            <input type="time" class="form-control" id="edit_event_start_time" name="edit_event_start_time" required>
+          </div>
+          <div class="mb-3">
+            <label for="edit_event_end_time" class="form-label">End Time</label>
+            <input type="time" class="form-control" id="edit_event_end_time" name="edit_event_end_time" required>
+          </div>
+          <div class="mb-3">
+            <label for="edit_event_desc" class="form-label">Event Description</label>
+            <textarea class="form-control" id="edit_event_desc" name="edit_event_desc" rows="3" placeholder="Enter event description"></textarea>
+          </div>
+          <button type="submit" name="update_event" class="btn btn-primary">Save Changes</button>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+function openEditModal(id, name, date, start_time, end_time, description) {
+    // Set modal fields with the event data
+    document.getElementById('edit_event_id').value = id;
+    document.getElementById('edit_name_event').value = name;
+    document.getElementById('edit_date_event').value = date;
+    document.getElementById('edit_event_start_time').value = start_time;
+    document.getElementById('edit_event_end_time').value = end_time;
+    document.getElementById('edit_event_desc').value = description; // Make sure this is set
+    // Show the modal
+    var myModal = new bootstrap.Modal(document.getElementById('editEventModal'));
+    myModal.show();
+}
+
+
+</script>
+
+
+<!-- Full-Screen Modal Structure -->
+<div class="modal fade" id="attendanceRecordsModal" tabindex="-1" aria-labelledby="attendanceRecordsModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-fullscreen"> <!-- This makes the modal fullscreen -->
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="attendanceRecordsModalLabel">Attendance Records</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <!-- Table with sample attendance records -->
+        <div class="table-responsive">
+          <table class="table table-sm table-striped">
+            <thead>
+              <tr>
+                <th>Type</th>
+                <th>Status</th>
+                <th>Start Time</th>
+                <th>End Time</th>
+                <th>Penalty Type</th>
+                <th>Penalty Requirements</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <!-- Sample Attendance Records -->
+              <tr>
+                <td>In-Person</td>
+                <td><span class="badge bg-primary">Ongoing</span></td>
+                <td>08:00 AM</td>
+                <td>10:00 AM</td>
+                <td><span class="badge bg-info">Late Arrival</span></td>
+                <td>Arrived 10 minutes late</td>
+                <td><button class="btn btn-info btn-sm">View Details</button></td>
+              </tr>
+              <tr>
+                <td>Online</td>
+                <td><span class="badge bg-secondary">Ended</span></td>
+                <td>11:00 AM</td>
+                <td>01:00 PM</td>
+                <td><span class="badge bg-warning text-dark">No Show</span></td>
+                <td>Did not attend the session</td>
+                <td><button class="btn btn-info btn-sm">View Details</button></td>
+              </tr>
+              <tr>
+                <td>In-Person</td>
+                <td><span class="badge bg-warning text-dark">Pending</span></td>
+                <td>02:00 PM</td>
+                <td>04:00 PM</td>
+                <td><span class="badge bg-success">On Time</span></td>
+                <td>Arrived on time</td>
+                <td><button class="btn btn-info btn-sm">View Details</button></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<div class="modal fade" id="addTimeModal" tabindex="-1" aria-labelledby="addTimeModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="addTimeModalLabel">Add Time to Attendance</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="addTimeForm">
+                    <input type="hidden" id="attendanceId" name="attendanceId">
+                    <div class="mb-3">
+                        <label for="additionalTime" class="form-label">Additional Time (in minutes)</label>
+                        <input type="number" class="form-control" id="additionalTime" name="additionalTime" min="1" required>
+                    </div>
+                    <button type="button" class="btn btn-primary" onclick="submitAddTime()">Save Changes</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function openEditTimeModal(attendanceId) {
+    // Ensure the modal and input elements exist
+    const attendanceIdInput = document.getElementById('attendanceId');
+    const addTimeModal = new bootstrap.Modal(document.getElementById('addTimeModal'));
+
+    if (attendanceIdInput) {
+        attendanceIdInput.value = attendanceId;
+        addTimeModal.show();  // Show the modal
+    } else {
+        console.error("Modal or input element not found.");
+    }
+}
+
+function submitAddTime() {
+    const attendanceId = document.getElementById('attendanceId').value;
+    const additionalTime = document.getElementById('additionalTime').value;
+
+    if (attendanceId && additionalTime) {
+        const xhr = new XMLHttpRequest();
+        xhr.open('POST', '././php/admin/add_time_action.php', true);
+        xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+
+        xhr.onload = function () {
+            if (xhr.status === 200) {
+                alert('End time successfully updated!');
+                location.reload();  // Reload the page to reflect changes
+            } else {
+                console.error('Error updating time.');
+            }
+        };
+
+        xhr.send(`attendanceId=${attendanceId}&additionalTime=${additionalTime}`);
+    }
+}
+
 </script>

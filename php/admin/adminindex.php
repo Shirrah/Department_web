@@ -33,6 +33,7 @@ if (isset($_SESSION['user_data'])) {
 <body>
 <link rel="stylesheet" href="http://localhost/Department_web/stylesheet/admin/admin-index.css">
 
+
 <style>
     /* Ensure the whole page takes the full height */
     html, body {
@@ -141,7 +142,7 @@ if (isset($_SESSION['user_data'])) {
                 <div class="collapse" id="studentsMenu">
                     <ul class="nav flex-column ps-3">
                         <li>
-                            <a href="?content=admin-index&admin=student-management" class="nav-link text-white"><i class="bi bi-chevron-right"></i> <span class="d-none d-sm-inline">Manage Students</span></a>
+                            <a href="?content=admin-index&admin=student management" class="nav-link text-white"><i class="bi bi-chevron-right"></i> <span class="d-none d-sm-inline">Manage Students</span></a>
                         </li>
                     </ul>
                 </div>
@@ -232,7 +233,7 @@ if (isset($_SESSION['user_data'])) {
                 include 'php/admin/admin-access-management.php';
                 break;
             case "student-management":
-                include 'php/admin/student-management.php';
+                include 'php/admin/student management.php';
                 break;
             case "event-management":
                 include 'php/admin/event-management.php';

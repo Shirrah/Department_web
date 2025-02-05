@@ -66,19 +66,8 @@ if (isset($_GET['show_attendances'])) {
                         <p><strong>Start Time:</strong> <?php echo date("h:i A", strtotime($event['event_start_time'])); ?></p>
                         <p><strong>End Time:</strong> <?php echo date("h:i A", strtotime($event['event_end_time'])); ?></p>
                         <p><strong>Created By:</strong> <?php echo $event['creator_firstname'] . ' ' . $event['creator_lastname']; ?></p>
-                        <p><strong>Actions:</strong></p>
-                        <a href="#" data-bs-toggle="tooltip" data-bs-placement="top" title="Edit" onclick="openEditModal(
-                            '<?php echo $event['id_event']; ?>',
-                            '<?php echo addslashes($event['name_event']); ?>',
-                            '<?php echo date('Y-m-d', strtotime($event['date_event'])); ?>',
-                        )"><i class='fas fa-edit'></i></a>
-                        <a href="#" data-bs-toggle="tooltip" data-bs-placement="top" title="Delete" onclick="confirmDelete(<?php echo $event['id_event']; ?>)"><i class='fas fa-trash'></i></a>
-                        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#attendanceModal" onclick="document.getElementById('id_event').value='<?php echo $event['id_event']; ?>';">Add Attendance</button>
-                        <h5>Attendances:</h5>
-                        <script>
-                              const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]')
-                              const tooltipList = [...tooltipTriggerList].map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl))
-                      </script>
+
+                        
 <div class="table-responsive">
   <table class="table table-sm table-striped">
     <thead>
@@ -89,7 +78,7 @@ if (isset($_GET['show_attendances'])) {
         <th>End Time</th>
         <th>Penalty Type</th>
         <th>Penalty Requirements</th>
-        <th>Actions</th>
+        <th>Status</th>
       </tr>
     </thead>
     <tbody>
@@ -122,7 +111,7 @@ if (isset($_GET['show_attendances'])) {
           <td><?php echo date("h:i A", strtotime($attendance['end_time'])); ?></td>
           <td><span class="badge bg-info"><?php echo $attendance['penalty_type']; ?></span></td>
           <td><?php echo $attendance['penalty_requirements']; ?></td>
-          <td><button class="btn btn-primary btn-sm">Show Records</button></td>
+          <td>Absent</td>
           <!-- <a href="?content=admin-index&admin=attendance-records&id=<?php //echo $event['id_event']; ?>"><i class="fas fa-database"></i></a> -->
         </tr>
       <?php 
