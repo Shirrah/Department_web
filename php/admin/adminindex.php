@@ -102,7 +102,7 @@ if (isset($_SESSION['user_data'])) {
     <div class="container-fluid d-flex justify-content-between">
         <!-- Sidebar Toggle Button for Mobile -->
 <button class="btn btn-dark d-lg-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#mobileSidebar" aria-controls="mobileSidebar">
-    ☰ Menu
+    ☰
 </button>
 
         <a class="navbar-brand text-white" href="#">
@@ -202,8 +202,8 @@ if (isset($_SESSION['user_data'])) {
 <!-- Offcanvas Sidebar for Mobile -->
 <div class="offcanvas offcanvas-start bg-dark text-white" tabindex="-1" id="mobileSidebar" aria-labelledby="mobileSidebarLabel">
     <div class="offcanvas-header">
-        <h5 class="offcanvas-title" id="mobileSidebarLabel"></h5>
-        <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+        <h5 class="offcanvas-title" id="mobileSidebarLabel">Menu</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas" aria-label="Close"></button>
     </div>
     <div class="offcanvas-body">
         <ul class="nav nav-pills flex-column mb-auto">
