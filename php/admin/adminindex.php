@@ -142,7 +142,7 @@ if (isset($_SESSION['user_data'])) {
                 <div class="collapse" id="studentsMenu">
                     <ul class="nav flex-column ps-3">
                         <li>
-                            <a href="?content=admin-index&admin=student management" class="nav-link text-white"><i class="bi bi-chevron-right"></i> <span class="d-none d-sm-inline">Manage Students</span></a>
+                            <a href="?content=admin-index&admin=student management" class="nav-link text-white action-btn"><i class="bi bi-chevron-right"></i> <span class="d-none d-sm-inline">Manage Students</span></a>
                         </li>
                     </ul>
                 </div>
@@ -159,7 +159,7 @@ if (isset($_SESSION['user_data'])) {
                 <div class="collapse" id="adminsMenu">
                     <ul class="nav flex-column ps-3">
                         <li>
-                            <a href="?content=admin-index&admin=admin-management" class="nav-link text-white"><i class="bi bi-chevron-right"></i>  <span class="d-none d-sm-inline">Manage Admins</span></a>
+                            <a href="?content=admin-index&admin=admin-management" class="nav-link text-white action-btn"><i class="bi bi-chevron-right"></i>  <span class="d-none d-sm-inline">Manage Admins</span></a>
                         </li>
                     </ul>
                 </div>
@@ -176,17 +176,17 @@ if (isset($_SESSION['user_data'])) {
                 <div class="collapse" id="eventsFeesMenu">
                     <ul class="nav flex-column ps-3">
                         <li>
-                            <a href="?content=admin-index&admin=event-management&admin_events=admin-events" class="nav-link text-white"><i class="bi bi-chevron-right"></i>   <span class="d-none d-sm-inline">Manage Events</span></a>
+                            <a href="?content=admin-index&admin=event-management&admin_events=admin-events" class="nav-link text-white action-btn"><i class="bi bi-chevron-right"></i>   <span class="d-none d-sm-inline">Manage Events</span></a>
                         </li>
                         <li>
-                            <a href="?content=admin-index&admin=event-management&admin_events=admin-fees" class="nav-link text-white"><i class="bi bi-chevron-right"></i>   <span class="d-none d-sm-inline">Manage Fees</span></a>
+                            <a href="?content=admin-index&admin=event-management&admin_events=admin-fees" class="nav-link text-white action-btn"><i class="bi bi-chevron-right"></i>   <span class="d-none d-sm-inline">Manage Fees</span></a>
                         </li>
                     </ul>
                 </div>
             </li>
 
             <li>
-                <a href="?content=admin-index&admin=ay-dashboard" class="nav-link text-white">
+                <a href="?content=admin-index&admin=ay-dashboard" class="nav-link text-white action-btn">
                     <i class="bi bi-calendar"></i>
                     <span class="ms-1 d-none d-sm-inline">Academic Year</span>
                 </a>
@@ -219,7 +219,13 @@ if (isset($_SESSION['user_data'])) {
 };
 </script>
 
-<div class="content">
+<div class="content" id="admin-content" style="position: relative; min-height: 300px;">
+    <div id="loading-indicator" style="display: none; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);">
+        <div class="spinner-border" style="color: tomato; width: 3rem; height: 3rem;" role="status">
+            <span class="visually-hidden">Loading...</span>
+        </div>
+    </div>
+
     <?php
         $admin_pg = $_GET['admin'] ?? "dashboard";
         switch ($admin_pg) {
@@ -232,8 +238,8 @@ if (isset($_SESSION['user_data'])) {
             case "admin-access-management":
                 include 'php/admin/admin-access-management.php';
                 break;
-            case "student-management":
-                include 'php/admin/student management.php';
+            case "student management":
+                include 'php/admin/student-management.php';
                 break;
             case "event-management":
                 include 'php/admin/event-management.php';
@@ -252,7 +258,57 @@ if (isset($_SESSION['user_data'])) {
         }
     ?>
 </div>
+
+
 </div>
     </div>
 </body>
 </html>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    function loadContent(url) {
+        let contentDiv = document.getElementById("admin-content");
+        let loadingIndicator = document.getElementById("loading-indicator");
+
+        // Show loading spinner and clear content
+        loadingIndicator.style.display = "block";
+        contentDiv.innerHTML = ""; 
+        contentDiv.appendChild(loadingIndicator);
+
+        fetch(url)
+            .then(response => response.text())
+            .then(data => {
+                let parser = new DOMParser();
+                let doc = parser.parseFromString(data, "text/html");
+                let newContent = doc.querySelector("#admin-content").innerHTML;
+
+                // Replace content
+                contentDiv.innerHTML = newContent;
+
+                // Update URL without refreshing
+                history.pushState(null, "", url);
+            })
+            .catch(error => {
+                console.error("Error loading content:", error);
+                contentDiv.innerHTML = "<p class='text-danger text-center'>Failed to load content.</p>";
+            })
+            .finally(() => {
+                loadingIndicator.style.display = "none"; // Hide loading spinner
+            });
+    }
+
+    document.querySelectorAll(".action-btn").forEach(link => {
+        link.addEventListener("click", function (e) {
+            e.preventDefault();
+            let page = this.getAttribute("href");
+            loadContent(page);
+        });
+    });
+
+    window.addEventListener("popstate", function () {
+        location.reload();
+    });
+});
+
+</script>
