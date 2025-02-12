@@ -174,6 +174,8 @@ ob_end_flush();
           <div class="divider"></div>
           <a class="nav-link" href="#" ><i class="bi bi-box-arrow-in-up"></i>Import</a>
           <div class="divider"></div>
+          <button  id="enrollButton" onclick="openEnrollForm()" class="nav-link" href="#" ><i class="bi bi-box-arrow-in-up"></i>Enroll Student</button>
+          <div class="divider"></div>
         </div>
       </div>
     </div>
@@ -185,7 +187,7 @@ ob_end_flush();
     <div class="student-table-con">
 
         <!-- Enroll Form -->
-        <button id="enrollButton" onclick="openEnrollForm()">Add Student</button>
+        <!-- <button id="enrollButton" onclick="openEnrollForm()">Add Student</button> -->
 
 
         <!-- Search & Show All -->
