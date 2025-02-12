@@ -80,3 +80,25 @@
     font-weight: 1000;
     font-family: 'Open Sans', sans-serif;
 }
+
+/* Extra small devices (phones) */
+@media only screen and (max-width: 576px) {
+    .admin-dashboard-con{
+        padding: 10px;
+        margin: 10px;
+    }
+
+    .dashcard-item{
+        flex-direction: column;
+    }
+}
+
+/* Small devices (large phones) */
+@media only screen and (min-width: 577px) and (max-width: 768px) {
+
+}
+
+/* Medium devices (tablets) */
+@media only screen and (min-width: 769px) and (max-width: 992px) {
+
+}
