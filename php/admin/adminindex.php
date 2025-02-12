@@ -206,9 +206,9 @@ if (isset($_SESSION['user_data'])) {
         <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Close"></button>
     </div>
     <div class="offcanvas-body">
-    <ul class="nav nav-pills flex-column mb-auto">
+        <ul class="nav nav-pills flex-column mb-auto">
             <li class="nav-item">
-                <a href="?content=admin-index&admin=dashboard" class="nav-link text-white action-btn">
+                <a href="?content=admin-index&admin=dashboard" class="nav-link text-white action-btn sidebar-link">
                     <i class="bi bi-speedometer2"></i>
                     <span class="">Dashboard</span>
                 </a>
@@ -224,12 +224,11 @@ if (isset($_SESSION['user_data'])) {
                 <div class="collapse" id="studentsMenu">
                     <ul class="nav flex-column ps-3">
                         <li>
-                            <a href="?content=admin-index&admin=student management" class="nav-link text-white action-btn"><i class="bi bi-chevron-right"></i> <span class="">Manage Students</span></a>
+                            <a href="?content=admin-index&admin=student management" class="nav-link text-white action-btn sidebar-link"><i class="bi bi-chevron-right"></i> <span class="">Manage Students</span></a>
                         </li>
                     </ul>
                 </div>
             </li>
-
             <li>    
                 <a href="#adminsMenu" class="nav-link text-white d-flex justify-content-between align-items-center collapsed" data-bs-toggle="collapse" role="button" aria-expanded="false">
                     <span>
@@ -241,12 +240,11 @@ if (isset($_SESSION['user_data'])) {
                 <div class="collapse" id="adminsMenu">
                     <ul class="nav flex-column ps-3">
                         <li>
-                            <a href="?content=admin-index&admin=admin-management" class="nav-link text-white action-btn"><i class="bi bi-chevron-right"></i>  <span class="">Manage Admins</span></a>
+                            <a href="?content=admin-index&admin=admin-management" class="nav-link text-white action-btn sidebar-link"><i class="bi bi-chevron-right"></i>  <span class="">Manage Admins</span></a>
                         </li>
                     </ul>
                 </div>
             </li>
-
             <li>
                 <a href="#eventsFeesMenu" class="nav-link text-white d-flex justify-content-between align-items-center collapsed" data-bs-toggle="collapse" role="button" aria-expanded="false">
                     <span>
@@ -258,17 +256,16 @@ if (isset($_SESSION['user_data'])) {
                 <div class="collapse" id="eventsFeesMenu">
                     <ul class="nav flex-column ps-3">
                         <li>
-                            <a href="?content=admin-index&admin=event-management&admin_events=admin-events" class="nav-link text-white action-btn"><i class="bi bi-chevron-right"></i>   <span class="">Manage Events</span></a>
+                            <a href="?content=admin-index&admin=event-management&admin_events=admin-events" class="nav-link text-white action-btn sidebar-link"><i class="bi bi-chevron-right"></i>   <span class="">Manage Events</span></a>
                         </li>
                         <li>
-                            <a href="?content=admin-index&admin=event-management&admin_events=admin-fees" class="nav-link text-white action-btn"><i class="bi bi-chevron-right"></i>   <span class="">Manage Fees</span></a>
+                            <a href="?content=admin-index&admin=event-management&admin_events=admin-fees" class="nav-link text-white action-btn sidebar-link"><i class="bi bi-chevron-right"></i>   <span class="">Manage Fees</span></a>
                         </li>
                     </ul>
                 </div>
             </li>
-
             <li>
-                <a href="?content=admin-index&admin=ay-dashboard" class="nav-link text-white action-btn">
+                <a href="?content=admin-index&admin=ay-dashboard" class="nav-link text-white action-btn sidebar-link">
                     <i class="bi bi-calendar"></i>
                     <span class="">Academic Year</span>
                 </a>
@@ -276,6 +273,23 @@ if (isset($_SESSION['user_data'])) {
         </ul>
     </div>
 </div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+    let sidebarLinks = document.querySelectorAll(".sidebar-link");
+    let mobileSidebar = document.getElementById("mobileSidebar");
+
+    sidebarLinks.forEach(link => {
+        link.addEventListener("click", function () {
+            let offcanvas = bootstrap.Offcanvas.getInstance(mobileSidebar);
+            if (offcanvas) {
+                offcanvas.hide(); // Closes the sidebar
+            }
+        });
+    });
+});
+
+</script>
 
 <script>
    window.onload = function() {
