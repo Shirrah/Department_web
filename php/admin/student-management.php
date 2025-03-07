@@ -174,7 +174,11 @@ ob_end_flush();
           <div class="divider"></div>
           <a class="nav-link" href="#" ><i class="bi bi-box-arrow-in-up"></i>Import</a>
           <div class="divider"></div>
-          <button  id="enrollButton" onclick="openEnrollForm()" class="nav-link" href="#" ><i class="bi bi-box-arrow-in-up"></i>Enroll Student</button>
+          <!-- Enroll Button to Trigger Modal -->
+<button id="enrollButton" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#enrollFormModal">
+    <i class="bi bi-box-arrow-in-up"></i> Enroll Student
+</button>
+
           <div class="divider"></div>
         </div>
       </div>
@@ -377,45 +381,60 @@ ob_end_flush();
         </div>
 </div>
 
-<!-- Enrollment Form Modal -->
-<div id="enrollFormModal" class="modal">
-    <div class="modal-content">
-        <span class="close" onclick="closeEnrollForm()">&times;</span>
-        <h2>Add Student</h2>
-        <form class="enrollForm" method="POST" action="">
-            <label for="id_student">Identification Number (ID):</label>
-            <input type="text" id="id_student" name="id_student" required>
-
-            <input type="text" id="semester_ID" name="semester_ID" value="<?php echo htmlspecialchars($selected_semester); ?>" required>
-
-            <label for="pass_student">Password:</label>
-            <input type="password" id="pass_student" name="pass_student" required>
-
-            <label for="lastname_student">Lastname:</label>
-            <input type="text" id="lastname_student" name="lastname_student" required>
-
-            <label for="firstname_student">Firstname:</label>
-            <input type="text" id="firstname_student" name="firstname_student" required>
-            
-            <input type="hidden" id="role_student" name="role_student" value="Student" required>
-
-
-            <label for="year_student">Year:</label>
-                <select id="year_student" name="year_student" required>
-                <option value="" disabled selected>Select Year</option>
-                <option value="1">1st Year</option>
-                <option value="2">2nd Year</option>
-                <option value="3">3rd Year</option>
-                <option value="4">4th Year</option>
-                </select>
-
-
-            <input type="submit" value="Add Student">
-        </form>
+<!-- Bootstrap Enrollment Form Modal -->
+<div class="modal fade" id="enrollFormModal" tabindex="-1" aria-labelledby="enrollFormModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="enrollFormModalLabel">Add Student</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" style="overflow: hidden;">
+                <form class="enrollForm" method="POST" action="">
+                    <div class="mb-3">
+                        <label for="id_student" class="form-label">Identification Number (ID):</label>
+                        <input type="text" class="form-control" id="id_student" name="id_student" required>
+                    </div>
+                    
+                    <input type="hidden" id="semester_ID" name="semester_ID" value="<?php echo htmlspecialchars($selected_semester); ?>" required>
+                    
+                    <div class="mb-3">
+                        <label for="pass_student" class="form-label">Password:</label>
+                        <input type="password" class="form-control" id="pass_student" name="pass_student" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="lastname_student" class="form-label">Lastname:</label>
+                        <input type="text" class="form-control" id="lastname_student" name="lastname_student" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="firstname_student" class="form-label">Firstname:</label>
+                        <input type="text" class="form-control" id="firstname_student" name="firstname_student" required>
+                    </div>
+                    
+                    <input type="hidden" id="role_student" name="role_student" value="Student" required>
+                    
+                    <div class="mb-3">
+                        <label for="year_student" class="form-label">Year:</label>
+                        <select class="form-select" id="year_student" name="year_student" required>
+                            <option value="" disabled selected>Select Year</option>
+                            <option value="1">1st Year</option>
+                            <option value="2">2nd Year</option>
+                            <option value="3">3rd Year</option>
+                            <option value="4">4th Year</option>
+                        </select>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary">Add Student</button>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
     </div>
 </div>
-
-
 
 <script>
 // JavaScript to open the modal

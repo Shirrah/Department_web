@@ -209,61 +209,6 @@
 }
 
 
-/* Form Styles */
-.enrollForm {
-    display: flex;
-    flex-direction: column;
-}
-
-.enrollForm  label {
-    margin: 10px 0 5px;
-    font-size: 16px;
-    font-weight: bold;
-}
-
-.enrollForm  input[type="text"],
-.enrollForm  input[type="password"], .enrollForm select {
-    padding: 10px;
-    margin-bottom: 15px;
-    border: 1px solid #ccc;
-    border-radius: 5px;
-    font-size: 14px;
-}
-
-.enrollForm  input[type="submit"] {
-    padding: 12px;
-    background-color: #f94415;
-    color: white;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-    font-size: 16px;
-    transition: background-color 0.3s;
-}
-
-.enrollForm  input[type="submit"]:hover {
-    background-color: tomato;
-}
-
-/* Style for "Enroll Student" button */
-#enrollButton {
-    margin-top: 10px;
-    padding: 10px;
-    background-color: #f94415;
-    color: white;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-    font-size: 14px;
-    font-weight: 600;
-    margin-bottom: 20px;
-    font-family: "Open-sans", sans-serif;
-}
-
-#enrollButton:hover {
-    background-color: tomato;
-}
-
 /* Responsive design for smaller screens */
 @media screen and (max-width: 600px) {
     .modal-content {

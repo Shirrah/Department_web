@@ -18,9 +18,12 @@
     </button>
     <div class="header-nav-con collapse navbar-collapse" id="navbarNav">
       <ul class="navbar-nav ms-auto">
-        <li class="nav-item">
-          <a id="installBtn" role="button" title="Progress Web App" class="btn btn-primary"><i class="bi bi-download me-1"></i>Install PWA App</a>
-        </li>
+      <li class="nav-item">
+  <a id="installBtn" role="button" title="Progress Web App" class="btn btn-primary">
+    <i class="bi bi-download me-1"></i>Install PWA App
+  </a>
+</li>
+
         <?php 
           require_once "php/db-conn.php";
           $db = new Database();
@@ -42,35 +45,49 @@
   
 </style>
 <script>
-let deferredPrompt; // To store the beforeinstallprompt event
+let deferredPrompt;
 const installBtn = document.getElementById('installBtn');
 
-// Listen for the beforeinstallprompt event
+// Function to check if PWA is installed
+function checkIfInstalled() {
+  const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
+  
+  if (isStandalone) {
+    installBtn.style.display = 'none'; // Hide install button if installed
+  } else {
+    installBtn.style.display = 'block'; // Show button if not installed
+  }
+}
+
+// Listen for beforeinstallprompt event (works in Chrome, Edge, etc.)
 window.addEventListener('beforeinstallprompt', (event) => {
-  // Prevent the default mini-infobar from appearing on mobile
   event.preventDefault();
-  // Store the event so it can be triggered later
   deferredPrompt = event;
-  // Show the install button
-  installBtn.style.display = 'block';
+
+  // Show button only if PWA is not installed
+  checkIfInstalled();
 });
 
-// Add click listener to the install button
+// Handle install button click (works in Chrome, Edge, etc.)
 installBtn.addEventListener('click', () => {
-  // Make sure the deferredPrompt is available
   if (deferredPrompt) {
-    // Show the install prompt
     deferredPrompt.prompt();
-    // Wait for the user to respond to the prompt
     deferredPrompt.userChoice.then((choiceResult) => {
       if (choiceResult.outcome === 'accepted') {
         console.log('User accepted the install prompt');
-      } else {
-        console.log('User dismissed the install prompt');
+        installBtn.style.display = 'none'; // Hide button after install
       }
-      // Clear the deferredPrompt so it can't be reused
       deferredPrompt = null;
     });
   }
 });
+
+// Hide the button when the app is installed (Chrome, Edge)
+window.addEventListener('appinstalled', () => {
+  console.log('PWA was installed');
+  installBtn.style.display = 'none';
+});
+
+// Run check on page load
+window.onload = checkIfInstalled;
 </script>
