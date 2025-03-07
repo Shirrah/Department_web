@@ -209,21 +209,6 @@
 }
 
 
-/* Responsive design for smaller screens */
-@media screen and (max-width: 600px) {
-    .modal-content {
-        width: 90%;
-        padding: 20px;
-    }
-
-    #enrollButton {
-        width: 100%;
-        padding: 12px;
-        font-size: 18px;
-    }
-}
-
-
 .sort-arrow {
     margin-left: 5px;
     font-size: 14px;
