@@ -8,13 +8,17 @@ if (isset($_GET['event_id'])) {
     $eventId = $_GET['event_id'];
 
     // Get the event date
-    $eventDateQuery = "SELECT date_event FROM events WHERE id_event = ?";
+    $eventDateQuery = "SELECT name_event, date_event FROM events WHERE id_event = ?";
+
     $eventDateStmt = $db->db->prepare($eventDateQuery);
     $eventDateStmt->bind_param("i", $eventId);
     $eventDateStmt->execute();
     $eventDateResult = $eventDateStmt->get_result();
     $eventDateRow = $eventDateResult->fetch_assoc();
-    $eventDate = $eventDateRow['date_event']; // Assuming format is YYYY-MM-DD
+    
+    $eventName = $eventDateRow['name_event']; // Store the event name
+    $eventDate = $eventDateRow['date_event']; // Store the event date
+    
 
     $attendanceQuery = "SELECT id_attendance, type_attendance, penalty_type, penalty_requirements, start_time, end_time, attendance_status
                         FROM attendances WHERE id_event = ?";
@@ -89,9 +93,18 @@ if (isset($_GET['event_id'])) {
                    <button class="btn btn-danger btn-sm" onclick="confirmDeleteAttendance(<?php echo $attendance['id_attendance']; ?>)">
                         <i class="fas fa-trash"></i> Delete
                     </button>
-                    <button class="btn btn-info btn-sm" data-bs-toggle="modal" data-bs-target="#attendanceRecordsModal" onclick="showAttendanceRecords(<?php echo $attendance['id_attendance']; ?>)">
-                        <i class="fas fa-database"></i> Show Records
-                    </button>
+                    <button class="btn btn-info btn-sm" data-bs-toggle="modal" data-bs-target="#attendanceRecordsModal"
+    onclick="showAttendanceRecords(
+        <?php echo $attendance['id_attendance']; ?>,
+        '<?php echo addslashes($eventDateRow['name_event']); ?>',
+        '<?php echo addslashes($attendance['type_attendance']); ?>',
+        '<?php echo date("h:i A", strtotime($attendance['start_time'])); ?>',
+        '<?php echo date("h:i A", strtotime($attendance['end_time'])); ?>'
+    )">
+    <i class="fas fa-database"></i> Show Records
+</button>
+
+
                 </td>
             </tr>
 <?php

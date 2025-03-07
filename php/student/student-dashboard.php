@@ -3,145 +3,231 @@
 require_once "././php/db-conn.php";
 $db = new Database();
 
-
 // Check if the user is logged in
 if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] != 'yes') {
-    // Redirect to login if not logged in
     header("location: ../index.php?content=log-in");
     exit();
 }
 
-// Get the user ID from the session (either admin or student)
+// Get user ID (admin or student)
 $user_id = $_SESSION['user_data']['id_admin'] ?? $_SESSION['user_data']['id_student'];
 
-// Handle the semester selection from GET request and store it in session for this user
+// Handle semester selection
 if (isset($_GET['semester']) && !empty($_GET['semester'])) {
-    // Store the selected semester for the user in session
     $_SESSION['selected_semester'][$user_id] = $_GET['semester'];
 }
 
-// Use the selected semester from the session or default to the latest semester
-if (isset($_SESSION['selected_semester'][$user_id]) && !empty($_SESSION['selected_semester'][$user_id])) {
+// Determine the selected semester
+if (!empty($_SESSION['selected_semester'][$user_id])) {
     $selected_semester = $_SESSION['selected_semester'][$user_id];
 } else {
-    // Get the latest semester from the database
-    $query = "SELECT semester_ID, academic_year, semester_type FROM semester ORDER BY semester_ID DESC LIMIT 1";
+    $query = "SELECT semester_ID FROM semester ORDER BY semester_ID DESC LIMIT 1";
     $stmt = $db->db->prepare($query);
     $stmt->execute();
     $result = $stmt->get_result();
-    if ($result && $row = $result->fetch_assoc()) {
-        $selected_semester = $row['semester_ID'];
-    } else {
-        $selected_semester = null;
-    }
+    $selected_semester = ($result && $row = $result->fetch_assoc()) ? $row['semester_ID'] : null;
 }
 
-// Fetch all semesters for dropdown
-$sql = "SELECT semester_ID, academic_year, semester_type FROM semester";
-$stmt = $db->db->prepare($sql);
-$stmt->execute();
-$allSemesters = $stmt->get_result();
+// Fetch semesters for dropdown
+$semesters = $db->db->query("SELECT semester_ID, academic_year, semester_type FROM semester");
 
-
-// Query to count events in the selected semester
-$query = "SELECT COUNT(*) AS events_count FROM events WHERE semester_ID = ?";
-$stmt = $db->db->prepare($query);
+// Count total events
+$stmt = $db->db->prepare("SELECT COUNT(*) AS events_count FROM events WHERE semester_ID = ?");
 $stmt->bind_param("s", $selected_semester);
 $stmt->execute();
-$result = $stmt->get_result();
+$events_count = $stmt->get_result()->fetch_assoc()['events_count'] ?? 0;
 
-// Check if the query was successful
-if ($result) {
-    $row = $result->fetch_assoc();
-    $events_count = $row['events_count'];
-} else {
-    echo "<p>Error retrieving event count.</p>";
-}
-
-// Query to count fees in the selected semester
-$query = "SELECT COUNT(*) AS fees_count FROM payments WHERE semester_ID = ?";
-$stmt = $db->db->prepare($query);
+// Count total fees
+$stmt = $db->db->prepare("SELECT COUNT(*) AS fees_count FROM payments WHERE semester_ID = ?");
 $stmt->bind_param("s", $selected_semester);
 $stmt->execute();
-$result = $stmt->get_result();
-
-// Check if the query was successful
-if ($result) {
-    $row = $result->fetch_assoc();
-    $fees_count = $row['fees_count'];
-} else {
-    echo "<p>Error retrieving fee count.</p>";
-}
-
-// Fetch all semester data to populate the dropdown
-$sql = "SELECT semester_ID, academic_year, semester_type FROM semester";
-$result = $db->db->query($sql);
-
+$fees_count = $stmt->get_result()->fetch_assoc()['fees_count'] ?? 0;
 ?>
 
-
-<link rel="stylesheet" href=".//.//stylesheet/admin/dashboard.css">
-
-<div class="admin-dashboard-body">
-    <div class="admin-dashboard-con">
-        <div class="report-summary-header">
-            <span>Report Summary</span>
-        </div>
-        <div class="semester-select">
+<div class="container mt-4">
+    <div class="card shadow-sm p-4">
+        <h4 class="mb-3"><strong>Report Summary</strong></h4>
+        
+        <!-- Semester Selection -->
         <form method="GET" action="index.php" id="semesterForm">
-    <input type="hidden" name="content" value="admin-index">
-    <input type="hidden" name="admin" value="dashboard">
-    <select class="form-select" style="width: min-content;" name="semester" id="semester" onchange="this.form.submit()">
-        <?php
-        if ($result->num_rows > 0) {
-            while ($row = $result->fetch_assoc()) {
-                $semester_id = $row['semester_ID'];
-                $academic_year = $row['academic_year'];
-                $semester_type = $row['semester_type'];
+            <input type="hidden" name="content" value="student-index">
+            <input type="hidden" name="admin" value="dashboard">
+            <select class="form-select w-auto mb-3" name="semester" id="semester" onchange="this.form.submit()">
+                <?php while ($row = $semesters->fetch_assoc()): ?>
+                    <option value="<?php echo $row['semester_ID']; ?>" <?php echo ($row['semester_ID'] == $selected_semester) ? 'selected' : ''; ?>>
+                        <?php echo htmlspecialchars($row['semester_type'] . ' - ' . $row['academic_year']); ?>
+                    </option>
+                <?php endwhile; ?>
+            </select>
+        </form>
 
-                // Check if this semester is the selected one
-                $selected = ($semester_id == $selected_semester) ? 'selected' : '';
-                echo "<option value='$semester_id' $selected>$semester_type - $academic_year</option>";
-            }
-        } else {
-            echo "<option value=''>No semesters available</option>";
-        }
-        ?>
-    </select>
-</form>
-
+        <!-- Dashboard Cards -->
+        <div class="row">
+            <div class="col-md-6">
+                <div class="card border-primary shadow-sm">
+                    <div class="card-body text-center">
+                        <h5 class="card-title">Total Events</h5>
+                        <p class="display-5 text-primary"> <?php echo htmlspecialchars($events_count); ?> </p>
+                        <a href="?content=student-index&student=student-events" class="btn btn-primary btn-sm">View Events</a>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card border-success shadow-sm">
+                    <div class="card-body text-center">
+                        <h5 class="card-title">Total Fees</h5>
+                        <p class="display-5 text-success"> <?php echo htmlspecialchars($fees_count); ?> </p>
+                        <a href="?content=student-index&student=student-fees" class="btn btn-success btn-sm">View Fees</a>
+                    </div>
+                </div>
+            </div>
         </div>
-        <div class="dashcard-item">
-            <div class="dashboard-card">
-                <div class="card-details">
-                    <h2>Total events</h2>
-                    <a class="dash-view-count" href=""><?php echo htmlspecialchars($events_count); ?></a>
-                    <a class="dash-view-loc" href="?content=admin-index&admin=event-management&admin_events=admin-events">View Events</a>
-                </div>
-                <img src=".//.//assets/images/event.png" alt="">
-            </div>
-            <div class="dashboard-card">
-                <div class="card-details">
-                    <h2>Total fees</h2>
-                    <a class="dash-view-count" href=""><?php echo htmlspecialchars($fees_count); ?></a>
-                    <a class="dash-view-loc" href="?content=admin-index&admin=event-management&admin_events=admin-fees">View Fees</a>
-                </div>
-                <img src=".//.//assets/images/money.png" alt="">
-            </div>
+
+        <!-- Show Report Button -->
+        <div class="mt-3">
+            <button type="button" class="btn btn-info" data-bs-toggle="modal" data-bs-target="#reportModal">
+                Show Report
+            </button>
         </div>
     </div>
 </div>
 
-<script>
-  window.addEventListener('load', function () {
-    // Automatically submit the form once when the page loads
-    if (!sessionStorage.getItem('formSubmitted')) {
-      document.getElementById('semesterForm').submit(); // Submit the form
-      sessionStorage.setItem('formSubmitted', 'true'); // Mark that the form has been submitted
-    }
-  });
+<!-- Report Modal -->
+<div class="modal fade" id="reportModal" tabindex="-1" aria-labelledby="reportModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="reportModalLabel">Attedance & Fee Report</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" id="reportContent">
 
-  window.addEventListener('unload', function () {
-    navigator.sendBeacon('http://localhost/Department_web//php/logout.php'); // Sends a logout request when the tab is closed
-  });
+                <?php
+                // Include the database connection
+                require_once "././php/db-conn.php";
+                $db = new Database();
+
+                // Ensure the user is logged in
+                if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] != 'yes') {
+                    header("location: ../index.php?content=log-in");
+                    exit();
+                }
+
+                // Get the logged-in student's ID
+                $id_student = $_SESSION['user_data']['id_student'];
+
+                // Fetch student details (full name and year level)
+                $queryStudent = "SELECT firstname_student, lastname_student, year_student FROM student WHERE id_student = ?";
+                $stmtStudent = $db->db->prepare($queryStudent);
+                $stmtStudent->bind_param("s", $id_student);
+                $stmtStudent->execute();
+                $resultStudent = $stmtStudent->get_result();
+                $student = $resultStudent->fetch_assoc();
+                ?>
+
+                <!-- Student Info -->
+                <h5 class="mb-3">
+                    Fullname: <strong><?php echo htmlspecialchars($student['firstname_student'] . " " . $student['lastname_student']); ?></strong>
+                    <br>
+                    Year Level: <strong><?php echo htmlspecialchars($student['year_student']); ?></strong>
+                </h5>
+
+                <!-- Event Attendance Table -->
+                <div class="table-responsive">
+                    <table class="table table-bordered align-middle text-center">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Event Name</th>
+                                <th>Attendance Type</th>
+                                <th>Date</th>
+                                <th>Status</th>
+                                <th>Penalty Requirements</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php
+                            // Fetch all attendance records for the logged-in student
+                            $queryAttendance = "
+                                SELECT 
+                                    e.name_event, 
+                                    a.type_attendance, 
+                                    sa.date_attendance, 
+                                    sa.status_attendance, 
+                                    sa.Penalty_requirements
+                                FROM student_attendance sa
+                                JOIN attendances a ON sa.id_attendance = a.id_attendance
+                                JOIN events e ON a.id_event = e.id_event
+                                WHERE sa.id_student = ?
+                                ORDER BY sa.date_attendance DESC";
+                            $stmtAttendance = $db->db->prepare($queryAttendance);
+                            $stmtAttendance->bind_param("s", $id_student);
+                            $stmtAttendance->execute();
+                            $resultAttendance = $stmtAttendance->get_result();
+
+                            // Display records
+                            while ($row = $resultAttendance->fetch_assoc()): ?>
+                                <tr>
+                                    <td><?php echo htmlspecialchars($row['name_event']); ?></td>
+                                    <td><?php echo htmlspecialchars($row['type_attendance']); ?></td>
+                                    <td><?php echo htmlspecialchars($row['date_attendance']); ?></td>
+                                    <td>
+                                        <?php if ($row['status_attendance'] === 'Present'): ?>
+                                            <span class="badge bg-success"><i class="bi bi-check-circle"></i> Present</span>
+                                        <?php else: ?>
+                                            <span class="badge bg-danger"><i class="bi bi-x-circle"></i> Absent</span>
+                                        <?php endif; ?>
+                                    </td>
+                                    <td>
+                                        <?php if ($row['Penalty_requirements'] == 0): ?>
+                                            <span class="text-success"><i class="bi bi-check-circle-fill"></i></span>
+                                        <?php else: ?>
+                                            <?php echo htmlspecialchars($row['Penalty_requirements']); ?>
+                                        <?php endif; ?>
+                                    </td>
+                                </tr>
+                            <?php endwhile; ?>
+                        </tbody>
+                    </table>
+                </div>
+
+            </div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+
+<script>
+    // Print Modal Content
+function printReport() {
+    var content = document.getElementById("reportContent").innerHTML;
+    var printWindow = window.open("", "", "width=900,height=700");
+    printWindow.document.write("<html><head><title>Print Report</title>");
+    printWindow.document.write("<link rel='stylesheet' href='https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css'>");
+    printWindow.document.write("</head><body>");
+    printWindow.document.write(content);
+    printWindow.document.write("</body></html>");
+    printWindow.document.close();
+    printWindow.print();
+}
+
+// Download Report as PDF
+function downloadPDF() {
+    var content = document.getElementById("reportContent").innerHTML;
+    var opt = {
+        margin: 10,
+        filename: "Student_Report.pdf",
+        image: { type: "jpeg", quality: 0.98 },
+        html2canvas: { scale: 2 },
+        jsPDF: { unit: "mm", format: "a4", orientation: "portrait" }
+    };
+    html2pdf().from(content).set(opt).save();
+}
+
+</script>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        if (!sessionStorage.getItem('formSubmitted')) {
+            document.getElementById('semesterForm').submit();
+            sessionStorage.setItem('formSubmitted', 'true');
+        }
+    });
 </script>

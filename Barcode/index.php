@@ -12,7 +12,7 @@ if ($database->error) {
 
 // Fetch events from the database
 $event_query = "SELECT * FROM events";
-$events = $database->conn->query($event_query);
+$events = $database->db->query($event_query);
 ?>
 
 <!DOCTYPE html>

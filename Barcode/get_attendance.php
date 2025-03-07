@@ -16,7 +16,7 @@ if (isset($_GET['event_id'])) {
 
     // Use prepared statements to fetch attendance options based on the selected event
     $attendance_query = "SELECT * FROM attendances WHERE id_event = ?";
-    $stmt = $database->conn->prepare($attendance_query);
+    $stmt = $database->db->prepare($attendance_query);
     $stmt->bind_param('i', $event_id);
     $stmt->execute();
     $result = $stmt->get_result();

@@ -30,7 +30,6 @@
     color: black;
     font-weight: bold;
     cursor: pointer;
-    position: sticky;
     user-select: none;
     top: 0;
 }

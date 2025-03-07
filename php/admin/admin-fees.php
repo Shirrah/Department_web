@@ -122,256 +122,275 @@ if (isset($_POST['edit_fee'])) {
     }
 }
 
+// Fetch payments for the selected semester
+$query = "SELECT id_payment, payment_name, payment_amount, date_payment 
+          FROM payments WHERE semester_ID = ?";
+$stmt = $db->db->prepare($query);
+$stmt->bind_param("s", $selected_semester);
+$stmt->execute();
+$result = $stmt->get_result();
 
-    // Initialize pagination variables
-    $limit = 7; // Records per page
-    $page = isset($_GET['page']) ? max(1, (int)$_GET['page']) : (isset($_SESSION['page']) ? $_SESSION['page'] : 1); // Default to page 1 if not set
-    $_SESSION['page'] = $page; // Store page number in session
-    $offset = ($page - 1) * $limit;
-
-    // Fetch total records and calculate total pages for the selected semester
-    $countQuery = "SELECT COUNT(*) as total FROM payments WHERE semester_ID = ?";
-    $stmt = $db->db->prepare($countQuery);
-    $stmt->bind_param("s", $selected_semester);
-    $stmt->execute();
-    $totalResult = $stmt->get_result();
-    $row = $totalResult->fetch_assoc();
-    $totalRecords = $row ? (int)$row['total'] : 0; // Ensure totalRecords is assigned
-    $totalPages = $totalRecords > 0 ? ceil($totalRecords / $limit) : 1;
-
-    // Fetch payments for the current page for the selected semester
-    if (isset($_GET['show_all']) && $_GET['show_all'] == 'true') {
-        // Query to fetch all payments for the selected semester (no pagination)
-        $query = "SELECT id_payment, payment_name, payment_amount, date_payment FROM payments WHERE semester_ID = ?";
-        $stmt = $db->db->prepare($query);
-        $stmt->bind_param("s", $selected_semester);
-        $stmt->execute();
-        $result = $stmt->get_result();
-        $totalPages = 1; // Only one page when showing all records
-        $page = 1; // Reset to the first page
-    } else {
-        // Query to fetch paginated payments for the selected semester
-        $query = "SELECT id_payment, payment_name, payment_amount, date_payment 
-                  FROM payments WHERE semester_ID = ? LIMIT $limit OFFSET $offset";
-        $stmt = $db->db->prepare($query);
-        $stmt->bind_param("s", $selected_semester);
-        $stmt->execute();
-        $result = $stmt->get_result();
-    }
-
-    // Display payments in a table
-    if ($result && mysqli_num_rows($result) > 0) {
-        echo '
-        <table class="fees-table">
-            <thead>
-                <tr>
-                    <th>Fee Name</th>
-                    <th>Date</th>
-                    <th>Amount</th>
-                    <th>Actions</th>
-                </tr>
-            </thead>
-            <tbody>';
-        while ($row = mysqli_fetch_assoc($result)) {
-            $id_payment = $row['id_payment'];
-            $payment_name = $row['payment_name'];
-            $payment_amount = $row['payment_amount'];
-            $date_payment = date('F d, Y', strtotime($row['date_payment']));
-            echo '
+// Display payments in a table
+if ($result && mysqli_num_rows($result) > 0) {
+    echo '
+    <table class="fees-table">
+        <thead>
             <tr>
-                <td>' . htmlspecialchars($payment_name) . '</td>
-                <td>' . $date_payment . '</td>
-                <td>PHP ' . number_format($payment_amount, 2) . '</td>
-                <td>
-                    <a href="#" onclick="openEditModal(' . $id_payment . ', \'' . htmlspecialchars($payment_name) . '\', ' . $payment_amount . ', \'' . $row['date_payment'] . '\')">Edit</a> |
-                    <a href="#" onclick="confirmDeleteFee(' . $id_payment . ')">Delete</a> |
-                    <a href="?content=admin-index&admin=fee-records&payment_id=' . $id_payment . '">Show records</a>
+                <th>Fee Name</th>
+                <th>Due Date</th>
+                <th>Amount</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>';
 
-                    
+    while ($row = mysqli_fetch_assoc($result)) {
+        $id_payment = $row['id_payment'];
+        $payment_name = $row['payment_name'];
+        $payment_amount = $row['payment_amount'];
+        $date_payment = date('F d, Y', strtotime($row['date_payment']));
 
-                </td>
-            </tr>';
-        }
-        echo '</tbody></table>';
-    } else {
-        echo '<p>No fees found.</p>';
+        echo '
+        <tr>
+            <td>' . htmlspecialchars($payment_name, ENT_QUOTES) . '</td>
+            <td>' . htmlspecialchars($date_payment, ENT_QUOTES) . '</td>
+            <td>PHP ' . number_format($payment_amount, 2) . '</td>
+            <td>
+                <button class="btn btn-primary btn-sm" onclick="openEditModal(' . $id_payment . ', 
+                    \'' . addslashes(htmlspecialchars($payment_name, ENT_QUOTES)) . '\', 
+                    ' . $payment_amount . ', 
+                    \'' . addslashes($row['date_payment']) . '\')">
+                    <i class="fas fa-edit"></i> Edit
+                </button>
+
+                <button class="btn btn-danger btn-sm" onclick="confirmDeleteFee(' . $id_payment . ')">
+                    <i class="fas fa-trash"></i> Delete
+                </button>
+
+                <button class="btn btn-info btn-sm" 
+                    data-bs-toggle="modal" 
+                    data-bs-target="#fullScreenModal" 
+                    onclick="loadPaymentRecords(' . htmlspecialchars($id_payment, ENT_QUOTES, 'UTF-8') . ')">
+                    <i class="fas fa-database"></i> Show Records
+                </button>
+            </td>
+        </tr>';
     }
-    ?>
 
-    </div>
+    echo '</tbody></table>';
+} else {
+    echo '<p>No fees found.</p>';
+}
+?>
 
-    <div class="admin-fees-action">
-        <button id="createFeeBtn">Create fee</button>
-    </div>
-
-    <!-- Pagination -->
-    <div class="pagination">
-        <button <?php if($page <= 1) echo 'disabled'; ?> onclick="navigateToPage(1)">First</button>
-        <button <?php if($page <= 1) echo 'disabled'; ?> onclick="navigateToPage(<?php echo $page - 1; ?>)">Previous</button>
-        <span>Page <?php echo $page; ?> of <?php echo $totalPages; ?></span>
-        <button <?php if($page >= $totalPages) echo 'disabled'; ?> onclick="navigateToPage(<?php echo $page + 1; ?>)">Next</button>
-        <button <?php if($page >= $totalPages) echo 'disabled'; ?> onclick="navigateToPage(<?php echo $totalPages; ?>)">Last</button>
-    </div>
-
-    <script>
-        function navigateToPage(page) {
-            window.location.href = '?content=admin-index&admin=event-management&admin_events=admin-fees&page=' + page;
-        }
-    </script>
+<div class="admin-fees-action">
+    <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#createFeeModal">
+        Create Fee
+    </button>
 </div>
+
+<!-- Full-Screen Modal -->
+<div class="modal fade" id="fullScreenModal" tabindex="-1" aria-labelledby="fullScreenModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-fullscreen">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="fullScreenModalLabel">Payment Records</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                
+                <!-- Search Bar -->
+                <input type="text" id="searchInput" class="form-control mb-3" placeholder="Search by Student ID, Name, or Year Level..." onkeyup="filterRecords()">
+
+                <div id="modal-body-content">
+                    <!-- Fee records will be loaded here -->
+                    <p>Loading...</p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// SEARCH FUNCTION
+function filterRecords() {
+    let input = document.getElementById("searchInput").value.toLowerCase();
+    let rows = document.querySelectorAll("#paymentRecordsTable tbody tr");
+
+    rows.forEach(row => {
+        let text = row.innerText.toLowerCase();
+        row.style.display = text.includes(input) ? "" : "none";
+    });
+}
+
+// SORT FUNCTION
+let sortDirection = {}; // Store sort direction for each column
+let activeColumn = -1; // Track which column is being sorted
+
+function sortTable(columnIndex) {
+    let table = document.getElementById("paymentRecordsTable");
+    let tbody = table.querySelector("tbody");
+    let rows = Array.from(tbody.rows);
+
+    // Reset previous column arrow to default if a new column is sorted
+    if (activeColumn !== columnIndex) {
+        document.querySelectorAll(".sort-icon").forEach(icon => icon.innerHTML = "⇅");
+        activeColumn = columnIndex;
+    }
+
+    // Toggle sort direction (asc/desc)
+    sortDirection[columnIndex] = !sortDirection[columnIndex];
+
+    // Sort the rows based on the selected column
+    rows.sort((rowA, rowB) => {
+        let cellA = rowA.cells[columnIndex].innerText.trim();
+        let cellB = rowB.cells[columnIndex].innerText.trim();
+
+        // Convert numeric values for proper sorting
+        if (!isNaN(cellA) && !isNaN(cellB)) {
+            cellA = parseFloat(cellA.replace(/[^0-9.]/g, ''));
+            cellB = parseFloat(cellB.replace(/[^0-9.]/g, ''));
+        } else {
+            cellA = cellA.toLowerCase();
+            cellB = cellB.toLowerCase();
+        }
+
+        return sortDirection[columnIndex] ? cellA.localeCompare(cellB, undefined, { numeric: true }) : cellB.localeCompare(cellA, undefined, { numeric: true });
+    });
+
+    // Append sorted rows back into the table
+    tbody.innerHTML = "";
+    rows.forEach(row => tbody.appendChild(row));
+
+    // Update arrow indicator
+    let sortIcon = document.querySelector(`.sort-icon[data-column="${columnIndex}"]`);
+    sortIcon.innerHTML = sortDirection[columnIndex] ? "⬆" : "⬇";
+}
+
+</script>
+
+
+
+<script>
+function loadPaymentRecords(paymentId) {
+    // Display a loading message while fetching data
+    document.getElementById('modal-body-content').innerHTML = '<p>Loading...</p>';
+
+    // Fetch data via AJAX
+    fetch('././php/admin/fetch-payment-records.php?payment_id=' + paymentId)
+        .then(response => response.text())
+        .then(data => {
+            document.getElementById('modal-body-content').innerHTML = data;
+        })
+        .catch(error => console.error('Error fetching data:', error));
+}
+</script>
+
+
 
 <form id="delete-fee-form" method="POST" action="">
     <input type="hidden" name="id_payment" id="delete-fee-id">
     <button type="submit" name="delete_fee" style="display: none;"></button>
 </form>
+
 <!-- Modal for Create Fee -->
-<div id="createFeeModal" class="modal">
+<div class="modal fade" id="createFeeModal" tabindex="-1" aria-labelledby="createFeeModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
     <div class="modal-content">
-        <span class="close">&times;</span>
-        <h3>Create Fee</h3>
+      <div class="modal-header">
+        <h5 class="modal-title" id="createFeeModalLabel">Create Fee</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
         <form action="" method="POST">
-            <label for="payment_name">Fee Name:</label>
-            <input type="text" id="payment_name" name="payment_name" required>
+          <div class="mb-3">
+            <label for="payment_name" class="form-label">Fee Name</label>
+            <input type="text" class="form-control" id="payment_name" name="payment_name" required>
+          </div>
 
-            <label for="payment_amount">Amount (PHP):</label>
-            <input type="number" id="payment_amount" name="payment_amount" step="0.01" required>
+          <div class="mb-3">
+            <label for="payment_amount" class="form-label">Amount (PHP)</label>
+            <input type="number" class="form-control" id="payment_amount" name="payment_amount" step="0.01" required>
+          </div>
 
-            <label for="date_payment">Date:</label>
-            <input type="date" id="date_payment" name="date_payment" required>
+          <div class="mb-3">
+            <label for="date_payment" class="form-label">Due Date</label>
+            <input type="date" class="form-control" id="date_payment" name="date_payment" required>
+          </div>
 
-            <button type="submit" name="create_fee">Create Fee</button>
+          <button type="submit" name="create_fee" class="btn btn-primary">Create Fee</button>
         </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+      </div>
     </div>
+  </div>
 </div>
 
 <!-- Modal for Edit Fee -->
-<div id="editFeeModal" class="modal">
+<div class="modal fade" id="editFeeModal" tabindex="-1" aria-labelledby="editFeeModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
     <div class="modal-content">
-        <span class="close-edit">&times;</span>
-        <h3>Edit Fee</h3>
+      <div class="modal-header">
+        <h5 class="modal-title" id="editFeeModalLabel">Edit Fee</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
         <form action="" method="POST">
-            <input type="hidden" id="edit_fee_id" name="id_payment">
+          <input type="hidden" id="edit_fee_id" name="id_payment">
 
-            <label for="edit_payment_name">Fee Name:</label>
-            <input type="text" id="edit_payment_name" name="payment_name" required>
+          <div class="mb-3">
+            <label for="edit_payment_name" class="form-label">Fee Name</label>
+            <input type="text" class="form-control" id="edit_payment_name" name="payment_name" required>
+          </div>
 
-            <label for="edit_payment_amount">Amount (PHP):</label>
-            <input type="number" id="edit_payment_amount" name="payment_amount" step="0.01" required>
+          <div class="mb-3">
+            <label for="edit_payment_amount" class="form-label">Amount (PHP)</label>
+            <input type="number" class="form-control" id="edit_payment_amount" name="payment_amount" step="0.01" required>
+          </div>
 
-            <label for="edit_date_payment">Date:</label>
-            <input type="date" id="edit_date_payment" name="date_payment" required>
+          <div class="mb-3">
+            <label for="edit_date_payment" class="form-label">Due Date</label>
+            <input type="date" class="form-control" id="edit_date_payment" name="date_payment" required>
+          </div>
 
-            <button type="submit" name="edit_fee">Save Changes</button>
+          <button type="submit" name="edit_fee" class="btn btn-primary">Save Changes</button>
         </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+      </div>
     </div>
+  </div>
 </div>
 
+
 <script>
-// Get the modals and buttons
-var createModal = document.getElementById('createFeeModal');
-var editModal = document.getElementById('editFeeModal');
-var createBtn = document.getElementById('createFeeBtn');
-var closeCreate = document.getElementsByClassName('close')[0];
-var closeEdit = document.getElementsByClassName('close-edit')[0];
+// Ensure the DOM is fully loaded before executing scripts
+document.addEventListener("DOMContentLoaded", function () {
+    // Open the edit fee modal and populate it with the current fee data
+    window.openEditModal = function (id_payment, payment_name, payment_amount, date_payment) {
+        document.getElementById("edit_fee_id").value = id_payment;
+        document.getElementById("edit_payment_name").value = payment_name;
+        document.getElementById("edit_payment_amount").value = payment_amount;
+        document.getElementById("edit_date_payment").value = date_payment;
 
-// Open the create fee modal
-createBtn.onclick = function() {
-    createModal.style.display = 'block';
-}
+        // Show the Bootstrap modal
+        let editModal = new bootstrap.Modal(document.getElementById("editFeeModal"));
+        editModal.show();
+    };
 
-// Close the create fee modal
-closeCreate.onclick = function() {
-    createModal.style.display = 'none';
-}
+    // Delete fee confirmation
+    window.confirmDeleteFee = function (id_payment) {
+        if (confirm("Are you sure you want to delete this fee?")) {
+            document.getElementById("delete-fee-id").value = id_payment;
+            document.querySelector("#delete-fee-form button").click();
+        }
+    };
+});
 
-// Close the edit fee modal
-closeEdit.onclick = function() {
-    editModal.style.display = 'none';
-}
-
-// Close modals when clicking outside of them
-window.onclick = function(event) {
-    if (event.target == createModal) {
-        createModal.style.display = 'none';
-    } else if (event.target == editModal) {
-        editModal.style.display = 'none';
-    }
-}
-
-// Open the edit fee modal and populate it with the current fee data
-function openEditModal(id_payment, payment_name, payment_amount, date_payment) {
-    document.getElementById('edit_fee_id').value = id_payment;
-    document.getElementById('edit_payment_name').value = payment_name;
-    document.getElementById('edit_payment_amount').value = payment_amount;
-    document.getElementById('edit_date_payment').value = date_payment;
-    editModal.style.display = 'block';
-}
-
-// Delete fee confirmation
-function confirmDeleteFee(id_payment) {
-    if (confirm('Are you sure you want to delete this fee?')) {
-        document.getElementById('delete-fee-id').value = id_payment;
-        document.querySelector('#delete-fee-form button').click();
-    }
-}
 </script>
-
-<style>
-/* Modal styles */
-.modal {
-    display: none;
-    position: fixed;
-    z-index: 1;
-    left: 0;
-    top: 0;
-    width: 100%;
-    height: 100%;
-    overflow: auto;
-    background-color: rgba(0, 0, 0, 0.4);
-}
-
-.modal-content {
-    background-color: #fefefe;
-    margin: 15% auto;
-    padding: 20px;
-    border: 1px solid #888;
-    width: 80%;
-    max-width: 500px;
-    border-radius: 8px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-}
-
-.close, .close-edit {
-    color: #aaa;
-    float: right;
-    font-size: 28px;
-    font-weight: bold;
-}
-
-.close:hover, .close-edit:hover {
-    color: black;
-    cursor: pointer;
-}
-
-form input,
-form textarea,
-form button {
-    display: block;
-    width: 100%;
-    margin: 10px 0;
-    padding: 10px;
-    border: 1px solid #ccc;
-    border-radius: 4px;
-}
-
-form button {
-    background-color: #4CAF50;
-    color: white;
-    font-size: 16px;
-    cursor: pointer;
-}
-
-form button:hover {
-    background-color: #45a049;
-}
-</style>

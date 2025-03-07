@@ -78,7 +78,7 @@
     border-bottom: 1px solid black;
 }
 
-.fee-management-con button{
+.fee-management-con #createFeeBtn{
     margin-top: 10px;
     border: none;
     padding: 10px;

@@ -215,3 +215,18 @@
         font-size: 18px;
     }
 }
+
+/* Extra small devices (phones) */
+@media only screen and (max-width: 576px) {
+
+}
+
+/* Small devices (large phones) */
+@media only screen and (min-width: 577px) and (max-width: 768px) {
+
+}
+
+/* Medium devices (tablets) */
+@media only screen and (min-width: 769px) and (max-width: 992px) {
+
+}

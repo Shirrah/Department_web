@@ -147,7 +147,7 @@ if (isset($_SESSION['user_data'])) {
                 <div class="collapse" id="studentsMenu">
                     <ul class="nav flex-column ps-3">
                         <li>
-                            <a href="?content=admin-index&admin=student management" class="nav-link text-white action-btn"><i class="bi bi-chevron-right"></i> <span class="d-none d-sm-inline">Manage Students</span></a>
+                            <a href="?content=admin-index&admin=student-management" class="nav-link text-white action-btn"><i class="bi bi-chevron-right"></i> <span class="d-none d-sm-inline">Manage Students</span></a>
                         </li>
                     </ul>
                 </div>
@@ -224,7 +224,7 @@ if (isset($_SESSION['user_data'])) {
                 <div class="collapse" id="studentsMenu">
                     <ul class="nav flex-column ps-3">
                         <li>
-                            <a href="?content=admin-index&admin=student management" class="nav-link text-white action-btn sidebar-link"><i class="bi bi-chevron-right"></i> <span class="">Manage Students</span></a>
+                            <a href="?content=admin-index&admin=student-management" class="nav-link text-white action-btn sidebar-link"><i class="bi bi-chevron-right"></i> <span class="">Manage Students</span></a>
                         </li>
                     </ul>
                 </div>
@@ -335,7 +335,7 @@ if (isset($_SESSION['user_data'])) {
             case "admin-access-management":
                 include 'php/admin/admin-access-management.php';
                 break;
-            case "student management":
+            case "student-management":
                 include 'php/admin/student-management.php';
                 break;
             case "event-management":
@@ -362,50 +362,3 @@ if (isset($_SESSION['user_data'])) {
 </body>
 </html>
 
-<script>
-document.addEventListener("DOMContentLoaded", function () {
-    function loadContent(url) {
-        let contentDiv = document.getElementById("admin-content");
-        let loadingIndicator = document.getElementById("loading-indicator");
-
-        // Show loading spinner and clear content
-        loadingIndicator.style.display = "block";
-        contentDiv.innerHTML = ""; 
-        contentDiv.appendChild(loadingIndicator);
-
-        fetch(url)
-            .then(response => response.text())
-            .then(data => {
-                let parser = new DOMParser();
-                let doc = parser.parseFromString(data, "text/html");
-                let newContent = doc.querySelector("#admin-content").innerHTML;
-
-                // Replace content
-                contentDiv.innerHTML = newContent;
-
-                // Update URL without refreshing
-                history.pushState(null, "", url);
-            })
-            .catch(error => {
-                console.error("Error loading content:", error);
-                contentDiv.innerHTML = "<p class='text-danger text-center'>Failed to load content.</p>";
-            })
-            .finally(() => {
-                loadingIndicator.style.display = "none"; // Hide loading spinner
-            });
-    }
-
-    document.querySelectorAll(".action-btn").forEach(link => {
-        link.addEventListener("click", function (e) {
-            e.preventDefault();
-            let page = this.getAttribute("href");
-            loadContent(page);
-        });
-    });
-
-    window.addEventListener("popstate", function () {
-        location.reload();
-    });
-});
-
-</script>

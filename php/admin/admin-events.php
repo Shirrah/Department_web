@@ -86,6 +86,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['id_event'], $_POST['t
   $end_time = $_POST['end_time'];
   $attendance_status = "Pending"; // Default status
 
+  // Get the user ID from session (either admin or student)
+  $user_id = $_SESSION['user_data']['id_admin'] ?? $_SESSION['user_data']['id_student'];
+  $semester_ID = $_SESSION['selected_semester'][$user_id] ?? ''; // Get selected semester
+
   // Validate input fields
   if (empty($id_event) || empty($type_attendance) || empty($penalty_type)) {
       $error = "All fields are required.";
@@ -95,6 +99,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['id_event'], $_POST['t
       $stmt->bind_param("issssss", $id_event, $type_attendance, $attendance_status, $penalty_type, $penalty_requirements, $start_time, $end_time);
 
       if ($stmt->execute()) {
+          // Get the last inserted attendance ID
+          $id_attendance = $stmt->insert_id;
+
+          // Fetch all students from the selected semester
+          $stmt_students = $db->db->prepare("SELECT id_student FROM student WHERE semester_ID = ?");
+          $stmt_students->bind_param("s", $semester_ID);
+          $stmt_students->execute();
+          $students_result = $stmt_students->get_result();
+
+          // Insert each student into student_attendance with status "Absent"
+          $insert_stmt = $db->db->prepare("INSERT INTO student_attendance (id_attendance, id_student, semester_ID, date_attendance, status_attendance, penalty_requirements) VALUES (?, ?, ?, NOW(), 'Absent', ?)");
+
+          while ($row = $students_result->fetch_assoc()) {
+              $id_student = $row['id_student'];
+              $insert_stmt->bind_param("iiss", $id_attendance, $id_student, $semester_ID, $penalty_requirements);
+              $insert_stmt->execute();
+          }
+
+
           // Redirect or display success message
           echo "<script>window.location.href='';</script>";
       } else {
@@ -102,6 +125,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['id_event'], $_POST['t
       }
   }
 }
+
 
 // Handle edit attendance
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['id_attendance'], $_POST['type_attendance'], $_POST['penalty_type'], $_POST['penalty_requirements'], $_POST['start_time'], $_POST['end_time'])) {
@@ -184,44 +208,25 @@ $status = isset($_GET['status']) ? $_GET['status'] : '';
 $message = isset($_GET['message']) ? $_GET['message'] : '';
 
 
+// Get the user ID from the session (either admin or student)
+$user_id = $_SESSION['user_data']['id_admin'] ?? $_SESSION['user_data']['id_student'];
+
+// Handle the semester selection from GET request and store it in session for this user
+if (isset($_GET['semester']) && !empty($_GET['semester'])) {
+    $_SESSION['selected_semester'][$user_id] = $_GET['semester'];
+}
+
 // Initialize the selected semester variable
-$selected_semester = isset($_SESSION['selected_semester'][$user_id]) ? $_SESSION['selected_semester'][$user_id] : '';
+$selected_semester = $_SESSION['selected_semester'][$user_id] ?? '';
 
-// Initialize pagination variables
-$limit = 7; // Number of records per page
-$page = isset($_GET['page']) ? max(1, (int)$_GET['page']) : (isset($_SESSION['page']) ? $_SESSION['page'] : 1); // Default to page 1 if not set
-$_SESSION['page'] = $page; // Store page number in session
-$offset = ($page - 1) * $limit;
-
-// Fetch total records and calculate total pages for the selected semester
-$countQuery = "SELECT COUNT(*) as total FROM events WHERE semester_ID = ?";
-$stmt = $db->db->prepare($countQuery);
+// Fetch all events for the selected semester (No pagination)
+$query = "SELECT id_event, name_event, date_event, event_start_time, event_end_time, event_desc 
+          FROM events WHERE semester_ID = ?";
+$stmt = $db->db->prepare($query);
 $stmt->bind_param("s", $selected_semester);
 $stmt->execute();
-$totalResult = $stmt->get_result();
-$row = $totalResult->fetch_assoc();
-$totalRecords = $row ? (int)$row['total'] : 0; // Ensure totalRecords is assigned
-$totalPages = $totalRecords > 0 ? ceil($totalRecords / $limit) : 1;
+$events = $stmt->get_result();
 
-// Fetch events for the current page for the selected semester
-if (isset($_GET['show_all']) && $_GET['show_all'] == 'true') {
-    // Query to fetch all events for the selected semester (no pagination)
-    $query = "SELECT id_event, name_event, date_event, event_start_time, event_end_time, event_desc FROM events WHERE semester_ID = ?";
-    $stmt = $db->db->prepare($query);
-    $stmt->bind_param("s", $selected_semester);
-    $stmt->execute();
-    $events = $stmt->get_result();
-    $totalPages = 1; // Only one page when showing all events
-    $page = 1; // Reset to the first page
-} else {
-    // Query to fetch paginated events for the selected semester
-    $query = "SELECT id_event, name_event, date_event,event_start_time, event_end_time, event_desc
-              FROM events WHERE semester_ID = ? LIMIT $limit OFFSET $offset";
-    $stmt = $db->db->prepare($query);
-    $stmt->bind_param("s", $selected_semester);
-    $stmt->execute();
-    $events = $stmt->get_result();
-}
 ?>
 
 <link rel="stylesheet" href=".//.//stylesheet/admin/admin-events.css">
@@ -244,7 +249,7 @@ if (isset($_GET['show_all']) && $_GET['show_all'] == 'true') {
     <div class="accordion" id="accordionExample">
         <?php 
         // Updated query to fetch creator details
-        $eventQuery = "
+                $eventQuery = "
             SELECT 
                 events.*, 
                 COALESCE(admins.firstname_admin, student.firstname_student) AS creator_firstname,
@@ -252,15 +257,21 @@ if (isset($_GET['show_all']) && $_GET['show_all'] == 'true') {
             FROM events
             LEFT JOIN admins ON events.created_by = admins.id_admin
             LEFT JOIN student ON events.created_by = student.id_student
+            WHERE events.semester_ID = ?
             ORDER BY events.date_event DESC
         ";
-        $events = $db->db->query($eventQuery);
+
+        $stmt = $db->db->prepare($eventQuery);
+        $stmt->bind_param("s", $selected_semester);
+        $stmt->execute();
+        $events = $stmt->get_result();
+
 
         while ($event = $events->fetch_assoc()): 
         ?>
             <div class="accordion-item">
                 <h2 class="accordion-header" id="heading<?php echo $event['id_event']; ?>">
-                    <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapse<?php echo $event['id_event']; ?>" aria-expanded="true" aria-controls="collapse<?php echo $event['id_event']; ?>">
+                    <button class="accordion-button bg-light" type="button" data-bs-toggle="collapse" data-bs-target="#collapse<?php echo $event['id_event']; ?>" aria-expanded="true" aria-controls="collapse<?php echo $event['id_event']; ?>">
                        <strong><?php echo $event['name_event']; ?> - <?php echo date("F j, Y", strtotime($event['date_event'])); ?></strong> 
                     </button>
                 </h2>
@@ -360,54 +371,30 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 </script>
 
-    <!-- Pagination Controls -->
-    <div class="pagination">
-        <button <?php if($page <= 1) echo 'disabled'; ?> onclick="navigateToPage(1)">First</button>
-        <button <?php if($page <= 1) echo 'disabled'; ?> onclick="navigateToPage(<?php echo $page - 1; ?>)">Previous</button>
-        <span>Page <?php echo $page; ?> of <?php echo $totalPages; ?></span>
-        <button <?php if($page >= $totalPages) echo 'disabled'; ?> onclick="navigateToPage(<?php echo $page + 1; ?>)">Next</button>
-        <button <?php if($page >= $totalPages) echo 'disabled'; ?> onclick="navigateToPage(<?php echo $totalPages; ?>)">Last</button>
-    </div>
-    
-
     <script>
         function navigateToPage(page) {
             window.location.href = '?content=admin-index&admin=event-management&page=' + page;
         }
     </script>
 
-    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#eventModal">
+<button type="button" class="btn" style="background-color: tomato; color: white; margin-top: 5px;" data-bs-toggle="modal" data-bs-target="#eventModal">
     Add Event
-    </button>
-    <button class="start-attendance-btn"><a href="./Barcode" target="_blank">Start Attendance</a></button>
+</button>
+
+<a href="./Barcode" target="_blank" class="btn" style="background-color: tomato; color: white; margin-top: 5px;">
+    Start Attendance
+</a>
+
 </div>
 
 
-
-<!-- Deleting event and attendances -->
-<!-- <form id="delete-event-form" method="POST" action="">
-    <input type="hidden" name="event_id" id="delete-event-id">
-    <button type="submit" name="delete_event" style="display: none;"></button>
-</form> -->
-
-
-
 <script>
-// Confirm deletion
-// function confirmDelete(eventId) {
-//     if (confirm('Are you sure you want to delete this event? \nNote that this will delete all the data assiocated with it!')) {
-//         // Set the event ID in the hidden form and submit
-//         document.getElementById('delete-event-id').value = eventId;
-//         document.querySelector('#delete-event-form button').click();
-//     }
-// }
 
 function confirmDelete(eventId) {
   document.getElementById('delete_event_id').value = eventId;
   var deleteModal = new bootstrap.Modal(document.getElementById('deleteEventModal'));
   deleteModal.show();
 }
-
 </script>
 
 
@@ -700,23 +687,6 @@ function updatePenaltyRequirements() {
     var deleteModal = new bootstrap.Modal(document.getElementById('deleteAttendanceModal'));
     deleteModal.show();
 }
-
-// Show alert modal if status and message exist
-const status = '<?php echo $status; ?>';
-const message = '<?php echo $message; ?>';
-
-if (status && message) {
-    const modalMessage = document.getElementById('modalMessage');
-    const modal = new bootstrap.Modal(document.getElementById('alertModal'));
-
-    modalMessage.innerHTML = message;
-    modal.show();
-
-    document.getElementById('alertModal').addEventListener('hidden.bs.modal', function () {
-        window.location.href = '?content=admin-index&admin=event-management&admin_events=admin-events';
-    });
-}
-
 </script>
 
 
@@ -841,58 +811,35 @@ function openEditModal(id, name, date, start_time, end_time, description) {
 </script>
 
 
-<!-- Full-Screen Modal Structure -->
+<!-- Full-Screen Modal -->
 <div class="modal fade" id="attendanceRecordsModal" tabindex="-1" aria-labelledby="attendanceRecordsModalLabel" aria-hidden="true">
-  <div class="modal-dialog modal-fullscreen"> <!-- This makes the modal fullscreen -->
+  <div class="modal-dialog modal-fullscreen"> 
     <div class="modal-content">
       <div class="modal-header">
         <h5 class="modal-title" id="attendanceRecordsModalLabel">Attendance Records</h5>
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
       <div class="modal-body">
-        <!-- Table with sample attendance records -->
+        <!-- Search Input -->
+        <div class="mb-3">
+          <input type="text" id="searchInput" class="form-control" placeholder="Search by ID, name, year, or status...">
+        </div>
+
+        <!-- Table -->
         <div class="table-responsive">
           <table class="table table-sm table-striped">
             <thead>
               <tr>
-                <th>Type</th>
+                <th>ID</th>
+                <th>Lastname</th>
+                <th>Firstname</th>
+                <th>Year Level</th>
+                <th>Date and Time</th>
                 <th>Status</th>
-                <th>Start Time</th>
-                <th>End Time</th>
-                <th>Penalty Type</th>
-                <th>Penalty Requirements</th>
-                <th>Actions</th>
               </tr>
             </thead>
-            <tbody>
-              <!-- Sample Attendance Records -->
-              <tr>
-                <td>In-Person</td>
-                <td><span class="badge bg-primary">Ongoing</span></td>
-                <td>08:00 AM</td>
-                <td>10:00 AM</td>
-                <td><span class="badge bg-info">Late Arrival</span></td>
-                <td>Arrived 10 minutes late</td>
-                <td><button class="btn btn-info btn-sm">View Details</button></td>
-              </tr>
-              <tr>
-                <td>Online</td>
-                <td><span class="badge bg-secondary">Ended</span></td>
-                <td>11:00 AM</td>
-                <td>01:00 PM</td>
-                <td><span class="badge bg-warning text-dark">No Show</span></td>
-                <td>Did not attend the session</td>
-                <td><button class="btn btn-info btn-sm">View Details</button></td>
-              </tr>
-              <tr>
-                <td>In-Person</td>
-                <td><span class="badge bg-warning text-dark">Pending</span></td>
-                <td>02:00 PM</td>
-                <td>04:00 PM</td>
-                <td><span class="badge bg-success">On Time</span></td>
-                <td>Arrived on time</td>
-                <td><button class="btn btn-info btn-sm">View Details</button></td>
-              </tr>
+            <tbody id="attendanceBody">
+              <tr><td colspan="6" class="text-center">Select an attendance record to display data.</td></tr>
             </tbody>
           </table>
         </div>
@@ -903,6 +850,20 @@ function openEditModal(id, name, date, start_time, end_time, description) {
     </div>
   </div>
 </div>
+
+<!-- JavaScript for Search Filter -->
+<script>
+  document.getElementById('searchInput').addEventListener('keyup', function() {
+      let filter = this.value.toUpperCase();
+      let rows = document.querySelectorAll("#attendanceBody tr");
+
+      rows.forEach(row => {
+          let text = row.innerText.toUpperCase();
+          row.style.display = text.includes(filter) ? "" : "none";
+      });
+  });
+</script>
+
 
 
 <div class="modal fade" id="addTimeModal" tabindex="-1" aria-labelledby="addTimeModalLabel" aria-hidden="true">
@@ -961,5 +922,33 @@ function submitAddTime() {
         xhr.send(`attendanceId=${attendanceId}&additionalTime=${additionalTime}`);
     }
 }
+
+</script>
+
+<script>
+
+function showAttendanceRecords(id_attendance, event_name, type_attendance, start_time, end_time) {
+    // Format title as: name_event - type_attendance (start_time - end_time)
+    let formattedTitle = `${event_name} - ${type_attendance} (${start_time} - ${end_time})`;
+
+    // Update modal title
+    document.getElementById("attendanceRecordsModalLabel").textContent = formattedTitle;
+
+    // Fetch attendance records via AJAX
+    $.ajax({
+        url: "./php/admin/fetch-attendance-records.php",
+        type: "GET",
+        data: { id_attendance: id_attendance },
+        success: function (response) {
+            $("#attendanceBody").html(response); // Update modal content
+            $("#attendanceRecordsModal").modal("show"); // Show modal
+        },
+        error: function () {
+            alert("Failed to fetch attendance records.");
+        },
+    });
+}
+
+
 
 </script>

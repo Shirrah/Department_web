@@ -88,20 +88,18 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         }
     } else {
         // Insert a new record if no semester_ID is provided
-        $stmt = $db->db->prepare("INSERT INTO semester (semester_ID, academic_year, semester_type) VALUES (?, ?, ?)");
-        $stmt->bind_param("sss", $generated_semester_id, $academic_year, $semester_type);
-        if ($stmt->execute()) {
-            // Get the newly inserted semester ID
-            $newSemesterID = $db->db->insert_id;
+            $stmt = $db->db->prepare("INSERT INTO semester (semester_ID, academic_year, semester_type) VALUES (?, ?, ?)");
+            $stmt->bind_param("sss", $generated_semester_id, $academic_year, $semester_type);
+            if ($stmt->execute()) {
+                // Store the generated semester_ID in session
+                $_SESSION['selected_semester'][$user_id] = $generated_semester_id;
 
-            // Store the selected semester in session
-            $_SESSION['selected_semester'][$user_id] = $newSemesterID;
+                header("Location: ?content=admin-index&admin=ay-dashboard");
+                exit();
+            } else {
+                echo "<script>alert('Error adding new term: " . $stmt->error . "');</script>";
+            }
 
-            header("Location: ?content=admin-index&admin=ay-dashboard");
-            exit();
-        } else {
-            echo "<script>alert('Error adding new term: " . $stmt->error . "');</script>";
-        }
     }
 }
 

@@ -35,13 +35,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 // Fetch event and attendance names
 $event_query = "SELECT name_event FROM events WHERE id_event = '$event_id'";
-$event_result = $database->conn->query($event_query);
+$event_result = $database->db->query($event_query);
 if ($event_result && $event_result->num_rows > 0) {
     $event_name = $event_result->fetch_assoc()['name_event'];
 }
 
 $attendance_query = "SELECT type_attendance FROM attendances WHERE id_attendance = '$attendance_id'";
-$attendance_result = $database->conn->query($attendance_query);
+$attendance_result = $database->db->query($attendance_query);
 if ($attendance_result && $attendance_result->num_rows > 0) {
     $attendance_name = $attendance_result->fetch_assoc()['type_attendance'];
 }
@@ -63,7 +63,7 @@ if (isset($_GET['export']) && $_GET['export'] === 'csv') {
         JOIN student_attendance ON student.id_student = student_attendance.id_student 
         WHERE student_attendance.id_attendance = '$attendance_id' 
         AND student_attendance.status_attendance = 'Present'";
-    $scanned_students_result = $database->conn->query($scanned_students_query);
+    $scanned_students_result = $database->db->query($scanned_students_query);
 
     if ($scanned_students_result && $scanned_students_result->num_rows > 0) {
         while ($row = $scanned_students_result->fetch_assoc()) {
@@ -89,7 +89,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['student_id'])) {
                     WHERE id_student = '$student_id' 
                     AND id_attendance = '$attendance_id' 
                     AND status_attendance = 'Present'";
-    $check_result = $database->conn->query($check_query);
+    $check_result = $database->db->query($check_query);
 
     if ($check_result && $check_result->num_rows > 0) {
         $message = "<p class='error'>You are already IN</p>";
@@ -97,7 +97,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['student_id'])) {
         // Fetch student details
         $student_query = "SELECT id_student, firstname_student, lastname_student, year_student 
                           FROM student WHERE id_student = '$student_id'";
-        $student_result = $database->conn->query($student_query);
+        $student_result = $database->db->query($student_query);
 
         if ($student_result && $student_result->num_rows > 0) {
             $student = $student_result->fetch_assoc();
@@ -105,10 +105,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['student_id'])) {
             // Insert attendance record
             $insert_query = "INSERT INTO student_attendance (id_student, id_attendance, status_attendance, date_attendance) 
                              VALUES ('$student_id', '$attendance_id', 'Present', NOW())";
-            if ($database->conn->query($insert_query) === TRUE) {
+            if ($database->db->query($insert_query) === TRUE) {
                 $message = "<p class='success'>Attendance recorded successfully</p>";
             } else {
-                $message = "<p class='error'>Error recording attendance: " . $database->conn->error . "</p>";
+                $message = "<p class='error'>Error recording attendance: " . $database->db->error . "</p>";
             }
         } else {
             $message = "<p class='error'>Student not found</p>";
@@ -188,7 +188,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['student_id'])) {
                     JOIN student_attendance ON student.id_student = student_attendance.id_student 
                     WHERE student_attendance.id_attendance = '$attendance_id' 
                     AND student_attendance.status_attendance = 'Present'";
-                $scanned_students_result = $database->conn->query($scanned_students_query);
+                $scanned_students_result = $database->db->query($scanned_students_query);
 
                 if ($scanned_students_result && $scanned_students_result->num_rows > 0) {
                     echo "<table><tr><th>Student ID</th><th>Name</th><th>Year</th><th>Date Attended</th></tr>";

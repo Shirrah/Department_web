@@ -103,6 +103,11 @@ if (isset($_SESSION['user_data'])) {
 <div class="main-content-con">
 <nav class="navbar bg-dark">
     <div class="container-fluid d-flex justify-content-between">
+        <!-- Sidebar Toggle Button for Mobile -->
+<button class="btn btn-dark d-lg-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#mobileSidebar" aria-controls="mobileSidebar">
+    ☰
+</button>
+
         <a class="navbar-brand text-white" href="#">
             <img src="././assets/images/sys-logo.png" alt="Logo" width="30" height="30" class="d-inline-block align-text-top">
             EFMS
@@ -126,37 +131,91 @@ if (isset($_SESSION['user_data'])) {
 
 <div class="main-content">
 
-    <nav class="admin-sidebar-con bg-dark text-white vh-100 p-3" style="padding: 15px;">
-        <ul class="nav nav-pills flex-column mb-auto">
-             <li>
-                <a href="?content=student-index&student=student-dashboard" class="nav-link text-white">
+<nav class="admin-sidebar-con bg-dark text-white vh-100 p-3 d-none d-lg-block" style="padding: 15px;">
+<ul class="nav nav-pills flex-column mb-auto">
+            <li class="nav-item">
+            <a href="?content=student-index&student=student-dashboard" class="nav-link text-white">
                     <i class="bi bi-speedometer2"></i>
                     <span class="ms-1 d-none d-sm-inline">Dashboard</span>
                 </a>
             </li>
 
             <li>
-                <a href="?content=student-index&student=student-events" class="nav-link text-white">
+            <a href="?content=student-index&student=student-events" class="nav-link text-white">
                     <i class="bi bi-calendar"></i>
                     <span class="ms-1 d-none d-sm-inline">Events</span>
+                </a>
+            </li>
+            <li>
+            <a href="?content=student-index&student=student-fees" class="nav-link text-white">
+                    <i class="bi bi-cash-coin"></i>
+                    <span class="ms-1 d-none d-sm-inline">Fees</span>
+                </a>
+            </li>
+            <li>
+            <a href="?content=student-index&student=notifications" class="nav-link text-white">
+                    <i class="bi bi-bell"></i>
+                    <span class="ms-1 d-none d-sm-inline">Notifications</span>
+                </a>
+            </li>
+        </ul>
+</nav>
+
+<!-- Offcanvas Sidebar for Mobile -->
+<div class="offcanvas offcanvas-start bg-dark text-white" tabindex="-1" id="mobileSidebar" aria-labelledby="mobileSidebarLabel">
+    <div class="offcanvas-header">
+        <h5 class="offcanvas-title" id="mobileSidebarLabel">Menu</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+    </div>
+    <div class="offcanvas-body">
+        <ul class="nav nav-pills flex-column mb-auto">
+            <li>
+                <a href="?content=student-index&student=student-dashboard" class="nav-link text-white">
+                    <i class="bi bi-speedometer2"></i>
+                    <span class="ms-1">Dashboard</span>
+                </a>
+            </li>
+
+            <li>
+                <a href="?content=student-index&student=student-events" class="nav-link text-white">
+                    <i class="bi bi-calendar"></i>
+                    <span class="ms-1">Events</span>
                 </a>
             </li>
 
             <li>
                 <a href="?content=student-index&student=student-fees" class="nav-link text-white">
                     <i class="bi bi-cash-coin"></i>
-                    <span class="ms-1 d-none d-sm-inline">Fees</span>
+                    <span class="ms-1">Fees</span>
                 </a>
             </li>
 
             <li>
                 <a href="?content=student-index&student=notifications" class="nav-link text-white">
                     <i class="bi bi-bell"></i>
-                    <span class="ms-1 d-none d-sm-inline">Notifications</span>
+                    <span class="ms-1">Notifications</span>
                 </a>
             </li>
         </ul>
-    </nav>
+    </div>
+</div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+    let sidebarLinks = document.querySelectorAll(".sidebar-link");
+    let mobileSidebar = document.getElementById("mobileSidebar");
+
+    sidebarLinks.forEach(link => {
+        link.addEventListener("click", function () {
+            let offcanvas = bootstrap.Offcanvas.getInstance(mobileSidebar);
+            if (offcanvas) {
+                offcanvas.hide(); // Closes the sidebar
+            }
+        });
+    });
+});
+
+</script>
 
 <script>
    window.onload = function() {
@@ -183,12 +242,17 @@ if (isset($_SESSION['user_data'])) {
 };
 </script>
 
-<div class="content">
+<div class="content" id="admin-content" style="position: relative; min-height: 300px;">
+    <div id="loading-indicator" style="display: none; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);">
+        <div class="spinner-border" style="color: tomato; width: 3rem; height: 3rem;" role="status">
+            <span class="visually-hidden">Loading...</span>
+        </div>
+    </div>
     <?php
         $student_pg = $_GET['student'] ?? "default";
         switch ($student_pg) {
             case "default":
-                include 'php/student/student-events.php';
+                include 'php/student/student-dashboard.php';
                 break;
             case "student-events":
                 include 'php/student/student-events.php';
@@ -200,7 +264,7 @@ if (isset($_SESSION['user_data'])) {
                 include 'php/student/student-fees.php';
                 break;
             case "notifications":
-                include 'php/admin/notifications.php';
+                include 'php/student/notifications.php';
                 break;
             default:
             include 'php/student/student-events.php';
@@ -208,7 +272,10 @@ if (isset($_SESSION['user_data'])) {
         }
     ?>
 </div>
+
+
 </div>
     </div>
 </body>
 </html>
+

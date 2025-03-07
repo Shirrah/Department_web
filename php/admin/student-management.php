@@ -242,9 +242,13 @@ ob_end_flush();
                             <td><?= htmlspecialchars($row['firstname_student']) ?></td>
                             <td><?= htmlspecialchars($row['year_student']) ?></td>
                             <td>
-                                <a href="?content=admin-index&admin=student-management&edit_id=<?= $row['id_student'] ?>"><i class="fas fa-edit"></i></a>
-                                <a href="?content=admin-index&admin=student-management&delete_id=<?= $row['id_student'] ?>" class="delete-btn"><i class="fas fa-trash"></i></a>
-                            </td>
+    <a href="?content=admin-index&admin=student-management&edit_id=<?= $row['id_student'] ?>"><i class="fas fa-edit"></i></a>
+    <a href="?content=admin-index&admin=student-management&delete_id=<?= $row['id_student'] ?>" class="delete-btn"><i class="fas fa-trash"></i></a>
+    <button class="btn btn-primary show-report-btn" data-id="<?= $row['id_student'] ?>" data-bs-toggle="modal" data-bs-target="#reportModal">
+        Show Report
+    </button>
+</td>
+
                         </tr>
                     <?php endwhile; ?>
                 <?php else: ?>
@@ -270,6 +274,41 @@ ob_end_flush();
     </div>
 </div>
 
+<div class="modal fade" id="reportModal" tabindex="-1" aria-labelledby="reportModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="reportModalLabel">Attendance & Fee Report</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" id="reportContent">
+                <p class="text-center">Loading report...</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<script>
+    document.querySelectorAll('.show-report-btn').forEach(button => {
+    button.addEventListener('click', function () {
+        const studentId = this.getAttribute('data-id');
+        document.getElementById('reportContent').innerHTML = "<p class='text-center'>Loading report...</p>";
+
+        // Fetch the student report via AJAX
+        fetch("php/admin/fetch-student-report.php?id_student=" + studentId)
+            .then(response => response.text())
+            .then(data => {
+                document.getElementById('reportContent').innerHTML = data;
+            })
+            .catch(error => {
+                document.getElementById('reportContent').innerHTML = "<p class='text-danger text-center'>Error loading report.</p>";
+                console.error("Error fetching report:", error);
+            });
+    });
+});
+
+</script>
 
 <script>
     document.getElementById('importButton').addEventListener('click', function() {
