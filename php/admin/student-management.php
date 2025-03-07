@@ -72,6 +72,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $stmt->bind_param("sssssi", $id_student, $semester_ID, $pass_student, $lastname_student, $firstname_student, $year_student);
 
     if ($stmt->execute()) {
+        $db->db->close();
         header("Location: ?content=admin-index&admin=student-management");
         exit();
     } else {
@@ -88,6 +89,7 @@ if (isset($_GET['delete_id'])) {
     $stmt->bind_param("s", $delete_id);
 
     if ($stmt->execute()) {
+        $db->db->close();
         header("Location: ?content=admin-index&admin=student-management");
         exit();
     } else {

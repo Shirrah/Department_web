@@ -22,6 +22,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $insertQuery = "INSERT INTO admins (id_admin, pass_admin, role_admin, lastname_admin, firstname_admin) 
                     VALUES ('$id_admin', '$pass_admin','$role_admin', '$lastname_admin', '$firstname_admin')";
     if ($db->db->query($insertQuery) === TRUE) {
+        $db->db->close();
         header("Location: ?content=admin-index&admin=admin-management");
         exit();
     } else {
@@ -35,6 +36,7 @@ if (isset($_GET['delete_id'])) {
     $deleteQuery = "DELETE FROM admins WHERE id_admin = '$delete_id'";
 
     if ($db->db->query($deleteQuery) === TRUE) {
+        $db->db->close();
         header("Location: ?content=admin-index&admin=admin-management");
         exit();
     } else {

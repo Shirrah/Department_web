@@ -16,6 +16,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
     if ($stmt_update->execute()) {
         // Redirect back to the previous page with a success message
+        $db->db->close();
         header("Location: http://localhost/Department_web/index.php?content=admin-index&admin=fee-records&payment_id=" . $payment_id);
         exit;
     } else {

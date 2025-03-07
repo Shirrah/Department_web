@@ -85,6 +85,7 @@ $insert_student_attendance->execute();
     }
 
     // Redirect to refresh the page
+    $db->db->close();
     header("Location: ?content=admin-index&admin=attendance-records&id=$event_id");
     exit();
 }
@@ -120,6 +121,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['delete_attendance'])) 
     $delete_student_attendance_stmt->execute();
 
     // Refresh the page to see changes
+    $db->db->close();
     header("Location: ?content=admin-index&admin=attendance-records&id=$event_id");
     exit();
 }

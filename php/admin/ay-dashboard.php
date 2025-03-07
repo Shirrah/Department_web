@@ -36,6 +36,7 @@ if (isset($_GET['delete_id'])) {
         $stmt->bind_param("s", $delete_id);
 
         if ($stmt->execute()) {
+            $db->db->close();
             header("Location: ?content=admin-index&admin=ay-dashboard");
             exit();
         } else {
@@ -81,6 +82,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         if ($stmt->execute()) {
             // Store the selected semester in session after updating
             $_SESSION['selected_semester'][$user_id] = $generated_semester_id;
+            $db->db->close();
             header("Location: ?content=admin-index&admin=ay-dashboard");
             exit();
         } else {
@@ -93,7 +95,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             if ($stmt->execute()) {
                 // Store the generated semester_ID in session
                 $_SESSION['selected_semester'][$user_id] = $generated_semester_id;
-
+                $db->db->close();
                 header("Location: ?content=admin-index&admin=ay-dashboard");
                 exit();
             } else {

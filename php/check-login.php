@@ -10,6 +10,7 @@ $timeout = 180;
 if (isset($_SESSION['LAST_ACTIVITY']) && (time() - $_SESSION['LAST_ACTIVITY']) > $timeout) {
     session_unset(); // Clear session variables
     session_destroy(); // Destroy session
+    $db->db->close();
     header("location: ../index.php?content=log-in"); // Redirect to login
     exit();
 }
@@ -25,6 +26,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     // Check if username and password are empty
     if (empty($_POST['id']) || empty($_POST['psw'])) {
         $_SESSION['error_msg'] = 'Please fill in all fields!';
+        $db->db->close();
         header("location: ../index.php?content=log-in");
         exit();
     }
@@ -39,6 +41,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $formatted_time = sprintf("%d:%02d", $minutes, $seconds);
 
         $_SESSION['error_msg'] = "Too many failed attempts. Please try again in $formatted_time minutes.";
+        $db->db->close();
         header("location: ../index.php?content=log-in");
         exit();
     }
@@ -73,10 +76,12 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 $semester_row = $semester_result->fetch_assoc();
                 $semester_id = $semester_row['semester_ID'];
                 $_SESSION['semester_data'] = $semester_row; // Optional: Store semester details in session
+                $db->db->close();
                 header("location: ../index.php?content=admin-index&semester=$semester_id");
             } else {
                 // Proceed even if no semester is found
                 $_SESSION['error_msg'] = 'No semester found, you can still proceed without a semester.';
+                $db->db->close();
                 header("location: ../index.php?content=admin-index");
             }
             exit();
@@ -96,6 +101,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
             $_SESSION['logged_in'] = 'yes';
             $_SESSION['user_data'] = $row; // Storing student details in the session
+            $db->db->close();
             header("location: ../index.php?content=student-index");
             exit();
         }
@@ -112,16 +118,19 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     if ($_SESSION['login_attempts'] >= $max_attempts) {
         $_SESSION['lockout_time'] = time() + $lockout_time;
         $_SESSION['error_msg'] = 'Too many failed attempts. Please try again in 5 minutes.';
+        $db->db->close();
         header("location: ../index.php?content=log-in");
         exit();
     } else {
         $_SESSION['error_msg'] = 'Invalid ID or Password. ' . ( $max_attempts - $_SESSION['login_attempts']) . ' attempts remaining.';
+        $db->db->close();
         header("location: ../index.php?content=log-in");
         exit();
     }
 } else {
     // Redirect them to the login page or handle unauthorized access
     $_SESSION['error_msg'] = 'Please log in.';
+    $db->db->close();
     header("location: ../index.php?content=log-in");
     exit();
 }

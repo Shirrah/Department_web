@@ -73,7 +73,7 @@ if (isset($_POST['create_fee'])) {
             $insertFeeStmt->bind_param("ssids", $student_id, $selected_semester, $payment_id, $payment_amount, $date_payment);
             $insertFeeStmt->execute();
         }
-
+        $db->db->close();
         echo "<script>window.location.href='';</script>";
     } else {
         $error = "Error creating fee: " . $stmt->error;
@@ -90,6 +90,7 @@ if (isset($_POST['create_fee'])) {
         $stmt->bind_param("i", $id_payment);
 
         if ($stmt->execute()) {
+            $db->db->close();
             echo "<script>window.location.href='';</script>";
         } else {
             $error = "Error deleting fee: " . $stmt->error;
@@ -113,6 +114,7 @@ if (isset($_POST['edit_fee'])) {
         $stmt2->bind_param("di", $payment_amount, $id_payment);
 
         if ($stmt2->execute()) {
+            $db->db->close();
             echo "<script>window.location.href='';</script>";
         } else {
             $error = "Error updating student fees record: " . $stmt2->error;

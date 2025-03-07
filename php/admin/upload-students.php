@@ -67,6 +67,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_FILES['studentFile'])) {
         }
 
         fclose($fileHandle);
+        $db->db->close();
         header("Location: ?content=admin-index&admin=student-management");
         exit();
     }
@@ -103,7 +104,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_FILES['studentFile'])) {
         } catch (\PhpOffice\PhpSpreadsheet\Reader\Exception $e) {
             die("Error loading Excel file: " . $e->getMessage());
         }
-
+        $db->db->close();
         header("Location: ?content=admin-index&admin=student-management");
         exit();
     }

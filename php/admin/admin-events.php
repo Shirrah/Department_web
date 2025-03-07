@@ -44,6 +44,7 @@ if (isset($_POST['create_event'])) {
 
         if ($stmt->execute()) {
             // Redirect or display success message
+            $db->db->close();
             echo "<script>window.location.href='';</script>";
         } else {
             $error = "Error creating event: " . $stmt->error;
@@ -69,6 +70,7 @@ if (isset($_POST['update_event'])) {
 
   if ($stmt->execute()) {
       // Redirect to refresh the page and show updated event
+      $db->db->close();
       echo "<script>window.location.href='';</script>";
   } else {
       $error = "Error updating event: " . $stmt->error;
@@ -119,6 +121,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['id_event'], $_POST['t
 
 
           // Redirect or display success message
+          $db->db->close();
           echo "<script>window.location.href='';</script>";
       } else {
           $error = "Error adding attendance record: " . $stmt->error;
@@ -146,6 +149,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['id_attendance'], $_PO
 
         if ($stmt->execute()) {
             // Redirect or display success message
+            $db->db->close();
             echo "<script>window.location.href='?content=admin-index&admin=event-management&admin_events=admin-events';</script>";
         } else {
             $error = "Error updating attendance record: " . $stmt->error;
@@ -169,17 +173,20 @@ if (isset($_POST['delete_event'])) {
 
       if ($delete_event_stmt->execute()) {
           // Redirect back to the same page with success message
+          $db->db->close();
           header("Location: " . $_SERVER['PHP_SELF'] . "?content=admin-index&admin=event-management&admin_events=admin-events&status=success&message=Event+deleted+successfully.");
           exit();
       } else {
           $error = "Error deleting event: " . $delete_event_stmt->error;
           // Redirect back to the same page with error message
+          $db->db->close();
           header("Location: " . $_SERVER['PHP_SELF'] . "?content=admin-index&admin=event-management&admin_events=admin-events&status=danger&message=" . urlencode($error));
           exit();
       }
   } else {
       $error = "Error deleting attendances: " . $delete_attendance_stmt->error;
       // Redirect back to the same page with error message
+      $db->db->close();
       header("Location: " . $_SERVER['PHP_SELF'] . "?content=admin-index&admin=event-management&admin_events=admin-events&status=danger&message=" . urlencode($error));
       exit();
   }
@@ -194,10 +201,12 @@ if (isset($_POST['delete_attendance'])) {
   $delete_attendance_stmt->bind_param("i", $id_attendance);
 
   if ($delete_attendance_stmt->execute()) {
+    $db->db->close();
       header("Location: " . $_SERVER['PHP_SELF'] . "?content=admin-index&admin=event-management&admin_events=admin-events&status=success&message=Attendance+deleted+successfully.");
       exit();
   } else {
       $error = "Error deleting attendance: " . $delete_attendance_stmt->error;
+      $db->db->close();
       header("Location: " . $_SERVER['PHP_SELF'] . "?content=admin-index&admin=event-management&admin_events=admin-events&status=danger&message=" . urlencode($error));
       exit();
   }
