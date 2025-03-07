@@ -35,29 +35,49 @@ if (isset($_GET['payment_id'])) {
                     $id_student = htmlspecialchars($row['id_student']);
                     $lastname = htmlspecialchars($row['lastname_student']);
                     $firstname = htmlspecialchars($row['firstname_student']);
-
+                
                     // Convert year_student to readable format
                     $year_levels = [1 => "1st Year", 2 => "2nd Year", 3 => "3rd Year", 4 => "4th Year"];
                     $year_student = $year_levels[$row['year_student']] ?? "Unknown";
-
-                    // Convert date_payment to readable format
-                    $date_payment = date("F d, Y", strtotime($row['date_payment']));
-
-                    // Convert status_payment to readable format
-                    $status_payment = ($row['status_payment'] == 1) ? 'Paid' : 'Unpaid';
-                    $badgeClass = ($row['status_payment'] == 1) ? 'bg-success' : 'bg-danger';
-
-                    // Format payment amount
-                    $payment_amount = "PHP " . number_format($row['payment_amount'], 2);
-
+                
+                    // Payment status
+                    $isPaid = ($row['status_payment'] == 1);
+                    $badgeClass = $isPaid ? 'btn-success' : 'btn-danger';
+                    $statusText = $isPaid ? '✔ Paid' : '✖ Unpaid';
+                
                     echo "<tr>
                             <td>{$id_student}</td>
                             <td>{$lastname}</td>
                             <td>{$firstname}</td>
                             <td>{$year_student}</td>
-                            <td><span class='badge {$badgeClass}'>{$status_payment}</span></td>
+                            <td>
+                                <div class='dropdown'>
+                                    <button class='btn {$badgeClass} btn-sm dropdown-toggle' type='button' id='dropdownMenu{$id_student}' 
+                                        data-bs-toggle='dropdown' aria-expanded='false'>
+                                        <span class='status-text'>{$statusText}</span>
+                                    </button>
+                                    <ul class='dropdown-menu'>
+                                        <li>
+                                            <a class='dropdown-item text-success update-status' data-value='1' 
+                                                data-student-id='{$id_student}' data-payment-id='{$payment_id}' 
+                                                style='background-color: #d4edda; cursor: pointer;'>
+                                                ✔ Paid
+                                            </a>
+                                        </li>
+                                        <li>
+                                            <a class='dropdown-item text-danger update-status' data-value='0' 
+                                                data-student-id='{$id_student}' data-payment-id='{$payment_id}' 
+                                                style='background-color: #f8d7da; cursor: pointer;'>
+                                                ✖ Unpaid
+                                            </a>
+                                        </li>
+                                    </ul>
+                                </div>
+                            </td>
                           </tr>";
                 }
+                
+                
             } else {
                 echo "<tr><td colspan='7' class='text-center'>No payment records found.</td></tr>";
             }

@@ -394,3 +394,66 @@ document.addEventListener("DOMContentLoaded", function () {
 });
 
 </script>
+
+
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    document.body.addEventListener('click', function (event) {
+        if (event.target.classList.contains('update-status')) {
+            let selectedOption = event.target;
+            let studentId = selectedOption.getAttribute('data-student-id');
+            let paymentId = selectedOption.getAttribute('data-payment-id');
+            let newStatus = selectedOption.getAttribute('data-value');
+
+            let dropdownButton = selectedOption.closest('.dropdown').querySelector('.btn');
+            let statusTextSpan = dropdownButton.querySelector('.status-text');
+
+            // Save original text and set loading state
+            let originalText = statusTextSpan.innerHTML;
+            statusTextSpan.innerHTML = `<span class="spinner-border spinner-border-sm"></span> Updating...`;
+            dropdownButton.disabled = true; // Disable button interaction
+
+            fetch('././php/admin/update-payment-status.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: `student_id=${studentId}&payment_id=${paymentId}&status_payment=${newStatus}`
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log("Response:", data);
+                if (data.success) {
+                    // Remove previous styles
+                    dropdownButton.classList.remove('btn-success', 'btn-danger');
+
+                    // Update button appearance based on new status
+                    if (newStatus == '1') {
+                        dropdownButton.classList.add('btn-success');
+                        statusTextSpan.innerHTML = "✔ Paid";
+                    } else {
+                        dropdownButton.classList.add('btn-danger');
+                        statusTextSpan.innerHTML = "✖ Unpaid";
+                    }
+                } else {
+                    statusTextSpan.innerHTML = originalText; // Restore text on failure
+                    console.error('Error updating status:', data.error);
+                }
+            })
+            .catch(error => {
+                console.error('Fetch Error:', error);
+                statusTextSpan.innerHTML = originalText; // Restore text on failure
+            })
+            .finally(() => {
+                dropdownButton.disabled = false; // Re-enable button
+            });
+        }
+    });
+});
+
+</script>
+
+<script>
+console.log("JavaScript is loaded and running!");
+</script>
+
+
