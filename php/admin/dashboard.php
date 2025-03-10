@@ -1,12 +1,11 @@
 <?php
 // Include the database connection
 require_once "././php/db-conn.php";
-$db = new Database();
+$db = Database::getInstance()->db;
 
 // Check if the user is logged in
 if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] != 'yes') {
     // Redirect to login if not logged in
-    $db->db->close();
     header("location: ../index.php?content=log-in");
     exit();
 }
@@ -26,7 +25,7 @@ if (isset($_SESSION['selected_semester'][$user_id]) && !empty($_SESSION['selecte
 } else {
     // Get the latest semester from the database
     $query = "SELECT semester_ID, academic_year, semester_type FROM semester ORDER BY semester_ID DESC LIMIT 1";
-    $stmt = $db->db->prepare($query);
+    $stmt = $db->prepare($query);
     $stmt->execute();
     $result = $stmt->get_result();
     if ($result && $row = $result->fetch_assoc()) {
@@ -38,13 +37,13 @@ if (isset($_SESSION['selected_semester'][$user_id]) && !empty($_SESSION['selecte
 
 // Fetch all semesters for dropdown
 $sql = "SELECT semester_ID, academic_year, semester_type FROM semester";
-$stmt = $db->db->prepare($sql);
+$stmt = $db->prepare($sql);
 $stmt->execute();
 $allSemesters = $stmt->get_result();
 
 // Query to count students in the selected semester
 $query = "SELECT COUNT(*) AS student_count FROM student WHERE semester_ID = ?";
-$stmt = $db->db->prepare($query);
+$stmt = $db->prepare($query);
 $stmt->bind_param("s", $selected_semester);
 $stmt->execute();
 $result = $stmt->get_result();
@@ -59,7 +58,7 @@ if ($result) {
 
 // Query to count events in the selected semester
 $query = "SELECT COUNT(*) AS events_count FROM events WHERE semester_ID = ?";
-$stmt = $db->db->prepare($query);
+$stmt = $db->prepare($query);
 $stmt->bind_param("s", $selected_semester);
 $stmt->execute();
 $result = $stmt->get_result();
@@ -74,7 +73,7 @@ if ($result) {
 
 // Query to count fees in the selected semester
 $query = "SELECT COUNT(*) AS fees_count FROM payments WHERE semester_ID = ?";
-$stmt = $db->db->prepare($query);
+$stmt = $db->prepare($query);
 $stmt->bind_param("s", $selected_semester);
 $stmt->execute();
 $result = $stmt->get_result();
@@ -89,7 +88,7 @@ if ($result) {
 
 // Fetch all semester data to populate the dropdown
 $sql = "SELECT semester_ID, academic_year, semester_type FROM semester";
-$result = $db->db->query($sql);
+$result = $db->query($sql);
 
 ?>
 

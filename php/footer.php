@@ -10,19 +10,15 @@
         <!-- Display Total Page Visits -->
         <div class="visits">
             <?php
-            // Include the database connection
-            require_once "././php/db-conn.php";
-            $db = new Database();
+            $db = Database::getInstance()->db;
 
             // Get the total number of visits
-            $result = $db->db->query("SELECT COUNT(*) AS total_visits FROM page_visits");
+            $result = $db->query("SELECT COUNT(*) AS total_visits FROM page_visits");
             $row = $result->fetch_assoc();
             $total_visits = $row['total_visits'];
 
             // Display total visits with an icon
             echo '<p class="mb-0">Page Visits: <span class="badge bg-light text-dark">' . $total_visits . '</span></p>';
-
-            $db->db->close();
             ?>
         </div>
     </div>

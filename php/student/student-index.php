@@ -2,7 +2,7 @@
 
 // Include the database connection
 require_once "././php/db-conn.php";
-$db = new Database();
+$db = Database::getInstance()->db;
 
 include "././php/auth-check.php";
 

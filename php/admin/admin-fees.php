@@ -22,7 +22,7 @@
 
     // Include the database connection
     require_once "././php/db-conn.php";
-    $db = new Database();
+    $db = Database::getInstance()->db;
 
     // Get the user ID from the session (either admin or student)
     $user_id = $_SESSION['user_data']['id_admin'] ?? $_SESSION['user_data']['id_student'];
@@ -41,7 +41,7 @@ if (isset($_POST['create_fee'])) {
     $payment_amount = $_POST['payment_amount'];
 
     // Insert into the payments table
-    $stmt = $db->db->prepare("INSERT INTO payments (payment_name, payment_amount, date_payment, semester_ID) VALUES (?, ?, NOW(), ?)");
+    $stmt = $db->prepare("INSERT INTO payments (payment_name, payment_amount, date_payment, semester_ID) VALUES (?, ?, NOW(), ?)");
     $stmt->bind_param("sss", $payment_name, $payment_amount, $selected_semester);
 
     if ($stmt->execute()) {
@@ -50,7 +50,7 @@ if (isset($_POST['create_fee'])) {
 
         // Fetch the date_payment from the payments table for the inserted record
         $paymentDateQuery = "SELECT date_payment FROM payments WHERE id_payment = ?";
-        $stmt = $db->db->prepare($paymentDateQuery);
+        $stmt = $db->prepare($paymentDateQuery);
         $stmt->bind_param("i", $payment_id);
         $stmt->execute();
         $result = $stmt->get_result();
@@ -59,7 +59,7 @@ if (isset($_POST['create_fee'])) {
 
         // Fetch all students for the selected semester
         $studentsQuery = "SELECT id_student FROM student WHERE semester_ID = ?";
-        $stmt = $db->db->prepare($studentsQuery);
+        $stmt = $db->prepare($studentsQuery);
         $stmt->bind_param("s", $selected_semester);
         $stmt->execute();
         $studentsResult = $stmt->get_result();
@@ -69,11 +69,10 @@ if (isset($_POST['create_fee'])) {
             $student_id = $student['id_student'];
 
             // Insert into student_fees_record with the payment_date from the payments table
-            $insertFeeStmt = $db->db->prepare("INSERT INTO student_fees_record (id_student, semester_ID, id_payment, status_payment, payment_amount, date_payment) VALUES (?, ?, ?, 0, ?, ?)");
+            $insertFeeStmt = $db->prepare("INSERT INTO student_fees_record (id_student, semester_ID, id_payment, status_payment, payment_amount, date_payment) VALUES (?, ?, ?, 0, ?, ?)");
             $insertFeeStmt->bind_param("ssids", $student_id, $selected_semester, $payment_id, $payment_amount, $date_payment);
             $insertFeeStmt->execute();
         }
-        $db->db->close();
         echo "<script>window.location.href='';</script>";
     } else {
         $error = "Error creating fee: " . $stmt->error;
@@ -86,11 +85,10 @@ if (isset($_POST['create_fee'])) {
         $id_payment = $_POST['id_payment'];
 
         // Delete the fee from the database
-        $stmt = $db->db->prepare("DELETE FROM payments WHERE id_payment = ?");
+        $stmt = $db->prepare("DELETE FROM payments WHERE id_payment = ?");
         $stmt->bind_param("i", $id_payment);
 
         if ($stmt->execute()) {
-            $db->db->close();
             echo "<script>window.location.href='';</script>";
         } else {
             $error = "Error deleting fee: " . $stmt->error;
@@ -105,16 +103,15 @@ if (isset($_POST['edit_fee'])) {
     $date_payment = $_POST['date_payment'];
 
     // Update the fee in the payments table
-    $stmt = $db->db->prepare("UPDATE payments SET payment_name = ?, payment_amount = ?, date_payment = ? WHERE id_payment = ?");
+    $stmt = $db->prepare("UPDATE payments SET payment_name = ?, payment_amount = ?, date_payment = ? WHERE id_payment = ?");
     $stmt->bind_param("sdsi", $payment_name, $payment_amount, $date_payment, $id_payment);
 
     if ($stmt->execute()) {
         // Update the student_fees_record table with the new payment_amount
-        $stmt2 = $db->db->prepare("UPDATE student_fees_record SET payment_amount = ? WHERE id_payment = ?");
+        $stmt2 = $db->prepare("UPDATE student_fees_record SET payment_amount = ? WHERE id_payment = ?");
         $stmt2->bind_param("di", $payment_amount, $id_payment);
 
         if ($stmt2->execute()) {
-            $db->db->close();
             echo "<script>window.location.href='';</script>";
         } else {
             $error = "Error updating student fees record: " . $stmt2->error;
@@ -127,7 +124,7 @@ if (isset($_POST['edit_fee'])) {
 // Fetch payments for the selected semester
 $query = "SELECT id_payment, payment_name, payment_amount, date_payment 
           FROM payments WHERE semester_ID = ?";
-$stmt = $db->db->prepare($query);
+$stmt = $db->prepare($query);
 $stmt->bind_param("s", $selected_semester);
 $stmt->execute();
 $result = $stmt->get_result();

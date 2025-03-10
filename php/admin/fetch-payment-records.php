@@ -1,12 +1,12 @@
 <?php
 require_once "../../php/db-conn.php";
-$db = new Database();
+$db = Database::getInstance()->db;
 
 if (isset($_GET['payment_id'])) {
     $payment_id = $_GET['payment_id'];
 
     // Fetch student fee records associated with the selected payment
-    $stmt = $db->db->prepare("
+    $stmt = $db->prepare("
         SELECT s.id_student, s.lastname_student, s.firstname_student, s.year_student, 
                sfr.status_payment, sfr.date_payment, sfr.payment_amount 
         FROM student_fees_record sfr

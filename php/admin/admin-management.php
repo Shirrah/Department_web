@@ -5,10 +5,10 @@ if (session_status() == PHP_SESSION_NONE) {
 }
 
 require_once "././php/db-conn.php";
-$db = new Database();
+$db = Database::getInstance()->db;
 
 $query = "SELECT id_admin, pass_admin, role_admin, lastname_admin, firstname_admin FROM admins";
-$students = $db->db->query($query);
+$students = $db->query($query);
 
 // Handle form submission to enroll a new student
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
@@ -21,12 +21,12 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     // Insert the new student data into the database
     $insertQuery = "INSERT INTO admins (id_admin, pass_admin, role_admin, lastname_admin, firstname_admin) 
                     VALUES ('$id_admin', '$pass_admin','$role_admin', '$lastname_admin', '$firstname_admin')";
-    if ($db->db->query($insertQuery) === TRUE) {
-        $db->db->close();
+    if ($db->query($insertQuery) === TRUE) {
+
         header("Location: ?content=admin-index&admin=admin-management");
         exit();
     } else {
-        echo "<script>alert('Error enrolling student: " . $db->db->error . "');</script>";
+        echo "<script>alert('Error enrolling student: " . $db->error . "');</script>";
     }
 }
 
@@ -35,12 +35,12 @@ if (isset($_GET['delete_id'])) {
     $delete_id = htmlspecialchars($_GET['delete_id']);
     $deleteQuery = "DELETE FROM admins WHERE id_admin = '$delete_id'";
 
-    if ($db->db->query($deleteQuery) === TRUE) {
-        $db->db->close();
+    if ($db->query($deleteQuery) === TRUE) {
+
         header("Location: ?content=admin-index&admin=admin-management");
         exit();
     } else {
-        echo "<script>alert('Error deleting student: " . $db->db->error . "');</script>";
+        echo "<script>alert('Error deleting student: " . $db->error . "');</script>";
     }
 }
 
@@ -52,7 +52,7 @@ $offset = ($page - 1) * $limit;
 
 // Fetch total records and calculate total pages
 $countQuery = "SELECT COUNT(*) as total FROM admins";
-$stmt = $db->db->prepare($countQuery);
+$stmt = $db->prepare($countQuery);
 $stmt->execute();
 $totalResult = $stmt->get_result();
 $row = $totalResult->fetch_assoc();
@@ -63,7 +63,7 @@ $totalPages = $totalRecords > 0 ? ceil($totalRecords / $limit) : 1;
 if (isset($_GET['show_all']) && $_GET['show_all'] == 'true') {
     // Query to fetch all student records (no pagination)
     $query = "SELECT id_admin, pass_admin, role_admin, lastname_admin, firstname_admin FROM admins";
-    $stmt = $db->db->prepare($query);
+    $stmt = $db->prepare($query);
     $stmt->execute();
     $students = $stmt->get_result();
     $totalPages = 1; // Only one page when showing all records
@@ -72,7 +72,7 @@ if (isset($_GET['show_all']) && $_GET['show_all'] == 'true') {
     // Query to fetch paginated student records
     $query = "SELECT id_admin, pass_admin, role_admin, lastname_admin, firstname_admin
               FROM admins LIMIT $limit OFFSET $offset";
-    $stmt = $db->db->prepare($query);
+    $stmt = $db->prepare($query);
     $stmt->execute();
     $students = $stmt->get_result();
 }

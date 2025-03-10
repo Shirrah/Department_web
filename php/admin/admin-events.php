@@ -7,7 +7,7 @@ if (session_status() == PHP_SESSION_NONE) {
 
 // Include the database connection
 require_once "././php/db-conn.php";
-$db = new Database();
+$db = Database::getInstance()->db;
     
 
 // Get the user ID from the session (either admin or student)
@@ -39,12 +39,11 @@ if (isset($_POST['create_event'])) {
         $error = "No semester selected. Please select a semester to create an event.";
     } else {
         // Insert into the events table including created_by
-        $stmt = $db->db->prepare("INSERT INTO events (name_event, date_event, event_start_time, event_end_time, event_desc, semester_ID, created_by) VALUES (?, ?, ?, ?, ?, ?, ?)");
+        $stmt = $db->prepare("INSERT INTO events (name_event, date_event, event_start_time, event_end_time, event_desc, semester_ID, created_by) VALUES (?, ?, ?, ?, ?, ?, ?)");
         $stmt->bind_param("sssssss", $name_event, $date_event, $event_start_time, $event_end_time, $event_desc, $semester_ID, $user_id);
 
         if ($stmt->execute()) {
             // Redirect or display success message
-            $db->db->close();
             echo "<script>window.location.href='';</script>";
         } else {
             $error = "Error creating event: " . $stmt->error;
@@ -65,12 +64,11 @@ if (isset($_POST['update_event'])) {
   $user_id = $_SESSION['user_data']['id_admin'] ?? $_SESSION['user_data']['id_student'];
 
   // Prepare update query
-  $stmt = $db->db->prepare("UPDATE events SET name_event = ?, date_event = ?, event_start_time = ?, event_end_time = ?, event_desc = ? WHERE id_event = ? AND created_by = ?");
+  $stmt = $db->prepare("UPDATE events SET name_event = ?, date_event = ?, event_start_time = ?, event_end_time = ?, event_desc = ? WHERE id_event = ? AND created_by = ?");
   $stmt->bind_param("ssssssi", $name_event, $date_event, $event_start_time, $event_end_time, $event_desc, $event_id, $user_id);
 
   if ($stmt->execute()) {
       // Redirect to refresh the page and show updated event
-      $db->db->close();
       echo "<script>window.location.href='';</script>";
   } else {
       $error = "Error updating event: " . $stmt->error;
@@ -97,7 +95,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['id_event'], $_POST['t
       $error = "All fields are required.";
   } else {
       // Insert the attendance record into the database
-      $stmt = $db->db->prepare("INSERT INTO attendances (id_event, type_attendance, attendance_status, penalty_type, penalty_requirements, start_time, end_time) VALUES (?, ?, ?, ?, ?, ?, ?)");
+      $stmt = $db->prepare("INSERT INTO attendances (id_event, type_attendance, attendance_status, penalty_type, penalty_requirements, start_time, end_time) VALUES (?, ?, ?, ?, ?, ?, ?)");
       $stmt->bind_param("issssss", $id_event, $type_attendance, $attendance_status, $penalty_type, $penalty_requirements, $start_time, $end_time);
 
       if ($stmt->execute()) {
@@ -105,13 +103,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['id_event'], $_POST['t
           $id_attendance = $stmt->insert_id;
 
           // Fetch all students from the selected semester
-          $stmt_students = $db->db->prepare("SELECT id_student FROM student WHERE semester_ID = ?");
+          $stmt_students = $db->prepare("SELECT id_student FROM student WHERE semester_ID = ?");
           $stmt_students->bind_param("s", $semester_ID);
           $stmt_students->execute();
           $students_result = $stmt_students->get_result();
 
           // Insert each student into student_attendance with status "Absent"
-          $insert_stmt = $db->db->prepare("INSERT INTO student_attendance (id_attendance, id_student, semester_ID, date_attendance, status_attendance, penalty_requirements) VALUES (?, ?, ?, NOW(), 'Absent', ?)");
+          $insert_stmt = $db->prepare("INSERT INTO student_attendance (id_attendance, id_student, semester_ID, date_attendance, status_attendance, penalty_requirements) VALUES (?, ?, ?, NOW(), 'Absent', ?)");
 
           while ($row = $students_result->fetch_assoc()) {
               $id_student = $row['id_student'];
@@ -121,7 +119,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['id_event'], $_POST['t
 
 
           // Redirect or display success message
-          $db->db->close();
           echo "<script>window.location.href='';</script>";
       } else {
           $error = "Error adding attendance record: " . $stmt->error;
@@ -144,12 +141,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['id_attendance'], $_PO
         $error = "All fields are required.";
     } else {
         // Update the attendance record in the database
-        $stmt = $db->db->prepare("UPDATE attendances SET type_attendance = ?, penalty_type = ?, penalty_requirements = ?, start_time = ?, end_time = ? WHERE id_attendance = ?");
+        $stmt = $db->prepare("UPDATE attendances SET type_attendance = ?, penalty_type = ?, penalty_requirements = ?, start_time = ?, end_time = ? WHERE id_attendance = ?");
         $stmt->bind_param("sssssi", $type_attendance, $penalty_type, $penalty_requirements, $start_time, $end_time, $id_attendance);
 
         if ($stmt->execute()) {
             // Redirect or display success message
-            $db->db->close();
             echo "<script>window.location.href='?content=admin-index&admin=event-management&admin_events=admin-events';</script>";
         } else {
             $error = "Error updating attendance record: " . $stmt->error;
@@ -163,30 +159,25 @@ if (isset($_POST['delete_event'])) {
   $id_event = $_POST['id_event'];
 
   // First, delete the attendance records associated with the event
-  $delete_attendance_stmt = $db->db->prepare("DELETE FROM attendances WHERE id_event = ?");
+  $delete_attendance_stmt = $db->prepare("DELETE FROM attendances WHERE id_event = ?");
   $delete_attendance_stmt->bind_param("i", $id_event);
 
   if ($delete_attendance_stmt->execute()) {
       // Then, delete the event from the database
-      $delete_event_stmt = $db->db->prepare("DELETE FROM events WHERE id_event = ?");
+      $delete_event_stmt = $db->prepare("DELETE FROM events WHERE id_event = ?");
       $delete_event_stmt->bind_param("i", $id_event);
 
       if ($delete_event_stmt->execute()) {
           // Redirect back to the same page with success message
-          $db->db->close();
           header("Location: " . $_SERVER['PHP_SELF'] . "?content=admin-index&admin=event-management&admin_events=admin-events&status=success&message=Event+deleted+successfully.");
           exit();
       } else {
           $error = "Error deleting event: " . $delete_event_stmt->error;
-          // Redirect back to the same page with error message
-          $db->db->close();
           header("Location: " . $_SERVER['PHP_SELF'] . "?content=admin-index&admin=event-management&admin_events=admin-events&status=danger&message=" . urlencode($error));
           exit();
       }
   } else {
       $error = "Error deleting attendances: " . $delete_attendance_stmt->error;
-      // Redirect back to the same page with error message
-      $db->db->close();
       header("Location: " . $_SERVER['PHP_SELF'] . "?content=admin-index&admin=event-management&admin_events=admin-events&status=danger&message=" . urlencode($error));
       exit();
   }
@@ -197,16 +188,14 @@ if (isset($_POST['delete_event'])) {
 if (isset($_POST['delete_attendance'])) {
   $id_attendance = $_POST['id_attendance'];
 
-  $delete_attendance_stmt = $db->db->prepare("DELETE FROM attendances WHERE id_attendance = ?");
+  $delete_attendance_stmt = $db->prepare("DELETE FROM attendances WHERE id_attendance = ?");
   $delete_attendance_stmt->bind_param("i", $id_attendance);
 
   if ($delete_attendance_stmt->execute()) {
-    $db->db->close();
       header("Location: " . $_SERVER['PHP_SELF'] . "?content=admin-index&admin=event-management&admin_events=admin-events&status=success&message=Attendance+deleted+successfully.");
       exit();
   } else {
       $error = "Error deleting attendance: " . $delete_attendance_stmt->error;
-      $db->db->close();
       header("Location: " . $_SERVER['PHP_SELF'] . "?content=admin-index&admin=event-management&admin_events=admin-events&status=danger&message=" . urlencode($error));
       exit();
   }
@@ -231,7 +220,7 @@ $selected_semester = $_SESSION['selected_semester'][$user_id] ?? '';
 // Fetch all events for the selected semester (No pagination)
 $query = "SELECT id_event, name_event, date_event, event_start_time, event_end_time, event_desc 
           FROM events WHERE semester_ID = ?";
-$stmt = $db->db->prepare($query);
+$stmt = $db->prepare($query);
 $stmt->bind_param("s", $selected_semester);
 $stmt->execute();
 $events = $stmt->get_result();
@@ -270,7 +259,7 @@ $events = $stmt->get_result();
             ORDER BY events.date_event DESC
         ";
 
-        $stmt = $db->db->prepare($eventQuery);
+        $stmt = $db->prepare($eventQuery);
         $stmt->bind_param("s", $selected_semester);
         $stmt->execute();
         $events = $stmt->get_result();

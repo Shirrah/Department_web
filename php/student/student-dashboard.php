@@ -105,7 +105,7 @@ $fees_count = $stmt->get_result()->fetch_assoc()['fees_count'] ?? 0;
                 <?php
                 // Include the database connection
                 require_once "././php/db-conn.php";
-                $db = new Database();
+                $db = Database::getInstance()->db;
 
                 // Ensure the user is logged in
                 if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] != 'yes') {
@@ -118,7 +118,7 @@ $fees_count = $stmt->get_result()->fetch_assoc()['fees_count'] ?? 0;
 
                 // Fetch student details (full name and year level)
                 $queryStudent = "SELECT firstname_student, lastname_student, year_student FROM student WHERE id_student = ?";
-                $stmtStudent = $db->db->prepare($queryStudent);
+                $stmtStudent = $db->prepare($queryStudent);
                 $stmtStudent->bind_param("s", $id_student);
                 $stmtStudent->execute();
                 $resultStudent = $stmtStudent->get_result();
@@ -159,7 +159,7 @@ $fees_count = $stmt->get_result()->fetch_assoc()['fees_count'] ?? 0;
                                 JOIN events e ON a.id_event = e.id_event
                                 WHERE sa.id_student = ?
                                 ORDER BY sa.date_attendance DESC";
-                            $stmtAttendance = $db->db->prepare($queryAttendance);
+                            $stmtAttendance = $db->prepare($queryAttendance);
                             $stmtAttendance->bind_param("s", $id_student);
                             $stmtAttendance->execute();
                             $resultAttendance = $stmtAttendance->get_result();

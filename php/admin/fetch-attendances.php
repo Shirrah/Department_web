@@ -1,6 +1,6 @@
 <?php
 require_once "../../php/db-conn.php";
-$db = new Database();
+$db = Database::getInstance()->db;
 
 date_default_timezone_set('Asia/Manila');
 
@@ -10,7 +10,7 @@ if (isset($_GET['event_id'])) {
     // Get the event date
     $eventDateQuery = "SELECT name_event, date_event FROM events WHERE id_event = ?";
 
-    $eventDateStmt = $db->db->prepare($eventDateQuery);
+    $eventDateStmt = $db->prepare($eventDateQuery);
     $eventDateStmt->bind_param("i", $eventId);
     $eventDateStmt->execute();
     $eventDateResult = $eventDateStmt->get_result();
@@ -22,7 +22,7 @@ if (isset($_GET['event_id'])) {
 
     $attendanceQuery = "SELECT id_attendance, type_attendance, penalty_type, penalty_requirements, start_time, end_time, attendance_status
                         FROM attendances WHERE id_event = ?";
-    $attendanceStmt = $db->db->prepare($attendanceQuery);
+    $attendanceStmt = $db->prepare($attendanceQuery);
     $attendanceStmt->bind_param("i", $eventId);
     $attendanceStmt->execute();
     $attendances = $attendanceStmt->get_result();
@@ -51,7 +51,7 @@ if (isset($_GET['event_id'])) {
 
             if ($attendanceStatus !== $newStatus) {
                 $updateStatusQuery = "UPDATE attendances SET attendance_status = ? WHERE id_attendance = ?";
-                $updateStmt = $db->db->prepare($updateStatusQuery);
+                $updateStmt = $db->prepare($updateStatusQuery);
                 $updateStmt->bind_param("si", $newStatus, $attendance['id_attendance']);
                 $updateStmt->execute();
             }

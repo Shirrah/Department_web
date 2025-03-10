@@ -1,12 +1,5 @@
 <link rel="stylesheet" href=".//.//stylesheet/student/student-fees.css">
 
-<?php
-// echo '<pre>';
-// print_r($_SESSION); 
-// echo '</pre>';
-?>
-
-
 <div class="container mt-4">
     <div class="card shadow-sm">
         <div class="card-header">
@@ -22,7 +15,7 @@
 
                 // Include the database connection
                 require_once "././php/db-conn.php";
-                $db = new Database();
+                $db = Database::getInstance()->db;
 
                 if (!isset($_SESSION['user_data']['id_student'])) {
                     echo '<p class="text-center text-danger">Error: Student not logged in.</p>';
@@ -40,7 +33,7 @@
                           ON p.id_payment = sfr.id_payment AND sfr.id_student = ?
                           ORDER BY p.date_payment ASC";
 
-                $stmt = $db->db->prepare($query);
+                $stmt = $db->prepare($query);
                 $stmt->bind_param("i", $id_student);
                 $stmt->execute();
                 $result = $stmt->get_result();

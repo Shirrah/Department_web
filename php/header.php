@@ -26,7 +26,7 @@
 
         <?php 
           require_once "php/db-conn.php";
-          $db = new Database();
+          $db = Database::getInstance()->db;
           if (isset($_SESSION['logged_in']) && $_SESSION['logged_in'] == 'yes') {
               $user_data = $_SESSION['user_data'];
               $role = $user_data['role_admin'] ?? $user_data['role_student'] ?? 'Unknown Role';

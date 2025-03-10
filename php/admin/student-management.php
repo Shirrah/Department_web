@@ -4,34 +4,18 @@ if (session_status() == PHP_SESSION_NONE) {
     session_start();
 }
 
-if (!class_exists('Database')) {
-    class Database {
-        public $db; // Change the visibility to public
-        public $error; // Added property to store connection errors
+require_once "././php/db-conn.php";
+$db = Database::getInstance()->db;
 
-        public function __construct() {
-            // Establishing a connection to the database
-            //$this->db = new mysqli("auth-db1632.hstgr.io", "u958767601_shirrah", "Shirrah612345", "u958767601_dcs");
-            $this->db = new mysqli("localhost", "root", "", "u958767601_dcs");
-            // Checking for connection errors
-            if ($this->db->connect_error) {
-                $this->error = "Connection failed: " . $this->db->connect_error;
-                die($this->error); // Terminating script execution if connection fails
-            }
-        }
-    }
-}
-
-$db = new Database();
 
 // Get the user ID from the session (either admin or student)
-$user_id = $_SESSION['user_data']['id_admin'] ?? $_SESSION['user_data']['id_student'];
+$user_id = $_SESSION['user_data']['id_admin'] ?? $_SESSION['user_data']['id_student'] ?? null;
 
-// Handle the semester selection from GET request and store it in session for this user
 if (isset($_GET['semester']) && !empty($_GET['semester'])) {
-    // Store the selected semester for the user in session
-    $_SESSION['selected_semester'][$user_id] = $_GET['semester'];
+    $_SESSION['selected_semester'] = $_GET['semester'];
 }
+
+$selected_semester = $_SESSION['selected_semester'] ?? null;
 
 // Use the selected semester from the session or default to the latest semester
 if (isset($_SESSION['selected_semester'][$user_id]) && !empty($_SESSION['selected_semester'][$user_id])) {
@@ -39,7 +23,7 @@ if (isset($_SESSION['selected_semester'][$user_id]) && !empty($_SESSION['selecte
 } else {
     // Get the latest semester from the database
     $query = "SELECT semester_ID, academic_year, semester_type FROM semester ORDER BY semester_ID DESC LIMIT 1";
-    $stmt = $db->db->prepare($query);
+    $stmt = $db->prepare($query);
     $stmt->execute();
     $result = $stmt->get_result();
     if ($result && $row = $result->fetch_assoc()) {
@@ -51,7 +35,7 @@ if (isset($_SESSION['selected_semester'][$user_id]) && !empty($_SESSION['selecte
 
 // Fetch all semesters for dropdown
 $sql = "SELECT semester_ID, academic_year, semester_type FROM semester";
-$stmt = $db->db->prepare($sql);
+$stmt = $db->prepare($sql);
 $stmt->execute();
 $allSemesters = $stmt->get_result();
 
@@ -68,11 +52,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     // Use parameterized queries to prevent SQL injection
     $insertQuery = "INSERT INTO student (id_student, semester_ID, pass_student, lastname_student, firstname_student, role_student, year_student) 
                     VALUES (?, ?, ?, ?, ?, 'Student', ?)";
-    $stmt = $db->db->prepare($insertQuery);
+    $stmt = $db->prepare($insertQuery);
     $stmt->bind_param("sssssi", $id_student, $semester_ID, $pass_student, $lastname_student, $firstname_student, $year_student);
 
     if ($stmt->execute()) {
-        $db->db->close();
         header("Location: ?content=admin-index&admin=student-management");
         exit();
     } else {
@@ -85,11 +68,10 @@ if (isset($_GET['delete_id'])) {
     // Sanitize the delete ID
     $delete_id = htmlspecialchars($_GET['delete_id']);
     $deleteQuery = "DELETE FROM student WHERE id_student = ?";
-    $stmt = $db->db->prepare($deleteQuery);
+    $stmt = $db->prepare($deleteQuery);
     $stmt->bind_param("s", $delete_id);
 
     if ($stmt->execute()) {
-        $db->db->close();
         header("Location: ?content=admin-index&admin=student-management");
         exit();
     } else {
@@ -111,7 +93,7 @@ if ($show_all) {
               FROM student 
               WHERE semester_ID = ? AND 
                     (id_student LIKE ? OR lastname_student LIKE ? OR firstname_student LIKE ?)";
-    $stmt = $db->db->prepare($query);
+    $stmt = $db->prepare($query);
     $stmt->bind_param("ssss", $selected_semester, $search_term, $search_term, $search_term);
 } else {
     $query = "SELECT id_student, pass_student, lastname_student, firstname_student, year_student 
@@ -119,7 +101,7 @@ if ($show_all) {
               WHERE semester_ID = ? AND 
                     (id_student LIKE ? OR lastname_student LIKE ? OR firstname_student LIKE ?)
               LIMIT ? OFFSET ?";
-    $stmt = $db->db->prepare($query);
+    $stmt = $db->prepare($query);
     $stmt->bind_param("ssssii", $selected_semester, $search_term, $search_term, $search_term, $limit, $offset);
 }
 $stmt->execute();
@@ -128,7 +110,7 @@ $students = $stmt->get_result();
 // Total records with parameterized query
 $countQuery = "SELECT COUNT(*) as total FROM student WHERE semester_ID = ? AND 
                 (id_student LIKE ? OR lastname_student LIKE ? OR firstname_student LIKE ?)";
-$stmt = $db->db->prepare($countQuery);
+$stmt = $db->prepare($countQuery);
 $stmt->bind_param("ssss", $selected_semester, $search_term, $search_term, $search_term);
 $stmt->execute();
 $totalResult = $stmt->get_result();

@@ -1,12 +1,12 @@
 <?php
 require_once "../../php/db-conn.php";
-$db = new Database();
+$db = Database::getInstance()->db;
 
 if (isset($_GET['id_attendance'])) {
     $id_attendance = $_GET['id_attendance'];
 
     // Fetch attendance details
-    $stmt = $db->db->prepare("
+    $stmt = $db->prepare("
         SELECT s.id_student, s.lastname_student, s.firstname_student, s.year_student, 
                sa.date_attendance, sa.status_attendance 
         FROM student_attendance sa

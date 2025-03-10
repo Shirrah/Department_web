@@ -2,12 +2,10 @@
 
 // Include the database connection class
 include_once('php/db-conn.php');
-
-// Instantiate the Database class to establish the connection
-$db = new Database();
+$db = Database::getInstance()->db;
 
 $notification_query = "SELECT * FROM notifications ORDER BY date_created DESC";
-$notifications = $db->db->query($notification_query);
+$notifications = $db->query($notification_query);
 ?>
 
 <link rel="stylesheet" href=".//.//stylesheet/admin/notifications.css">

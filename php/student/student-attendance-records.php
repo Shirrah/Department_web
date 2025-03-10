@@ -1,7 +1,7 @@
 <?php
 // Include the database connection
 require_once "././php/db-conn.php";
-$db = new Database();
+$db = Database::getInstance()->db;
 
 // Initialize an array for student attendance records
 $student_attendance_records = [];
@@ -30,7 +30,7 @@ if (isset($_SESSION['logged_in']) && $_SESSION['logged_in'] === 'yes') {
             sa.id_student = ? AND a.id_event = ?
     ";
 
-    $attendance_stmt = $db->db->prepare($attendance_sql);
+    $attendance_stmt = $db->prepare($attendance_sql);
     $attendance_stmt->bind_param("ii", $student_id, $event_id); // Bind both student ID and event ID
     $attendance_stmt->execute();
     $attendance_result = $attendance_stmt->get_result();

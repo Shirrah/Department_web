@@ -4,7 +4,7 @@ if (session_status() == PHP_SESSION_NONE) {
 }
 
 require_once "././php/db-conn.php";
-$db = new Database();
+$db = Database::getInstance()->db;
 
 // Get user ID (admin or student)
 $user_id = $_SESSION['user_data']['id_admin'] ?? $_SESSION['user_data']['id_student'];
@@ -28,7 +28,7 @@ $is_student = isset($_SESSION['user_data']['id_student']); // Check if user is a
                     LEFT JOIN student ON events.created_by = student.id_student
                     ORDER BY events.date_event DESC
                 ";
-                $events = $db->db->query($eventQuery);
+                $events = $db->query($eventQuery);
 
                 while ($event = $events->fetch_assoc()):
                 ?>
@@ -64,7 +64,7 @@ $is_student = isset($_SESSION['user_data']['id_student']); // Check if user is a
                                             date_default_timezone_set('Asia/Manila');
                                             $current_time = date("H:i:s");
                                             $attendanceQuery = "SELECT id_attendance, type_attendance, penalty_type, penalty_requirements, start_time, end_time FROM attendances WHERE id_event = ?";
-                                            $attendanceStmt = $db->db->prepare($attendanceQuery);
+                                            $attendanceStmt = $db->prepare($attendanceQuery);
                                             $attendanceStmt->bind_param("i", $event['id_event']);
                                             $attendanceStmt->execute();
                                             $attendances = $attendanceStmt->get_result();
@@ -85,7 +85,7 @@ $is_student = isset($_SESSION['user_data']['id_student']); // Check if user is a
                                                     // Fetch attendance status only for the logged-in student
                                                     if ($is_student) {
                                                         $studentQuery = "SELECT status_attendance FROM student_attendance WHERE id_attendance = ? AND id_student = ?";
-                                                        $studentStmt = $db->db->prepare($studentQuery);
+                                                        $studentStmt = $db->prepare($studentQuery);
                                                         $studentStmt->bind_param("ii", $attendance['id_attendance'], $user_id);
                                                         $studentStmt->execute();
                                                         $studentResult = $studentStmt->get_result();

@@ -1,7 +1,6 @@
 <?php
 require_once "../../php/db-conn.php"; // Adjust the path as needed
-$db = new Database();
-
+$db = Database::getInstance()->db;
 $id_student = $_GET['id_student'] ?? '';
 
 if (!$id_student) {
@@ -11,7 +10,7 @@ if (!$id_student) {
 
 // Fetch student details
 $queryStudent = "SELECT firstname_student, lastname_student, year_student FROM student WHERE id_student = ?";
-$stmtStudent = $db->db->prepare($queryStudent);
+$stmtStudent = $db->prepare($queryStudent);
 $stmtStudent->bind_param("s", $id_student);
 $stmtStudent->execute();
 $resultStudent = $stmtStudent->get_result();
@@ -35,7 +34,7 @@ $queryAttendance = "
     JOIN events e ON a.id_event = e.id_event
     WHERE sa.id_student = ?
     ORDER BY sa.date_attendance DESC";
-$stmtAttendance = $db->db->prepare($queryAttendance);
+$stmtAttendance = $db->prepare($queryAttendance);
 $stmtAttendance->bind_param("s", $id_student);
 $stmtAttendance->execute();
 $resultAttendance = $stmtAttendance->get_result();

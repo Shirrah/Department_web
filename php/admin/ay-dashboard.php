@@ -5,7 +5,7 @@ if (session_status() == PHP_SESSION_NONE) {
 ob_start(); // Start output buffering
 
 require_once "././php/db-conn.php";
-$db = new Database();
+$db = Database::getInstance()->db;
 
 // Get the user ID from the session (either admin or student)
 $user_id = $_SESSION['user_data']['id_admin'] ?? $_SESSION['user_data']['id_student'];
@@ -18,7 +18,7 @@ if (isset($_GET['semester']) && !empty($_GET['semester'])) {
 
 // Fetch the semesters from the database
 $query = "SELECT semester_ID, academic_year, semester_type FROM semester";
-$semester = $db->db->query($query);
+$semester = $db->query($query);
 
 // Handle deletion
 if (isset($_GET['delete_id'])) {
@@ -26,24 +26,23 @@ if (isset($_GET['delete_id'])) {
     
     // First, delete students related to the semester
     $deleteStudentsQuery = "DELETE FROM student WHERE semester_ID = ?";
-    $stmt = $db->db->prepare($deleteStudentsQuery);
+    $stmt = $db->prepare($deleteStudentsQuery);
     $stmt->bind_param("s", $delete_id);
     
     if ($stmt->execute()) {
         // Now, delete the semester
         $deleteQuery = "DELETE FROM semester WHERE semester_ID = ?";
-        $stmt = $db->db->prepare($deleteQuery);
+        $stmt = $db->prepare($deleteQuery);
         $stmt->bind_param("s", $delete_id);
 
         if ($stmt->execute()) {
-            $db->db->close();
             header("Location: ?content=admin-index&admin=ay-dashboard");
             exit();
         } else {
-            echo "<script>alert('Error deleting term: " . $db->db->error . "');</script>";
+            echo "<script>alert('Error deleting term: " . $db->error . "');</script>";
         }
     } else {
-        echo "<script>alert('Error deleting students: " . $db->db->error . "');</script>";
+        echo "<script>alert('Error deleting students: " . $db->error . "');</script>";
     }
 }
 
@@ -52,7 +51,7 @@ $editData = null;
 if (isset($_GET['edit_id'])) {
     $edit_id = htmlspecialchars($_GET['edit_id']);
     $editQuery = "SELECT * FROM semester WHERE semester_ID = ?";
-    $stmt = $db->db->prepare($editQuery);
+    $stmt = $db->prepare($editQuery);
     $stmt->bind_param("s", $edit_id);
     $stmt->execute();
     $result = $stmt->get_result();
@@ -77,12 +76,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
     if (!empty($semester_id)) {
         // If we're updating the record, use the new generated semester_ID
-        $stmt = $db->db->prepare("UPDATE semester SET semester_ID = ?, academic_year = ?, semester_type = ? WHERE semester_ID = ?");
+        $stmt = $db->prepare("UPDATE semester SET semester_ID = ?, academic_year = ?, semester_type = ? WHERE semester_ID = ?");
         $stmt->bind_param("ssss", $generated_semester_id, $academic_year, $semester_type, $semester_id);
         if ($stmt->execute()) {
             // Store the selected semester in session after updating
             $_SESSION['selected_semester'][$user_id] = $generated_semester_id;
-            $db->db->close();
             header("Location: ?content=admin-index&admin=ay-dashboard");
             exit();
         } else {
@@ -90,12 +88,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         }
     } else {
         // Insert a new record if no semester_ID is provided
-            $stmt = $db->db->prepare("INSERT INTO semester (semester_ID, academic_year, semester_type) VALUES (?, ?, ?)");
+            $stmt = $db->prepare("INSERT INTO semester (semester_ID, academic_year, semester_type) VALUES (?, ?, ?)");
             $stmt->bind_param("sss", $generated_semester_id, $academic_year, $semester_type);
             if ($stmt->execute()) {
                 // Store the generated semester_ID in session
                 $_SESSION['selected_semester'][$user_id] = $generated_semester_id;
-                $db->db->close();
                 header("Location: ?content=admin-index&admin=ay-dashboard");
                 exit();
             } else {

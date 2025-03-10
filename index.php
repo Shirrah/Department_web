@@ -5,7 +5,7 @@ if (session_status() == PHP_SESSION_NONE) {
 }  
 // Include the database connection
 require_once "././php/db-conn.php";
-$db = new Database();
+$db = Database::getInstance()->db;
 
 // Capture visit data
 $page_url = $_SERVER['REQUEST_URI'];           // Current page URL
@@ -13,13 +13,11 @@ $visitor_ip = $_SERVER['REMOTE_ADDR'];         // Visitor's IP address
 
 // Insert visit record into the database
 $sql = "INSERT INTO page_visits (page_url, visitor_ip) VALUES (?, ?)";
-$stmt = $db->db->prepare($sql);
+$stmt = $db->prepare($sql);
 $stmt->bind_param("ss", $page_url, $visitor_ip);
 $stmt->execute();
 $stmt->close();
 
-// Close the database connection
-$db->db->close();
 ob_start(); // Start output buffering
 ?>
 
