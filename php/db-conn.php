@@ -5,8 +5,7 @@ class Database {
     public $error;
 
     private function __construct() {
-        $this->db = new mysqli("p:auth-db1632.hstgr.io", "u958767601_shirrah", "Shirrah612345", "u958767601_dcs");
-        //$this->db = new mysqli("localhost", "root", "", "u958767601_dcs");
+        $this->db = new mysqli("auth-db1632.hstgr.io", "u958767601_shirrah", "Shirrah612345", "u958767601_dcs");
 
         if ($this->db->connect_error) {
             $this->error = "Connection failed: " . $this->db->connect_error;
@@ -19,6 +18,12 @@ class Database {
             self::$instance = new Database();
         }
         return self::$instance;
+    }
+
+    public function __destruct() {
+        if ($this->db) {
+            $this->db->close();
+        }
     }
 }
 ?>
