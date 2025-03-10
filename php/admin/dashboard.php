@@ -129,7 +129,7 @@ $result = $db->query($sql);
                 <div class="card-details">
                     <h2>Total students</h2>
                     <a class="dash-view-count" href=""><?php echo htmlspecialchars($student_count); ?></a>
-                    <a class="dash-view-loc" href="?content=admin-index&admin=student management">View Students</a>
+                    <a class="dash-view-loc" href="?content=admin-index&admin=student-management">View Students</a>
                 </div>
                 <img src=".//.//assets/images/team.png" alt="">
             </div>
