@@ -1,7 +1,7 @@
 <?php
 // Include the database connection
 require_once "././php/db-conn.php";
-$db = new Database();
+$db = Database::getInstance()->db;
 
 // Check if the user is logged in
 if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] != 'yes') {
@@ -22,23 +22,23 @@ if (!empty($_SESSION['selected_semester'][$user_id])) {
     $selected_semester = $_SESSION['selected_semester'][$user_id];
 } else {
     $query = "SELECT semester_ID FROM semester ORDER BY semester_ID DESC LIMIT 1";
-    $stmt = $db->db->prepare($query);
+    $stmt = $db->prepare($query);
     $stmt->execute();
     $result = $stmt->get_result();
     $selected_semester = ($result && $row = $result->fetch_assoc()) ? $row['semester_ID'] : null;
 }
 
 // Fetch semesters for dropdown
-$semesters = $db->db->query("SELECT semester_ID, academic_year, semester_type FROM semester");
+$semesters = $db->query("SELECT semester_ID, academic_year, semester_type FROM semester");
 
 // Count total events
-$stmt = $db->db->prepare("SELECT COUNT(*) AS events_count FROM events WHERE semester_ID = ?");
+$stmt = $db->prepare("SELECT COUNT(*) AS events_count FROM events WHERE semester_ID = ?");
 $stmt->bind_param("s", $selected_semester);
 $stmt->execute();
 $events_count = $stmt->get_result()->fetch_assoc()['events_count'] ?? 0;
 
 // Count total fees
-$stmt = $db->db->prepare("SELECT COUNT(*) AS fees_count FROM payments WHERE semester_ID = ?");
+$stmt = $db->prepare("SELECT COUNT(*) AS fees_count FROM payments WHERE semester_ID = ?");
 $stmt->bind_param("s", $selected_semester);
 $stmt->execute();
 $fees_count = $stmt->get_result()->fetch_assoc()['fees_count'] ?? 0;
