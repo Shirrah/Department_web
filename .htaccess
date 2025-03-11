@@ -1,0 +1,6 @@
+Options -Indexes
+RewriteEngine On
+RewriteBase /Department_web/
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^(.*)$ index.php?content=$1 [L,QSA]
