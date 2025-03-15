@@ -1,10 +1,9 @@
 <link rel="stylesheet" href=".//.//stylesheet/header.css">
 
-<link rel="stylesheet" href="././stylesheet/header.css">
 
 <!-- Header Section -->
-<nav class="navbar navbar-expand-lg navbar-light fixed-top bg-light shadow-sm">
-<div class="container-fluid d-flex align-items-center align-items-center h-100 bg-light" style="height: 100px;">
+<nav class="navbar navbar-expand-lg fixed-top shadow-sm">
+<div class="container-fluid d-flex align-items-center align-items-center h-100" style="height: 100px;">
     <!-- Logo and Brand -->
     <a class="navbar-brand d-flex align-items-center" href="#">
       <img src="./assets/images/sys-logo.png" alt="Logo" class="me-2" style="height: 40px;">
@@ -90,4 +89,18 @@ window.addEventListener('appinstalled', () => {
 
 // Run check on page load
 window.onload = checkIfInstalled;
+</script>
+
+
+
+<script>
+  window.addEventListener("scroll", function () {
+    let navbar = document.querySelector(".navbar");
+    if (window.scrollY > 50) {
+        navbar.style.height = "80px";
+    } else {
+        navbar.style.height = "100px"; // Default height
+    }
+});
+
 </script>
