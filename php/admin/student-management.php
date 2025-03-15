@@ -154,9 +154,9 @@ ob_end_flush();
       <div class="collapse navbar-collapse" id="navbarContent">
         <div class="navbar-nav ms-auto">
           <div class="divider"></div>
-          <a class="nav-link" href="#"><i class="bi bi-box-arrow-down"></i>Export</a>
+          <!-- <a class="nav-link" href="#"><i class="bi bi-box-arrow-down"></i>Export</a> -->
           <div class="divider"></div>
-          <a class="nav-link" href="#" ><i class="bi bi-box-arrow-in-up"></i>Import</a>
+          <!-- <a class="nav-link" href="#" ><i class="bi bi-box-arrow-in-up"></i>Import</a> -->
           <div class="divider"></div>
           <!-- Enroll Button to Trigger Modal -->
 <button id="enrollButton" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#enrollFormModal">
@@ -204,46 +204,56 @@ ob_end_flush();
             </div>
         </div>
 
-        <!-- Student Table -->
-        <table class="student-table" id="studentTable">
-            <thead>
+<!-- Student Table -->
+<table class="student-table" id="studentTable">
+    <thead>
+        <tr>
+            <th onclick="sortTable(0)">ID</th>
+            <th>Password</th>
+            <th onclick="sortTable(2)">Last Name</th>
+            <th onclick="sortTable(3)">First Name</th>
+            <th onclick="sortTable(4)">Year</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        <?php if ($students->num_rows > 0): ?>
+            <?php while ($row = $students->fetch_assoc()): ?>
                 <tr>
-                    <th onclick="sortTable(0)">ID</th>
-                    <th>Password</th>
-                    <th onclick="sortTable(2)">Last Name</th>
-                    <th onclick="sortTable(3)">First Name</th>
-                    <th onclick="sortTable(4)">Year</th>
-                    <th>Actions</th>
+                    <td><?= htmlspecialchars($row['id_student']) ?></td>
+                    <td>
+                        <span class="password-mask"><?= str_repeat('•', strlen($row['pass_student'])) ?></span>
+                        <span class="password-full" style="display:none;"><?= htmlspecialchars($row['pass_student']) ?></span>
+                        <button class="toggle-password-btn" onclick="togglePassword(this)"><i class="fas fa-eye"></i></button>
+                    </td>
+                    <td><?= htmlspecialchars($row['lastname_student']) ?></td>
+                    <td><?= htmlspecialchars($row['firstname_student']) ?></td>
+                    <td><?= htmlspecialchars($row['year_student']) ?></td>
+                    <td>
+                        <button class="btn btn-warning edit-student-btn" 
+                                data-id="<?= $row['id_student'] ?>"
+                                data-password="<?= $row['pass_student'] ?>"
+                                data-lastname="<?= $row['lastname_student'] ?>"
+                                data-firstname="<?= $row['firstname_student'] ?>"
+                                data-year="<?= $row['year_student'] ?>"
+                                data-bs-toggle="modal" 
+                                data-bs-target="#editStudentModal">
+                            <i class="fas fa-edit"></i> Edit
+                        </button>
+                        <a href="?content=admin-index&admin=student-management&delete_id=<?= $row['id_student'] ?>" class="btn btn-danger delete-btn">
+                            <i class="fas fa-trash"></i> Delete
+                        </a>
+                        <button class="btn btn-primary show-report-btn" data-id="<?= $row['id_student'] ?>" data-bs-toggle="modal" data-bs-target="#reportModal">
+                            Show Report
+                        </button>
+                    </td>
                 </tr>
-            </thead>
-            <tbody>
-                <?php if ($students->num_rows > 0): ?>
-                    <?php while ($row = $students->fetch_assoc()): ?>
-                        <tr>
-                            <td><?= htmlspecialchars($row['id_student']) ?></td>
-                            <td>
-                                <span class="password-mask"><?= str_repeat('•', strlen($row['pass_student'])) ?></span>
-                                <span class="password-full" style="display:none;"><?= htmlspecialchars($row['pass_student']) ?></span>
-                                <button class="toggle-password-btn" onclick="togglePassword(this)"><i class="fas fa-eye"></i></button>
-                            </td>
-                            <td><?= htmlspecialchars($row['lastname_student']) ?></td>
-                            <td><?= htmlspecialchars($row['firstname_student']) ?></td>
-                            <td><?= htmlspecialchars($row['year_student']) ?></td>
-                            <td>
-    <a href="?content=admin-index&admin=student-management&edit_id=<?= $row['id_student'] ?>"><i class="fas fa-edit"></i></a>
-    <a href="?content=admin-index&admin=student-management&delete_id=<?= $row['id_student'] ?>" class="delete-btn"><i class="fas fa-trash"></i></a>
-    <button class="btn btn-primary show-report-btn" data-id="<?= $row['id_student'] ?>" data-bs-toggle="modal" data-bs-target="#reportModal">
-        Show Report
-    </button>
-</td>
-
-                        </tr>
-                    <?php endwhile; ?>
-                <?php else: ?>
-                    <tr><td colspan="6">No students found</td></tr>
-                <?php endif; ?>
-            </tbody>
-        </table>
+            <?php endwhile; ?>
+        <?php else: ?>
+            <tr><td colspan="6">No students found</td></tr>
+        <?php endif; ?>
+    </tbody>
+</table>
 
         <!-- Pagination -->
         <div class="pagination">
@@ -517,5 +527,67 @@ function sortTable(columnIndex) {
         arrow.classList.add('desc');
     }
 }
+
+</script>
+
+
+<!-- Edit Student Modal -->
+<div class="modal fade" id="editStudentModal" tabindex="-1" aria-labelledby="editStudentModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="editStudentModalLabel">Edit Student</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="editStudentForm" method="POST" action="././php/admin/update_student.php">
+                    <input type="hidden" id="edit_id_student" name="id_student">
+                    
+                    <div class="mb-3">
+                        <label for="edit_pass_student" class="form-label">Password:</label>
+                        <input type="password" class="form-control" id="edit_pass_student" name="pass_student" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="edit_lastname_student" class="form-label">Lastname:</label>
+                        <input type="text" class="form-control" id="edit_lastname_student" name="lastname_student" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="edit_firstname_student" class="form-label">Firstname:</label>
+                        <input type="text" class="form-control" id="edit_firstname_student" name="firstname_student" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="edit_year_student" class="form-label">Year:</label>
+                        <select class="form-select" id="edit_year_student" name="year_student" required>
+                            <option value="1">1st Year</option>
+                            <option value="2">2nd Year</option>
+                            <option value="3">3rd Year</option>
+                            <option value="4">4th Year</option>
+                        </select>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-success">Update Student</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+    const editButtons = document.querySelectorAll(".edit-student-btn");
+
+    editButtons.forEach(button => {
+        button.addEventListener("click", function() {
+            document.getElementById("edit_id_student").value = this.getAttribute("data-id");
+            document.getElementById("edit_pass_student").value = this.getAttribute("data-password");
+            document.getElementById("edit_lastname_student").value = this.getAttribute("data-lastname");
+            document.getElementById("edit_firstname_student").value = this.getAttribute("data-firstname");
+            document.getElementById("edit_year_student").value = this.getAttribute("data-year");
+        });
+    });
+});
 
 </script>

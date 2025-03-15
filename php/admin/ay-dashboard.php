@@ -2,6 +2,7 @@
 if (session_status() == PHP_SESSION_NONE) {
     session_start();
 }
+
 ob_start(); // Start output buffering
 
 require_once "././php/db-conn.php";
@@ -88,8 +89,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         }
     } else {
         // Insert a new record if no semester_ID is provided
-            $stmt = $db->prepare("INSERT INTO semester (semester_ID, academic_year, semester_type) VALUES (?, ?, ?)");
-            $stmt->bind_param("sss", $generated_semester_id, $academic_year, $semester_type);
+        $date_created = date("Y-m-d H:i:s"); // Get current timestamp
+        $stmt = $db->prepare("INSERT INTO semester (semester_ID, academic_year, semester_type, date_created) VALUES (?, ?, ?, ?)");
+        $stmt->bind_param("ssss", $generated_semester_id, $academic_year, $semester_type, $date_created);        
             if ($stmt->execute()) {
                 // Store the generated semester_ID in session
                 $_SESSION['selected_semester'][$user_id] = $generated_semester_id;

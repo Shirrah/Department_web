@@ -97,7 +97,7 @@ $fees_count = $stmt->get_result()->fetch_assoc()['fees_count'] ?? 0;
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="reportModalLabel">Attedance & Fee Report</h5>
+                <h5 class="modal-title" id="reportModalLabel">Attendance & Fee Report</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body" id="reportContent">
@@ -116,7 +116,7 @@ $fees_count = $stmt->get_result()->fetch_assoc()['fees_count'] ?? 0;
                 // Get the logged-in student's ID
                 $id_student = $_SESSION['user_data']['id_student'];
 
-                // Fetch student details (full name and year level)
+                // Fetch student details
                 $queryStudent = "SELECT firstname_student, lastname_student, year_student FROM student WHERE id_student = ?";
                 $stmtStudent = $db->prepare($queryStudent);
                 $stmtStudent->bind_param("s", $id_student);
@@ -190,44 +190,60 @@ $fees_count = $stmt->get_result()->fetch_assoc()['fees_count'] ?? 0;
                     </table>
                 </div>
 
+                <!-- Fee Payment Table -->
+                <h5 class="mt-4"><strong>Fee Payment Report</strong></h5>
+                <div class="table-responsive">
+                    <table class="table table-bordered align-middle text-center">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Fee Name</th>
+                                <th>Amount</th>
+                                <th>Payment Status</th>
+                                <th>Payment Date</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php
+                            // Fetch student fee payment records
+                            $queryFees = "
+                                SELECT 
+                                    p.payment_name, 
+                                    p.payment_amount, 
+                                    sfr.status_payment, 
+                                    sfr.date_payment
+                                FROM student_fees_record sfr
+                                JOIN payments p ON sfr.id_payment = p.id_payment
+                                WHERE sfr.id_student = ? 
+                                AND sfr.semester_ID = ? 
+                                ORDER BY sfr.date_payment DESC";
+
+                            $stmtFees = $db->prepare($queryFees);
+                            $stmtFees->bind_param("ss", $id_student, $selected_semester);
+                            $stmtFees->execute();
+                            $resultFees = $stmtFees->get_result();
+
+                            // Display fee records
+                            while ($row = $resultFees->fetch_assoc()): ?>
+                                <tr>
+                                    <td><?php echo htmlspecialchars($row['payment_name']); ?></td>
+                                    <td>₱<?php echo number_format($row['payment_amount'], 2); ?></td>
+                                    <td>
+                                        <?php if ($row['status_payment'] == 1): ?>
+                                            <span class="badge bg-success"><i class="bi bi-check-circle"></i> Paid</span>
+                                        <?php else: ?>
+                                            <span class="badge bg-danger"><i class="bi bi-x-circle"></i> Not Paid</span>
+                                        <?php endif; ?>
+                                    </td>
+                                    <td>
+                                        <?php echo ($row['status_payment'] == 1) ? htmlspecialchars($row['date_payment']) : 'N/A'; ?>
+                                    </td>
+                                </tr>
+                            <?php endwhile; ?>
+                        </tbody>
+                    </table>
+                </div>
+
             </div>
-
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-
-<script>
-    // Print Modal Content
-function printReport() {
-    var content = document.getElementById("reportContent").innerHTML;
-    var printWindow = window.open("", "", "width=900,height=700");
-    printWindow.document.write("<html><head><title>Print Report</title>");
-    printWindow.document.write("<link rel='stylesheet' href='https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css'>");
-    printWindow.document.write("</head><body>");
-    printWindow.document.write(content);
-    printWindow.document.write("</body></html>");
-    printWindow.document.close();
-    printWindow.print();
-}
-
-// Download Report as PDF
-function downloadPDF() {
-    var content = document.getElementById("reportContent").innerHTML;
-    var opt = {
-        margin: 10,
-        filename: "Student_Report.pdf",
-        image: { type: "jpeg", quality: 0.98 },
-        html2canvas: { scale: 2 },
-        jsPDF: { unit: "mm", format: "a4", orientation: "portrait" }
-    };
-    html2pdf().from(content).set(opt).save();
-}
-
-</script>
-
-<script>
-    document.addEventListener('DOMContentLoaded', function () {
-        if (!sessionStorage.getItem('formSubmitted')) {
-            document.getElementById('semesterForm').submit();
-            sessionStorage.setItem('formSubmitted', 'true');
-        }
-    });
-</script>
+        </div>
+    </div>
+</div>

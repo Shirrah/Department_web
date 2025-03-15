@@ -6,10 +6,10 @@ class Database {
 
     private function __construct() {
         // Use Persistent Connection (prevents excessive new connections)
-        $host = "p:auth-db1632.hstgr.io";  // Persistent connection prefix "p:"
-        $user = "u958767601_shirrah";
-        $pass = "Shirrah612345";
-        $dbname = "u958767601_dcs";
+        $host = "p:5.181.217.145";  // Persistent connection prefix "p:"
+        $user = "hpo-admin";
+        $pass = "Shirrah+admin1234#";
+        $dbname = "dcs";
 
         // Create MySQLi Object
         $this->db = new mysqli($host, $user, $pass, $dbname);

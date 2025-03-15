@@ -1,4 +1,6 @@
 <?php
+date_default_timezone_set('Asia/Manila');
+
 if (session_status() == PHP_SESSION_NONE) {
     session_start();
 }
@@ -10,6 +12,7 @@ $db = Database::getInstance()->db;
 $user_id = $_SESSION['user_data']['id_admin'] ?? $_SESSION['user_data']['id_student'];
 $is_student = isset($_SESSION['user_data']['id_student']); // Check if user is a student
 ?>
+
 <div class="container mt-4">
     <div class="card shadow-sm">
         <div class="card-header">
@@ -61,8 +64,9 @@ $is_student = isset($_SESSION['user_data']['id_student']); // Check if user is a
                                         </thead>
                                         <tbody>
                                             <?php 
-                                            date_default_timezone_set('Asia/Manila');
-                                            $current_time = date("H:i:s");
+                                            $currentDateTime = new DateTime(); // Current date and time
+                                            $eventDate = new DateTime($event['date_event']); // Event date
+
                                             $attendanceQuery = "SELECT id_attendance, type_attendance, penalty_type, penalty_requirements, start_time, end_time FROM attendances WHERE id_event = ?";
                                             $attendanceStmt = $db->prepare($attendanceQuery);
                                             $attendanceStmt->bind_param("i", $event['id_event']);
@@ -71,17 +75,27 @@ $is_student = isset($_SESSION['user_data']['id_student']); // Check if user is a
 
                                             if ($attendances->num_rows > 0):
                                                 while ($attendance = $attendances->fetch_assoc()): 
-                                                    $start_time = date("h:i A", strtotime($attendance['start_time']));
-                                                    $end_time = date("h:i A", strtotime($attendance['end_time']));
-                                                    
-                                                    if ($current_time < $attendance['start_time']) {
+                                                    // Combine event date with start and end times
+                                                    $startTime = new DateTime($event['date_event'] . ' ' . $attendance['start_time']);
+                                                    $endTime = new DateTime($event['date_event'] . ' ' . $attendance['end_time']);
+                                                    $pendingTime = clone $startTime;
+                                                    $pendingTime->modify('-30 minutes'); // Pending status starts 30 mins before start time
+
+                                                    // Determine attendance status
+                                                    if ($currentDateTime < $pendingTime) {
+                                                        $newStatus = 'Not Yet Started';
+                                                        $status_badge = '<span class="badge bg-info">Not Yet Started</span>';
+                                                    } elseif ($currentDateTime >= $pendingTime && $currentDateTime < $startTime) {
+                                                        $newStatus = 'Pending';
                                                         $status_badge = '<span class="badge bg-warning text-dark">Pending</span>';
-                                                    } elseif ($current_time >= $attendance['start_time'] && $current_time <= $attendance['end_time']) {
+                                                    } elseif ($currentDateTime >= $startTime && $currentDateTime <= $endTime) {
+                                                        $newStatus = 'Ongoing';
                                                         $status_badge = '<span class="badge bg-primary">Ongoing</span>';
                                                     } else {
+                                                        $newStatus = 'Ended';
                                                         $status_badge = '<span class="badge bg-secondary">Ended</span>';
                                                     }
-                                                    
+
                                                     // Fetch attendance status only for the logged-in student
                                                     if ($is_student) {
                                                         $studentQuery = "SELECT status_attendance FROM student_attendance WHERE id_attendance = ? AND id_student = ?";
@@ -104,8 +118,8 @@ $is_student = isset($_SESSION['user_data']['id_student']); // Check if user is a
                                             <tr>
                                                 <td><?php echo $attendance['type_attendance']; ?></td>
                                                 <td><?php echo $status_badge; ?></td>
-                                                <td><?php echo $start_time; ?></td>
-                                                <td><?php echo $end_time; ?></td>
+                                                <td><?php echo $startTime->format("h:i A"); ?></td>
+                                                <td><?php echo $endTime->format("h:i A"); ?></td>
                                                 <td><span class="badge bg-info"> <?php echo $attendance['penalty_type']; ?> </span></td>
                                                 <td><?php echo $attendance['penalty_requirements']; ?></td>
                                                 <td><?php echo $student_status; ?></td>

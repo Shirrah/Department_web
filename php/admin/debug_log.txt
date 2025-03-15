@@ -1,0 +1,6 @@
+Array
+(
+    [student_id] => 48099001
+    [payment_id] => 128
+    [status_payment] => 0
+)

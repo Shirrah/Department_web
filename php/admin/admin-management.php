@@ -98,7 +98,10 @@ ob_end_flush();  // End output buffering and send output to the browser
     </div>
             
             <!-- Enroll button to trigger modal -->
-            <button id="enrollButton" onclick="openEnrollForm()">Add a new admin</button>
+            <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#enrollFormModal">
+    Add a New Admin
+</button>
+
 
             <div class="search-students">
             <input class="search-student-input" type="text" id="searchInput" onkeyup="searchTable()" placeholder="Search for admins" title="Type to search" style="padding-left: 30px;">
@@ -197,64 +200,62 @@ ob_end_flush();  // End output buffering and send output to the browser
         </div>
 </div>
 
-<!-- Enrollment Form Modal -->
-<div id="enrollFormModal" class="modal">
-    <div class="modal-content">
-        <span class="close" onclick="closeEnrollForm()">&times;</span>
-        <h2>Add New Admin</h2>
-        <form class="enrollForm" method="POST" action="">
-            <label for="id_admin">Identification Number (ID):</label>
-            <input type="text" id="id_admin" name="id_admin" required>
+<!-- Bootstrap Enrollment Form Modal -->
+<div class="modal fade" id="enrollFormModal" tabindex="-1" aria-labelledby="enrollFormModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="enrollFormModalLabel">Add New Admin</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" style="overflow: hidden;">
+                <form class="enrollForm" method="POST" action="">
+                    <div class="mb-3">
+                        <label for="id_admin" class="form-label">Identification Number (ID):</label>
+                        <input type="text" class="form-control" id="id_admin" name="id_admin" required>
+                    </div>
 
-            <label for="pass_admin">Password:</label>
-            <input type="password" id="pass_admin" name="pass_admin" required>
+                    <div class="mb-3">
+                        <label for="pass_admin" class="form-label">Password:</label>
+                        <input type="password" class="form-control" id="pass_admin" name="pass_admin" required>
+                    </div>
 
-            <label for="role_admin">Role:</label>
-            <select id="role_admin" name="role_admin" required>
-                <option value="" disabled selected>Select Role</option>
-                <option value="Governor">Governor</option>
-                <option value="Dean">Dean</option>
-                <option value="Secretary">Secretary</option>
-                <option value="Treasurer">Treasurer</option>
-                <option value="Guest Admin">Guest Admin</option>
-                <option value="Developer">Developer</option>
-                </select>
+                    <div class="mb-3">
+                        <label for="role_admin" class="form-label">Role:</label>
+                        <select class="form-select" id="role_admin" name="role_admin" required>
+                            <option value="" disabled selected>Select Role</option>
+                            <option value="Governor">Governor</option>
+                            <option value="Dean">Dean</option>
+                            <option value="Secretary">Secretary</option>
+                            <option value="Treasurer">Treasurer</option>
+                            <option value="Guest Admin">Guest Admin</option>
+                            <option value="Developer">Developer</option>
+                        </select>
+                    </div>
 
-            <label for="lastname_admin">Lastname:</label>
-            <input type="text" id="lastname_admin" name="lastname_admin" required>
+                    <div class="mb-3">
+                        <label for="lastname_admin" class="form-label">Last Name:</label>
+                        <input type="text" class="form-control" id="lastname_admin" name="lastname_admin" required>
+                    </div>
 
-            <label for="firstname_amdin">Firstname:</label>
-            <input type="text" id="firstname_admin" name="firstname_admin" required>
-            
+                    <div class="mb-3">
+                        <label for="firstname_admin" class="form-label">First Name:</label>
+                        <input type="text" class="form-control" id="firstname_admin" name="firstname_admin" required>
+                    </div>
 
-            <input type="submit" value="Add Student">
-        </form>
+                    <button type="submit" class="btn btn-primary">Add Admin</button>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
     </div>
 </div>
 
 
 
 <script>
-// JavaScript to open the modal
-function openEnrollForm() {
-    var modal = document.getElementById("enrollFormModal");
-    modal.style.display = "block";
-}
-
-// JavaScript to close the modal
-function closeEnrollForm() {
-    var modal = document.getElementById("enrollFormModal");
-    modal.style.display = "none";
-}
-
-// Close modal if clicking outside of modal content
-window.onclick = function(event) {
-    var modal = document.getElementById("enrollFormModal");
-    if (event.target == modal) {
-        modal.style.display = "none";
-    }
-}
-
 // Add confirmation before deleting a student
 document.querySelectorAll('.delete-btn').forEach(function(button) {
     button.addEventListener('click', function(e) {

@@ -121,11 +121,6 @@
     color: black;
 }
 
-.student-table td a {
-    color: #007BFF;
-    text-decoration: none;
-}
-
 .student-table td a:hover {
     text-decoration: underline;
 }
