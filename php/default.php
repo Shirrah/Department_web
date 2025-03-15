@@ -123,9 +123,6 @@ require_once "php/auth-check-login.php";
                         <i class="bi bi-file-earmark-text fs-5 me-2 text-tomato"></i> Transparent fee structure
                     </li>
                     <li class="d-flex align-items-center mb-2">
-                        <i class="bi bi-credit-card fs-5 me-2 text-tomato"></i> Multiple payment options
-                    </li>
-                    <li class="d-flex align-items-center mb-2">
                         <i class="bi bi-calendar-event fs-5 me-2 text-tomato"></i> Payment reminders and schedules
                     </li>
                     <li class="d-flex align-items-center mb-2">
