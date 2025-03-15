@@ -1,3 +1,3 @@
 #!/bin/bash
-cd /home/cloudpanel/htdocs/your-site
+cd /home/hpo-admin/htdocs/Department_web
 git pull origin main
