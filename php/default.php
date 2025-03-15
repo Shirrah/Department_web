@@ -33,7 +33,7 @@ require_once "php/auth-check-login.php";
 
 <div class="">
     <div class="container-fluid bg-dark py-5 text-white">
-        <div class="row align-items-center" style="margin-top: 100px;">
+        <div class="row align-items-center" style="margin-top: 143px;">
             <!-- Left Content --> 
             <div class="col-md-6 text-start px-5">
                 <h1 class="fw-bold text-tomato">College of Computer Studies</h1>
@@ -42,8 +42,7 @@ require_once "php/auth-check-login.php";
                     comprehensive system designed for the College of Computer Studies.
                 </p>
                 <div class="mt-4">
-                    <a href="#" class="btn btn-tomato me-2">Get Started</a>
-                    <a href="#" class="btn btn-outline-light">Learn More</a>
+                    <a href="?content=log-in" class="btn btn-outline-light">Get Started</a>
                 </div>
             </div>
 
@@ -67,7 +66,7 @@ require_once "php/auth-check-login.php";
                 <div class="col-md-4">
                     <div class="card border-0 shadow-sm p-4">
                         <div class="d-flex justify-content-center">
-                            <span class="bg-tomato p-3 rounded-circle text-white">
+                            <span class="bg-tomato p-3 text-white">
                                 <i class="bi bi-calendar-event fs-3"></i>
                             </span>
                         </div>
@@ -82,7 +81,7 @@ require_once "php/auth-check-login.php";
                 <div class="col-md-4">
                     <div class="card border-0 shadow-sm p-4">
                         <div class="d-flex justify-content-center">
-                            <span class="bg-tomato p-3 rounded-circle text-white">
+                            <span class="bg-tomato p-3 text-white">
                                 <i class="bi bi-credit-card fs-3"></i>
                             </span>
                         </div>
@@ -97,7 +96,7 @@ require_once "php/auth-check-login.php";
                 <div class="col-md-4">
                     <div class="card border-0 shadow-sm p-4">
                         <div class="d-flex justify-content-center">
-                            <span class="bg-tomato p-3 rounded-circle text-white">
+                            <span class="bg-tomato p-3 text-white">
                                 <i class="bi bi-people fs-3"></i>
                             </span>
                         </div>
@@ -133,15 +132,35 @@ require_once "php/auth-check-login.php";
                         <i class="bi bi-people fs-5 me-2 text-tomato"></i> Individual student accounts
                     </li>
                 </ul>
-                <a href="#" class="btn btn-tomato">Explore Fee Management</a>
             </div>
 
-            <!-- Right Image -->
-            <div class="col-md-6">
-                <div class="bg-dark d-flex align-items-center justify-content-center" style="height: 300px; border-radius: 10px;">
-                    <span class="text-muted">[Insert Image Here]</span>
+<!-- Right Image -->
+<div class="col-md-6">
+    <div class="d-flex align-items-center justify-content-center feather-container">
+        <div id="logoCarousel" class="carousel slide" data-bs-ride="carousel" data-bs-interval="5000">
+            <div class="carousel-inner">
+                <div class="carousel-item active">
+                    <img src="./assets/images/SJC-LOGO-NEWER-1536x1024.png" class="d-block mx-auto logo-img" alt="Logo 1">
+                </div>
+                <div class="carousel-item">
+                    <img src="./assets/images/ccslogo.png" class="d-block mx-auto logo-img" alt="Logo 2">
+                </div>
+                <div class="carousel-item">
+                    <img src="./assets/images/sys-logo.png" class="d-block mx-auto logo-img" alt="Logo 3">
                 </div>
             </div>
+        </div>
+    </div>
+</div>
+
+
+<!-- Custom CSS for feather effect -->
+<style>
+    .logo-img {
+        height: 300px;
+    }
+</style>
+
         </div>
     </div>
 </div>

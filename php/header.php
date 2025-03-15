@@ -91,16 +91,3 @@ window.addEventListener('appinstalled', () => {
 window.onload = checkIfInstalled;
 </script>
 
-
-
-<script>
-  window.addEventListener("scroll", function () {
-    let navbar = document.querySelector(".navbar");
-    if (window.scrollY > 50) {
-        navbar.style.height = "80px";
-    } else {
-        navbar.style.height = "100px"; // Default height
-    }
-});
-
-</script>
