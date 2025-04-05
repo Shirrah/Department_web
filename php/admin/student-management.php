@@ -185,12 +185,12 @@ ob_end_flush();
                     <div class="search-student-con">
                     <input type="hidden" name="content" value="admin-index">
                     <input type="hidden" name="admin" value="student-management">
-                    <input class="search-student-input" type="text" name="search" placeholder="Search..." value="<?= htmlspecialchars($search) ?>" />
+                    <input class="search-student-input" type="text" id="searchStudentInput" name="search" placeholder="Search..." value="<?= htmlspecialchars($search) ?>" />
                     <button type="submit">Search</button>
                     </div>
-                    <label>
-                        <input type="checkbox" name="show_all" value="true" <?= $show_all ? 'checked' : '' ?> onchange="this.form.submit()"> Show all records
-                    </label>
+                    <label id="showAllLabel">
+    <input type="checkbox" id="showAllCheckbox" name="show_all" value="true" <?= $show_all ? 'checked' : '' ?>> Show All
+</label>
                 </form>
             </div>
             <div class="manage-student-menu-list">
@@ -576,18 +576,74 @@ function sortTable(columnIndex) {
 </div>
 
 <script>
-    document.addEventListener("DOMContentLoaded", function() {
-    const editButtons = document.querySelectorAll(".edit-student-btn");
+document.getElementById('showAllCheckbox').addEventListener('change', function () {
+    const showAllLabel = document.getElementById('showAllLabel');
+    const isChecked = this.checked;
 
-    editButtons.forEach(button => {
-        button.addEventListener("click", function() {
-            document.getElementById("edit_id_student").value = this.getAttribute("data-id");
-            document.getElementById("edit_pass_student").value = this.getAttribute("data-password");
-            document.getElementById("edit_lastname_student").value = this.getAttribute("data-lastname");
-            document.getElementById("edit_firstname_student").value = this.getAttribute("data-firstname");
-            document.getElementById("edit_year_student").value = this.getAttribute("data-year");
-        });
-    });
+    // Update the label text based on the checkbox state
+    if (isChecked) {
+        showAllLabel.innerHTML = `
+            <input type="checkbox" id="showAllCheckbox" name="show_all" value="true" checked> Unshow All
+        `;
+    } else {
+        showAllLabel.innerHTML = `
+            <input type="checkbox" id="showAllCheckbox" name="show_all" value="true"> Show All
+        `;
+    }
+
+    // Reattach the event listener to the updated checkbox
+    document.getElementById('showAllCheckbox').addEventListener('change', arguments.callee);
+
+    // Fetch data dynamically based on the checkbox state
+    const searchValue = document.getElementById('searchStudentInput').value;
+    const semesterID = <?= json_encode($selected_semester) ?>; // Pass the selected semester ID
+    const page = 1; // Reset to the first page when toggling
+
+    fetch(`php/admin/search-students.php?search=${encodeURIComponent(searchValue)}&semester_ID=${encodeURIComponent(semesterID)}&show_all=${isChecked}&page=${page}`)
+        .then(response => response.json())
+        .then(data => {
+            const tableBody = document.querySelector('#studentTable tbody');
+            tableBody.innerHTML = ''; // Clear existing rows
+
+            if (data.length > 0) {
+                data.forEach(student => {
+                    const row = `
+                        <tr>
+                            <td>${student.id_student}</td>
+                            <td>
+                                <span class="password-mask">${'•'.repeat(student.pass_student.length)}</span>
+                                <span class="password-full" style="display:none;">${student.pass_student}</span>
+                                <button class="toggle-password-btn" onclick="togglePassword(this)"><i class="fas fa-eye"></i></button>
+                            </td>
+                            <td>${student.lastname_student}</td>
+                            <td>${student.firstname_student}</td>
+                            <td>${student.year_student}</td>
+                            <td>
+                                <button class="btn btn-warning edit-student-btn" 
+                                        data-id="${student.id_student}"
+                                        data-password="${student.pass_student}"
+                                        data-lastname="${student.lastname_student}"
+                                        data-firstname="${student.firstname_student}"
+                                        data-year="${student.year_student}"
+                                        data-bs-toggle="modal" 
+                                        data-bs-target="#editStudentModal">
+                                    <i class="fas fa-edit"></i> Edit
+                                </button>
+                                <a href="?content=admin-index&admin=student-management&delete_id=${student.id_student}" class="btn btn-danger delete-btn">
+                                    <i class="fas fa-trash"></i> Delete
+                                </a>
+                                <button class="btn btn-primary show-report-btn" data-id="${student.id_student}" data-bs-toggle="modal" data-bs-target="#reportModal">
+                                    Show Report
+                                </button>
+                            </td>
+                        </tr>
+                    `;
+                    tableBody.insertAdjacentHTML('beforeend', row);
+                });
+            } else {
+                tableBody.innerHTML = '<tr><td colspan="6">No students found</td></tr>';
+            }
+        })
+        .catch(error => console.error('Error fetching students:', error));
 });
-
 </script>
