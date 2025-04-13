@@ -7,223 +7,175 @@ if (session_status() == PHP_SESSION_NONE) {
 require_once "././php/db-conn.php";
 $db = Database::getInstance()->db;
 
-$query = "SELECT id_admin, pass_admin, role_admin, lastname_admin, firstname_admin FROM admins";
-$students = $db->query($query);
-
-// Handle form submission to enroll a new student
+// Handle form submission to enroll a new admin
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
+    // Sanitize and validate user inputs to prevent SQL injection and XSS
     $id_admin = htmlspecialchars($_POST['id_admin']);
     $pass_admin = htmlspecialchars($_POST['pass_admin']);
     $role_admin = htmlspecialchars($_POST['role_admin']);
     $lastname_admin = htmlspecialchars($_POST['lastname_admin']);
     $firstname_admin = htmlspecialchars($_POST['firstname_admin']);
-    
-    // Insert the new student data into the database
+
+    // Use prepared statement for inserting admin data
     $insertQuery = "INSERT INTO admins (id_admin, pass_admin, role_admin, lastname_admin, firstname_admin) 
-                    VALUES ('$id_admin', '$pass_admin','$role_admin', '$lastname_admin', '$firstname_admin')";
-    if ($db->query($insertQuery) === TRUE) {
+                    VALUES (?, ?, ?, ?, ?)";
+    $stmt = $db->prepare($insertQuery);
+    $stmt->bind_param("sssss", $id_admin, $pass_admin, $role_admin, $lastname_admin, $firstname_admin);
 
+    if ($stmt->execute()) {
         header("Location: ?content=admin-index&admin=admin-management");
         exit();
     } else {
-        echo "<script>alert('Error enrolling student: " . $db->error . "');</script>";
+        echo "<script>alert('Error enrolling admin: " . $db->error . "');</script>";
     }
 }
 
-// Handle student deletion
+// Handle admin deletion
 if (isset($_GET['delete_id'])) {
+    // Sanitize the delete ID
     $delete_id = htmlspecialchars($_GET['delete_id']);
-    $deleteQuery = "DELETE FROM admins WHERE id_admin = '$delete_id'";
+    $deleteQuery = "DELETE FROM admins WHERE id_admin = ?";
+    $stmt = $db->prepare($deleteQuery);
+    $stmt->bind_param("s", $delete_id);
 
-    if ($db->query($deleteQuery) === TRUE) {
-
+    if ($stmt->execute()) {
         header("Location: ?content=admin-index&admin=admin-management");
         exit();
     } else {
-        echo "<script>alert('Error deleting student: " . $db->error . "');</script>";
+        echo "<script>alert('Error deleting admin: " . $db->error . "');</script>";
     }
 }
 
-// Initialize pagination variables
-$limit = 10; // Records per page
-$page = isset($_GET['page']) ? max(1, (int)$_GET['page']) : 1; // Current page, default to 1
-$_SESSION['page'] = $page; // Store page in session
-$offset = ($page - 1) * $limit;
-
-// Fetch total records and calculate total pages
-$countQuery = "SELECT COUNT(*) as total FROM admins";
-$stmt = $db->prepare($countQuery);
+// Search logic
+$search = isset($_GET['search']) ? htmlspecialchars($_GET['search']) : '';
+$searchQuery = "SELECT id_admin, pass_admin, role_admin, lastname_admin, firstname_admin 
+                 FROM admins WHERE id_admin LIKE ? OR role_admin LIKE ? OR lastname_admin LIKE ? OR firstname_admin LIKE ?";
+$stmt = $db->prepare($searchQuery);
+$searchPattern = "%$search%";
+$stmt->bind_param("ssss", $searchPattern, $searchPattern, $searchPattern, $searchPattern);
 $stmt->execute();
-$totalResult = $stmt->get_result();
-$row = $totalResult->fetch_assoc();
-$totalRecords = $row ? (int)$row['total'] : 0; // Ensure totalRecords is assigned
-$totalPages = $totalRecords > 0 ? ceil($totalRecords / $limit) : 1;
-
-// Fetch records for the current page
-if (isset($_GET['show_all']) && $_GET['show_all'] == 'true') {
-    // Query to fetch all student records (no pagination)
-    $query = "SELECT id_admin, pass_admin, role_admin, lastname_admin, firstname_admin FROM admins";
-    $stmt = $db->prepare($query);
-    $stmt->execute();
-    $students = $stmt->get_result();
-    $totalPages = 1; // Only one page when showing all records
-    $page = 1; // Reset to the first page
-} else {
-    // Query to fetch paginated student records
-    $query = "SELECT id_admin, pass_admin, role_admin, lastname_admin, firstname_admin
-              FROM admins LIMIT $limit OFFSET $offset";
-    $stmt = $db->prepare($query);
-    $stmt->execute();
-    $students = $stmt->get_result();
-}
-
+$admins = $stmt->get_result();
 
 ob_end_flush();  // End output buffering and send output to the browser
 ?>
 
-<link rel="stylesheet" href=".//.//stylesheet/admin/student-management.css">
-<!-- Add Font Awesome for icons if it's not already included -->
+<!-- Add Bootstrap CSS for styling -->
+<link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+<link rel="stylesheet" href=".//.//stylesheet/admin/admin-management.css">
 
+<div class="">
+<nav class="navbar navbar-expand-lg navbar-light bg-light">
+    <div class="container-fluid">
+      <!-- Toggle Button on the Left -->
+      <a class="navbar-brand" href="#">Manage Admins</a>
+      <button class="navbar-toggler me-2" type="button" data-bs-toggle="collapse" data-bs-target="#navbarContent" aria-controls="navbarContent" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
 
-<div class="student-management-body">
-        <div class="student-table-con">
-        <div class="student-management-header">
-        <span>Manage Admin</span>
-        <div class="location">
-            <a href="?content=admin-index&admin=dashboard">Dashboard</a>
-            /
-            <span>Manage Admins</span>
-        </div>
-    </div>
-            
-            <!-- Enroll button to trigger modal -->
-            <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#enrollFormModal">
-    Add a New Admin
+      <!-- Collapsible Navbar Content -->
+      <div class="collapse navbar-collapse" id="navbarContent">
+        <div class="navbar-nav ms-auto">
+          <div class="divider"></div>
+          <!-- <a class="nav-link" href="#"><i class="bi bi-box-arrow-down"></i>Export</a> -->
+          <div class="divider"></div>
+          <!-- <a class="nav-link" href="#" ><i class="bi bi-box-arrow-in-up"></i>Import</a> -->
+          <div class="divider"></div>
+          <!-- Enroll Button to Trigger Modal -->
+<button id="enrollButton" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#enrollFormModal">
+    <i class="bi bi-box-arrow-in-up"></i> Add a New Admin
 </button>
 
-
-            <div class="search-students">
-            <input class="search-student-input" type="text" id="searchInput" onkeyup="searchTable()" placeholder="Search for admins" title="Type to search" style="padding-left: 30px;">
-            </div>
-       
-            <table class="student-table" id="studentTable">
-            <thead>
-                <tr>
-                    <th title="Click to sort" onclick="sortTable(0)">Identification Number <i class="fas fa-arrow-down sort-arrow"></i></th>
-                    <th title="Click to sort" onclick="sortTable(1)">Password <i class="fas fa-arrow-down sort-arrow"></i></th>
-                    <th title="Click to sort" onclick="sortTable(2)">Role <i class="fas fa-arrow-down sort-arrow"></i></th>
-                    <th title="Click to sort" onclick="sortTable(3)">Last Name <i class="fas fa-arrow-down sort-arrow"></i></th>
-                    <th title="Click to sort" onclick="sortTable(4)">First Name <i class="fas fa-arrow-down sort-arrow"></i></th>
-                    <th>Actions</th>
-                </tr>
-            </thead>
-
-    <tbody>
-
-    <style>
-        </style>
-        <?php
-        // Display each student in a table row
-        if ($students->num_rows > 0) {
-            while ($row = $students->fetch_assoc()) {
-                echo "<tr>";
-                echo "<td>" . htmlspecialchars($row['id_admin']) . "</td>";
-                echo "<td>
-                    <span class='password-mask'>" . str_repeat('•', strlen($row['pass_admin'])) . "</span>
-                    <span class='password-full' style='display:none;'>" . htmlspecialchars($row['pass_admin']) . "</span>
-                    <button class='toggle-password-btn' onclick='togglePassword(this)' title='Show Password'>
-                        <i class='fas fa-eye'></i>
-                    </button>
-                </td>";
-                echo "<td>" . htmlspecialchars($row['role_admin']) . "</td>";
-                echo "<td>" . htmlspecialchars($row['lastname_admin']) . "</td>";
-                echo "<td>" . htmlspecialchars($row['firstname_admin']) . "</td>";
-                echo "<td>
-                    <a href='?content=admin-index&admin=admin-management&edit_id=" . htmlspecialchars($row['id_admin']) . "' class='edit-btn'><i class='fas fa-edit'></i></a>
-                    <a href='?content=admin-index&admin=admin-management&delete_id=" . htmlspecialchars($row['id_admin']) . "' class='delete-btn'><i class='fas fa-trash'></i></a>
-                </td>";
-                echo "</tr>";
-            }
-        } else {
-            echo "<tr><td colspan='6'>No students found</td></tr>";
-        }
-        ?>
-    </tbody>
-</table>
-
-<script>
-    function togglePassword(button) {
-        const passwordMask = button.parentElement.querySelector('.password-mask');
-        const passwordFull = button.parentElement.querySelector('.password-full');
-        const isHidden = passwordFull.style.display === 'none';
-
-        if (isHidden) {
-            passwordMask.style.display = 'none';
-            passwordFull.style.display = 'inline';
-            button.innerHTML = '<i class="fas fa-eye-slash"></i>';
-            button.title = 'Hide Password';
-        } else {
-            passwordMask.style.display = 'inline';
-            passwordFull.style.display = 'none';
-            button.innerHTML = '<i class="fas fa-eye"></i>';
-            button.title = 'Show Password';
-        }
-    }
-</script>
-
-
-            <!-- No records found message -->
-            <p id="noRecordMsg" style="display:none;">No records found</p>
-            <div class="pagination">
-    <button <?php if($page <= 1) echo 'disabled'; ?> onclick="navigateToPage(1)">First</button>
-    <button <?php if($page <= 1) echo 'disabled'; ?> onclick="navigateToPage(<?php echo $page - 1; ?>)">Previous</button>
-    <span>Page <?php echo $page; ?> of <?php echo $totalPages; ?></span>
-    <button <?php if($page >= $totalPages) echo 'disabled'; ?> onclick="navigateToPage(<?php echo $page + 1; ?>)">Next</button>
-    <button <?php if($page >= $totalPages) echo 'disabled'; ?> onclick="navigateToPage(<?php echo $totalPages; ?>)">Last</button>
-
-    <!-- Show All Button -->
-    <button onclick="showAll()">Show All</button>
-
-    <script>
-    function navigateToPage(page) {
-        window.location.href = '?content=admin-index&admin=admin-management&page=' + page;
-    }
-
-    // Function for Show All button to remove pagination limit
-    function showAll() {
-        window.location.href = '?content=admin-index&admin=admin-management&show_all=true';
-    }
-    </script>
-</div>
-
+          <div class="divider"></div>
         </div>
+      </div>
+    </div>
+  </nav>
+
+    
+    <div class="admin-management-body">
+    <!-- Admin Table -->
+    <table class="admin-table">
+            <!-- Search Bar -->
+            <div class="form-group">
+    <form method="GET" action="">
+        <div class="input-group">
+            <div class="input-group-prepend">
+                <span class="input-group-text"><i class="fas fa-search"></i></span>
+            </div>
+            <input type="text" class="form-control" name="search" placeholder="Search for admins" value="<?= $search ?>" style="padding-left: 30px;">
+        </div>
+        <button type="submit" class="btn btn-primary mt-2">Search</button>
+    </form>
 </div>
 
-<!-- Bootstrap Enrollment Form Modal -->
+        <thead>
+            <tr>
+                <th onclick="sortTable(0)">Identification Number</th>
+                <th onclick="sortTable(1)">Password</th>
+                <th onclick="sortTable(2)">Role</th>
+                <th onclick="sortTable(3)">Last Name</th>
+                <th onclick="sortTable(4)">First Name</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody id="adminTable">
+            <?php
+            if ($admins->num_rows > 0) {
+                while ($row = $admins->fetch_assoc()) {
+                    echo "<tr>";
+                    echo "<td>" . htmlspecialchars($row['id_admin']) . "</td>";
+                    echo "<td>
+                        <span class='password-mask'>" . str_repeat('•', strlen($row['pass_admin'])) . "</span>
+                        <span class='password-full' style='display:none;'>" . htmlspecialchars($row['pass_admin']) . "</span>
+                        <button class='btn btn-link' onclick='togglePassword(this)' title='Show Password'>
+                            <i class='fas fa-eye'></i>
+                        </button>
+                    </td>";
+                    echo "<td>" . htmlspecialchars($row['role_admin']) . "</td>";
+                    echo "<td>" . htmlspecialchars($row['lastname_admin']) . "</td>";
+                    echo "<td>" . htmlspecialchars($row['firstname_admin']) . "</td>";
+                    echo "<td>
+                        <a href='?content=admin-index&admin=admin-management&edit_id=" . htmlspecialchars($row['id_admin']) . "' class='btn btn-warning btn-sm'>
+                            <i class='fas fa-edit'></i> Edit
+                        </a>
+                        <a href='?content=admin-index&admin=admin-management&delete_id=" . htmlspecialchars($row['id_admin']) . "' class='btn btn-danger btn-sm' onclick='return confirmDelete()'>
+                            <i class='fas fa-trash'></i> Delete
+                        </a>
+                    </td>";
+                    echo "</tr>";
+                }
+            } else {
+                echo "<tr><td colspan='6' class='text-center'>No admins found</td></tr>";
+            }
+            ?>
+        </tbody>
+    </table>
+    </div>
+</div>
+
+<!-- Modal for adding admin -->
 <div class="modal fade" id="enrollFormModal" tabindex="-1" aria-labelledby="enrollFormModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
+    <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title" id="enrollFormModalLabel">Add New Admin</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <div class="modal-body" style="overflow: hidden;">
-                <form class="enrollForm" method="POST" action="">
-                    <div class="mb-3">
-                        <label for="id_admin" class="form-label">Identification Number (ID):</label>
+            <div class="modal-body">
+                <form method="POST" action="">
+                    <div class="form-group">
+                        <label for="id_admin">Identification Number (ID):</label>
                         <input type="text" class="form-control" id="id_admin" name="id_admin" required>
                     </div>
-
-                    <div class="mb-3">
-                        <label for="pass_admin" class="form-label">Password:</label>
+                    <div class="form-group">
+                        <label for="pass_admin">Password:</label>
                         <input type="password" class="form-control" id="pass_admin" name="pass_admin" required>
                     </div>
-
-                    <div class="mb-3">
-                        <label for="role_admin" class="form-label">Role:</label>
-                        <select class="form-select" id="role_admin" name="role_admin" required>
-                            <option value="" disabled selected>Select Role</option>
+                    <div class="form-group">
+                        <label for="role_admin">Role:</label>
+                        <select class="form-control" id="role_admin" name="role_admin" required>
+                            <option value="">Select Role</option>
                             <option value="Governor">Governor</option>
                             <option value="Dean">Dean</option>
                             <option value="Secretary">Secretary</option>
@@ -232,140 +184,86 @@ ob_end_flush();  // End output buffering and send output to the browser
                             <option value="Developer">Developer</option>
                         </select>
                     </div>
-
-                    <div class="mb-3">
-                        <label for="lastname_admin" class="form-label">Last Name:</label>
+                    <div class="form-group">
+                        <label for="lastname_admin">Last Name:</label>
                         <input type="text" class="form-control" id="lastname_admin" name="lastname_admin" required>
                     </div>
-
-                    <div class="mb-3">
-                        <label for="firstname_admin" class="form-label">First Name:</label>
+                    <div class="form-group">
+                        <label for="firstname_admin">First Name:</label>
                         <input type="text" class="form-control" id="firstname_admin" name="firstname_admin" required>
                     </div>
-
-                    <button type="submit" class="btn btn-primary">Add Admin</button>
+                    <button type="submit" class="btn btn-success">Save Admin</button>
                 </form>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
             </div>
         </div>
     </div>
 </div>
 
-
-
+<!-- Add JavaScript to handle password visibility -->
 <script>
-// Add confirmation before deleting a student
-document.querySelectorAll('.delete-btn').forEach(function(button) {
-    button.addEventListener('click', function(e) {
-        if (!confirm("Are you sure you want to delete this student?")) {
-            e.preventDefault(); // Prevent the link from being followed
-        }
-    }); 
-});
-
-</script>
-
-
-
-<script>
-// JavaScript function to sort the table
-function sortTable(columnIndex) {
-    var table, rows, switching, i, x, y, shouldSwitch, dir, switchcount = 0;
-    table = document.getElementById("studentTable");
-    switching = true;
-    dir = "asc"; // Set the sorting direction to ascending initially
-
-    // Reset all arrow icons to down
-    var arrows = table.querySelectorAll('.sort-arrow');
-    arrows.forEach(function(arrow) {
-        arrow.classList.remove('asc', 'desc');
-        arrow.classList.add('desc'); // Reset all arrows to down
-    });
-
-    while (switching) {
-        switching = false;
-        rows = table.rows;
-
-        for (i = 1; i < (rows.length - 1); i++) {
-            shouldSwitch = false;
-            x = rows[i].getElementsByTagName("TD")[columnIndex];
-            y = rows[i + 1].getElementsByTagName("TD")[columnIndex];
-
-            // Check if the two rows should switch place based on the direction
-            if (dir == "asc") {
-                if (x.innerHTML.toLowerCase() > y.innerHTML.toLowerCase()) {
-                    shouldSwitch = true;
-                    break;
-                }
-            } else if (dir == "desc") {
-                if (x.innerHTML.toLowerCase() < y.innerHTML.toLowerCase()) {
-                    shouldSwitch = true;
-                    break;
-                }
-            }
-        }
-
-        if (shouldSwitch) {
-            // If a switch is needed, make the switch and mark that a switch was made
-            rows[i].parentNode.insertBefore(rows[i + 1], rows[i]);
-            switching = true;
-            switchcount++;
+    function togglePassword(button) {
+        const passwordField = button.closest('td').querySelector('.password-mask');
+        const passwordFull = button.closest('td').querySelector('.password-full');
+        if (passwordField.style.display === 'none') {
+            passwordField.style.display = 'inline';
+            passwordFull.style.display = 'none';
         } else {
-            // If no switching happened and the direction is "asc", change direction to "desc"
-            if (switchcount == 0 && dir == "asc") {
-                dir = "desc";
-                switching = true;
-            }
+            passwordField.style.display = 'none';
+            passwordFull.style.display = 'inline';
         }
     }
 
-    // Toggle the arrow for the clicked column
-    var header = table.rows[0].cells[columnIndex];
-    var arrow = header.querySelector('.sort-arrow');
-    if (dir === "asc") {
-        arrow.classList.remove('desc');
-        arrow.classList.add('asc');
-    } else {
-        arrow.classList.remove('asc');
-        arrow.classList.add('desc');
+    function confirmDelete() {
+        return confirm("Are you sure you want to delete this admin?");
     }
-}
-
-
-
-// JavaScript function to search the table
-function searchTable() {
-    var input, filter, table, tr, td, i, j, txtValue, visibleRowCount = 0;
-    input = document.getElementById("searchInput");
-    filter = input.value.toLowerCase();
-    table = document.getElementById("studentTable");
-    tr = table.getElementsByTagName("tr");
-
-    // Loop through all table rows (except the first, which contains table headers)
-    for (i = 1; i < tr.length; i++) {
-        tr[i].style.display = "none"; // Hide all rows initially
-        td = tr[i].getElementsByTagName("td");
-
-        // Loop through each cell in the row
-        for (j = 0; j < td.length; j++) {
-            if (td[j]) {
-                txtValue = td[j].textContent || td[j].innerText;
-                if (txtValue.toLowerCase().indexOf(filter) > -1) {
-                    tr[i].style.display = ""; // Show the row if any cell matches the search query
-                    visibleRowCount++; // Count visible rows
-                    break;
-                }
-            }
-        }
-    }
-
-    // Show "No records found" message if no rows are visible
-    if (visibleRowCount === 0) {
-        document.getElementById("noRecordMsg").style.display = "block";
-    } else {
-        document.getElementById("noRecordMsg").style.display = "none";
-    }
-}
 </script>
+
+<!-- Add CSS styling -->
+<style>
+    /* Table styling */
+    .admin-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 20px;
+        border: 1px solid #e8ecf1;
+    }
+
+    .admin-table th,
+    .admin-table td {
+        padding: 12px;
+        text-align: left;
+        font-size: 14px;
+        border-bottom: 1px solid #e8ecf1;
+        font-family: "Open Sans", sans-serif;
+    }
+
+    .admin-table th {
+        background-color: #f2f2f2;
+        color: black;
+        font-weight: bold;
+        cursor: pointer;
+        position: sticky;
+        user-select: none;
+        top: 0;
+    }
+
+    .admin-table th:hover {
+        background-color: #e1e1e1;
+    }
+
+    .admin-table tr:nth-child(even) {
+        background-color: #f9f9f9;
+    }
+
+    .admin-table tr:hover {
+        background-color: #f1f1f1;
+    }
+
+    .admin-table td {
+        color: black;
+    }
+
+    .admin-table td a:hover {
+        text-decoration: underline;
+    }
+</style>

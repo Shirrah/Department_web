@@ -1,7 +1,7 @@
 <link rel="stylesheet" href="stylesheet/footer.css">
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
 
-<div class="footer-body text-light py-3">
+<div class="footer-body text-light py-3" id="footer">
     <div class="container d-flex justify-content-between align-items-center">
         <div class="version">
             <p class="mb-0">Version 1.0.0 | © Copyright College of Computer Studies</p>

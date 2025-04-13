@@ -18,8 +18,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $stmt->bind_param("ssssi", $pass_student, $lastname_student, $firstname_student, $year_student, $id_student);
 
     if ($stmt->execute()) {
-        echo "<script>window.location.href='https://www.ccsportal.online/index.php?content=admin-index&admin=student-management';
-;</script>";
+        echo "<script>window.location.href='https://www.ccsportal.online/index.php?content=admin-index&admin=student-management';</script>";
     } else {
         echo "<script>alert('Update failed!');</script>";
     }

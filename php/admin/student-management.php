@@ -79,12 +79,9 @@ if (isset($_GET['delete_id'])) {
     }
 }
 
-// Pagination and filtering logic
+// Search logic (without pagination)
 $search = isset($_GET['search']) ? htmlspecialchars($_GET['search']) : '';
 $show_all = isset($_GET['show_all']) && $_GET['show_all'] === 'true';
-$limit = 10;
-$page = isset($_GET['page']) ? max(1, (int)$_GET['page']) : 1;
-$offset = ($page - 1) * $limit;
 
 // Query students with parameterized search to prevent SQL injection
 $search_term = "%$search%";
@@ -99,24 +96,14 @@ if ($show_all) {
     $query = "SELECT id_student, pass_student, lastname_student, firstname_student, year_student 
               FROM student 
               WHERE semester_ID = ? AND 
-                    (id_student LIKE ? OR lastname_student LIKE ? OR firstname_student LIKE ?)
-              LIMIT ? OFFSET ?";
+                    (id_student LIKE ? OR lastname_student LIKE ? OR firstname_student LIKE ?)";
     $stmt = $db->prepare($query);
-    $stmt->bind_param("ssssii", $selected_semester, $search_term, $search_term, $search_term, $limit, $offset);
+    $stmt->bind_param("ssss", $selected_semester, $search_term, $search_term, $search_term);
 }
 $stmt->execute();
 $students = $stmt->get_result();
 
-// Total records with parameterized query
-$countQuery = "SELECT COUNT(*) as total FROM student WHERE semester_ID = ? AND 
-                (id_student LIKE ? OR lastname_student LIKE ? OR firstname_student LIKE ?)";
-$stmt = $db->prepare($countQuery);
-$stmt->bind_param("ssss", $selected_semester, $search_term, $search_term, $search_term);
-$stmt->execute();
-$totalResult = $stmt->get_result();
-$totalRecords = $totalResult->fetch_assoc()['total'] ?? 0;
-$totalPages = $totalRecords > 0 ? ceil($totalRecords / $limit) : 1;
-
+// No need for the count query or pagination variables
 ob_end_flush();
 ?>
 
@@ -125,22 +112,6 @@ ob_end_flush();
 <link rel="stylesheet" href=".//.//stylesheet/admin/student-management.css">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 
-
-<style>
-    .navbar-nav .nav-link {
-      display: flex;
-      align-items: center;
-      padding: 0.5rem 1rem;
-    }
-    .navbar-nav .nav-link i {
-      margin-right: 6px;
-    }
-    .divider {
-      border-left: 1px solid #ddd;
-      height: 24px;
-      margin: auto 0;
-    }
-  </style>
 
   <nav class="navbar navbar-expand-lg navbar-light bg-light">
     <div class="container-fluid">
@@ -159,6 +130,9 @@ ob_end_flush();
           <!-- <a class="nav-link" href="#" ><i class="bi bi-box-arrow-in-up"></i>Import</a> -->
           <div class="divider"></div>
           <!-- Enroll Button to Trigger Modal -->
+          <button id="enrollButton" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#enrollFormModal">
+          <i class="fas fa-file-csv"></i> Import
+</button>
 <button id="enrollButton" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#enrollFormModal">
     <i class="bi bi-box-arrow-in-up"></i> Enroll Student
 </button>
@@ -188,9 +162,6 @@ ob_end_flush();
                     <input class="search-student-input" type="text" id="searchStudentInput" name="search" placeholder="Search..." value="<?= htmlspecialchars($search) ?>" />
                     <button type="submit">Search</button>
                     </div>
-                    <label id="showAllLabel">
-    <input type="checkbox" id="showAllCheckbox" name="show_all" value="true" <?= $show_all ? 'checked' : '' ?>> Show All
-</label>
                 </form>
             </div>
             <div class="manage-student-menu-list">
@@ -230,7 +201,7 @@ ob_end_flush();
                     <td><?= htmlspecialchars($row['firstname_student']) ?></td>
                     <td><?= htmlspecialchars($row['year_student']) ?></td>
                     <td>
-                        <button class="btn btn-warning edit-student-btn" 
+                        <button class="btn btn-warning edit-student-btn btn-sm" 
                                 data-id="<?= $row['id_student'] ?>"
                                 data-password="<?= $row['pass_student'] ?>"
                                 data-lastname="<?= $row['lastname_student'] ?>"
@@ -240,10 +211,10 @@ ob_end_flush();
                                 data-bs-target="#editStudentModal">
                             <i class="fas fa-edit"></i> Edit
                         </button>
-                        <a href="?content=admin-index&admin=student-management&delete_id=<?= $row['id_student'] ?>" class="btn btn-danger delete-btn">
+                        <a href="?content=admin-index&admin=student-management&delete_id=<?= $row['id_student'] ?>" class="btn btn-danger delete-btn btn-sm">
                             <i class="fas fa-trash"></i> Delete
                         </a>
-                        <button class="btn btn-primary show-report-btn" data-id="<?= $row['id_student'] ?>" data-bs-toggle="modal" data-bs-target="#reportModal">
+                        <button class="btn btn-primary show-report-btn btn-sm" data-id="<?= $row['id_student'] ?>" data-bs-toggle="modal" data-bs-target="#reportModal">
                             Show Report
                         </button>
                     </td>
@@ -255,20 +226,6 @@ ob_end_flush();
     </tbody>
 </table>
 
-        <!-- Pagination -->
-        <div class="pagination">
-            <ul>
-                <?php if ($page > 1): ?>
-                    <li><a href="?content=admin-index&admin=student-management&page=1&search=<?= urlencode($search) ?>">First</a></li>
-                    <li><a href="?content=admin-index&admin=student-management&page=<?= $page - 1 ?>&search=<?= urlencode($search) ?>">Prev</a></li>
-                <?php endif; ?>
-                <li>Page <?= $page ?> of <?= $totalPages ?></li>
-                <?php if ($page < $totalPages): ?>
-                    <li><a href="?content=admin-index&admin=student-management&page=<?= $page + 1 ?>&search=<?= urlencode($search) ?>">Next</a></li>
-                    <li><a href="?content=admin-index&admin=student-management&page=<?= $totalPages ?>&search=<?= urlencode($search) ?>">Last</a></li>
-                <?php endif; ?>
-            </ul>
-        </div>
     </div>
 </div>
 
@@ -338,19 +295,6 @@ ob_end_flush();
 });
 
 </script>
-
-    <script>
-    function navigateToPage(page) {
-        window.location.href = '?content=admin-index&admin=student-management&page=' + page;
-    }
-
-    // Function for Show All button to remove pagination limit
-    function showAll() {
-        window.location.href = '?content=admin-index&admin=student-management&show_all=true';
-    }
-    </script>
-
-    
 <script>
     function togglePassword(button) {
         const passwordMask = button.parentElement.querySelector('.password-mask');
@@ -574,76 +518,3 @@ function sortTable(columnIndex) {
         </div>
     </div>
 </div>
-
-<script>
-document.getElementById('showAllCheckbox').addEventListener('change', function () {
-    const showAllLabel = document.getElementById('showAllLabel');
-    const isChecked = this.checked;
-
-    // Update the label text based on the checkbox state
-    if (isChecked) {
-        showAllLabel.innerHTML = `
-            <input type="checkbox" id="showAllCheckbox" name="show_all" value="true" checked> Unshow All
-        `;
-    } else {
-        showAllLabel.innerHTML = `
-            <input type="checkbox" id="showAllCheckbox" name="show_all" value="true"> Show All
-        `;
-    }
-
-    // Reattach the event listener to the updated checkbox
-    document.getElementById('showAllCheckbox').addEventListener('change', arguments.callee);
-
-    // Fetch data dynamically based on the checkbox state
-    const searchValue = document.getElementById('searchStudentInput').value;
-    const semesterID = <?= json_encode($selected_semester) ?>; // Pass the selected semester ID
-    const page = 1; // Reset to the first page when toggling
-
-    fetch(`php/admin/search-students.php?search=${encodeURIComponent(searchValue)}&semester_ID=${encodeURIComponent(semesterID)}&show_all=${isChecked}&page=${page}`)
-        .then(response => response.json())
-        .then(data => {
-            const tableBody = document.querySelector('#studentTable tbody');
-            tableBody.innerHTML = ''; // Clear existing rows
-
-            if (data.length > 0) {
-                data.forEach(student => {
-                    const row = `
-                        <tr>
-                            <td>${student.id_student}</td>
-                            <td>
-                                <span class="password-mask">${'•'.repeat(student.pass_student.length)}</span>
-                                <span class="password-full" style="display:none;">${student.pass_student}</span>
-                                <button class="toggle-password-btn" onclick="togglePassword(this)"><i class="fas fa-eye"></i></button>
-                            </td>
-                            <td>${student.lastname_student}</td>
-                            <td>${student.firstname_student}</td>
-                            <td>${student.year_student}</td>
-                            <td>
-                                <button class="btn btn-warning edit-student-btn" 
-                                        data-id="${student.id_student}"
-                                        data-password="${student.pass_student}"
-                                        data-lastname="${student.lastname_student}"
-                                        data-firstname="${student.firstname_student}"
-                                        data-year="${student.year_student}"
-                                        data-bs-toggle="modal" 
-                                        data-bs-target="#editStudentModal">
-                                    <i class="fas fa-edit"></i> Edit
-                                </button>
-                                <a href="?content=admin-index&admin=student-management&delete_id=${student.id_student}" class="btn btn-danger delete-btn">
-                                    <i class="fas fa-trash"></i> Delete
-                                </a>
-                                <button class="btn btn-primary show-report-btn" data-id="${student.id_student}" data-bs-toggle="modal" data-bs-target="#reportModal">
-                                    Show Report
-                                </button>
-                            </td>
-                        </tr>
-                    `;
-                    tableBody.insertAdjacentHTML('beforeend', row);
-                });
-            } else {
-                tableBody.innerHTML = '<tr><td colspan="6">No students found</td></tr>';
-            }
-        })
-        .catch(error => console.error('Error fetching students:', error));
-});
-</script>

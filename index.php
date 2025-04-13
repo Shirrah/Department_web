@@ -51,32 +51,33 @@ ob_start(); // Start output buffering
         }
         ?>
 
-        <div class="content">
-            <?php
-            switch($content_pg){
-                case "default":
-                    include 'php/default.php';
-                    break;
-                case "log-in":
-                    include 'php/login-new.php';
-                    break;
-                case "admin-index":
-                    include 'php/admin/adminindex.php';
-                    break;
-                case "student-index":
-                    include 'php/student/student-index.php';
-                    break;
-                case "logout":
-                    session_destroy();
-                    header("Location: index.php?content=log-in");
-                    exit;
-                    break;
-                default:
-                    include 'php/default.php';
-                    break;
-            }
-            ?>
-        </div>
+<div class="content" id="main-content">
+    <?php
+    switch($content_pg){
+        case "default":
+            include 'php/default.php';
+            break;
+        case "log-in":
+            include 'php/login-new.php';
+            break;
+        case "admin-index":
+            include 'php/admin/adminindex.php';
+            break;
+        case "student-index":
+            include 'php/student/student-index.php';
+            break;
+        case "logout":
+            session_destroy();
+            header("Location: index.php?content=log-in");
+            exit;
+            break;
+        default:
+            include 'php/default.php';
+            break;
+    }
+    ?>
+</div>
+
 
         <?php
         // Include footer if not excluded
@@ -87,7 +88,50 @@ ob_start(); // Start output buffering
     </div>
 </body>
 
-</html>
+<script>
+$(document).ready(function(){
+    $('#login-link').click(function(e){
+  e.preventDefault();
 
-<style>
-</style>
+   // Show spinner, hide text
+   $('#login-text').addClass('d-none');
+    $('#login-spinner').removeClass('d-none');
+
+
+
+   // Add 2-second delay before loading login content
+   setTimeout(function() {
+      $('#main-content').load('index.php?content=log-in .content > *', function() {
+        // After content is loaded
+    
+        $('#login-spinner').addClass('d-none');
+        $('#login-text').removeClass('d-none');
+        // Hide header and footer
+        $('#header, #footer').hide(); // to hide
+      });
+
+      // Update browser URL
+      history.pushState(null, '', '?content=log-in');
+    }, 2000); // 2000 milliseconds = 2 seconds
+});
+
+});
+
+window.onpopstate = function () {
+  const urlParams = new URLSearchParams(window.location.search);
+  const page = urlParams.get('content') || 'default';
+
+  $('#main-content').load(`index.php?content=${page} .content > *`, function () {
+    // Show/hide header and footer based on content
+    if (page === 'log-in') {
+        $('#header, #footer').hide(); // to hide
+    } else {
+        $('#header, #footer').show(); // to show
+    }
+  });
+};
+
+</script>
+
+
+</html>
