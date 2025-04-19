@@ -4,7 +4,7 @@
 <div class="footer-body text-light py-3" id="footer">
     <div class="container d-flex justify-content-between align-items-center">
         <div class="version">
-            <p class="mb-0">Version 1.0.0 | © Copyright College of Computer Studies</p>
+            <p class="mb-0">Version: <?php echo $site_version; ?> | © Copyright College of Computer Studies</p>
         </div>
 
         <!-- Display Total Page Visits -->

@@ -1,29 +1,65 @@
 <?php
+ob_start();
 
-ini_set('display_errors', 1);
-ini_set('display_startup_errors', 1);
-error_reporting(E_ALL);
 
 require_once "../../php/db-conn.php";
+
+// Start session if not already started
+if (session_status() == PHP_SESSION_NONE) {
+    session_start();
+}
+
+// Only allow POST requests
+if ($_SERVER["REQUEST_METHOD"] != "POST") {
+    http_response_code(405); // Method Not Allowed
+    exit(json_encode(['success' => false, 'message' => 'Only POST requests allowed']));
+}
+
+// Get database connection
 $db = Database::getInstance()->db;
 
-if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    $id_student = $_POST['id_student'];
-    $pass_student = $_POST['pass_student'];
-    $lastname_student = $_POST['lastname_student'];
-    $firstname_student = $_POST['firstname_student'];
-    $year_student = $_POST['year_student'];
+// Sanitize and validate inputs
+$id_student = filter_input(INPUT_POST, 'id_student', FILTER_SANITIZE_STRING);
+$pass_student = filter_input(INPUT_POST, 'pass_student', FILTER_SANITIZE_STRING);
+$lastname_student = filter_input(INPUT_POST, 'lastname_student', FILTER_SANITIZE_STRING);
+$firstname_student = filter_input(INPUT_POST, 'firstname_student', FILTER_SANITIZE_STRING);
+$year_student = filter_input(INPUT_POST, 'year_student', FILTER_VALIDATE_INT, [
+    'options' => ['min_range' => 1, 'max_range' => 4]
+]);
 
-    $stmt = $db->prepare("UPDATE student SET pass_student=?, lastname_student=?, firstname_student=?, year_student=? WHERE id_student=?");
-    $stmt->bind_param("ssssi", $pass_student, $lastname_student, $firstname_student, $year_student, $id_student);
-
-    if ($stmt->execute()) {
-        echo "<script>window.location.href='https://www.ccsportal.online/index.php?content=admin-index&admin=student-management';</script>";
-    } else {
-        echo "<script>alert('Update failed!');</script>";
-    }
-
-    $stmt->close();
-    $db->close();
+// Validate all required fields
+if (!$id_student || !$pass_student || !$lastname_student || !$firstname_student || !$year_student) {
+    http_response_code(400); // Bad Request
+    exit(json_encode(['success' => false, 'message' => 'All fields are required']));
 }
+
+try {
+    // Prepare and execute update statement
+    $stmt = $db->prepare("UPDATE student SET 
+        pass_student = ?, 
+        lastname_student = ?, 
+        firstname_student = ?, 
+        year_student = ? 
+        WHERE id_student = ?");
+    
+    $stmt->bind_param("sssss", $pass_student, $lastname_student, $firstname_student, $year_student, $id_student);
+    
+    if ($stmt->execute()) {
+        // Return JSON response for AJAX handling
+        header('Content-Type: application/json');
+        echo json_encode(['success' => true, 'message' => 'Student updated successfully']);
+    } else {
+        throw new Exception("Database update failed");
+    }
+} catch (Exception $e) {
+    http_response_code(500); // Internal Server Error
+    echo json_encode(['success' => false, 'message' => 'Update failed: ' . $e->getMessage()]);
+}
+
+$stmt->close();
+$db->close();
+ob_end_clean();
+header('Content-Type: application/json');
+echo json_encode(['success' => true, 'message' => 'Student updated successfully']);
+exit();
 ?>

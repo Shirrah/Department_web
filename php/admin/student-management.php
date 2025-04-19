@@ -120,42 +120,69 @@ ob_end_flush();
 </nav>
 
 
-<!-- import csv modal -->
+<!-- Modern CSV/Excel Import Modal -->
 <div class="modal fade" id="enrollCsvModal" tabindex="-1" aria-labelledby="enrollCsvModalLabel" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
   <div class="modal-dialog modal-dialog-centered">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title" id="enrollCsvModalLabel">Import Students by CSV</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+    <div class="modal-content border-0 shadow">
+      <div class="modal-header bg-primary text-white">
+        <h5 class="modal-title" id="enrollCsvModalLabel">
+          <i class="fas fa-file-import me-2"></i>Import Students
+        </h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
-      <div class="modal-body">
-        <div class="import-container">
+      <div class="modal-body p-4">
+        <div class="import-container text-center">
           <!-- Hidden semester input -->
           <input type="hidden" id="csv_semester_ID" name="semester_ID" value="<?php echo htmlspecialchars($selected_semester); ?>">
           
-          <p class="text-muted small mb-3">
-            Download template: 
-            <a href="templates/student-import-template.csv" download class="text-primary">
-              <i class="fas fa-file-csv"></i> CSV Template
-            </a> or 
-            <a href="templates/student-import-template.xlsx" download class="text-success">
-              <i class="fas fa-file-excel"></i> Excel Template
-            </a>
-          </p>
+          <!-- Template download section -->
+          <div class="alert alert-light border mb-4">
+            <h6 class="fw-bold mb-3">Download Template</h6>
+            <div class="d-flex justify-content-center gap-3">
+              <a href="templates/student-import-template.csv" download class="btn btn-outline-primary btn-sm">
+                <i class="fas fa-file-csv me-2"></i>CSV Template
+              </a>
+              <a href="templates/student-import-template.xlsx" download class="btn btn-outline-success btn-sm">
+                <i class="fas fa-file-excel me-2"></i>Excel Template
+              </a>
+            </div>
+          </div>
           
-          <!-- File input -->
-          <input type="file" id="studentFile" name="studentFile" accept=".csv, .xlsx" required style="display: none;">
+          <!-- File upload section -->
+          <div class="file-upload-area border-2 border-dashed rounded-3 p-4 mb-3 bg-light">
+            <input type="file" id="studentFile" name="studentFile" accept=".csv, .xlsx" required class="d-none">
+            
+            <div class="file-upload-icon text-primary mb-3">
+              <i class="fas fa-cloud-upload-alt fa-3x"></i>
+            </div>
+            <h5 class="mb-2">Drag & drop your file here</h5>
+            <p class="small text-muted mb-3">or</p>
+            
+            <button id="importButton" class="btn btn-primary px-4">
+              <i class="fas fa-folder-open me-2"></i>Browse Files
+            </button>
+            
+            <div id="fileInfo" class="mt-3 small" style="display: none;">
+              <div class="alert alert-success d-flex align-items-center">
+                <i class="fas fa-check-circle me-2"></i>
+                <span id="fileName"></span>
+              </div>
+            </div>
+          </div>
           
-          <button title="Import (xlsx, csv)" class="btn btn-primary" id="importButton">
-            <i class="fas fa-file-excel"></i> Choose File
-          </button>
-          
-          <div id="fileInfo" class="small mt-2 text-muted" style="display: none;"></div>
           <div id="response" class="mt-3"></div>
+          
+          <div class="text-start mt-3 small text-muted">
+            <p class="mb-1"><i class="fas fa-info-circle me-2 text-primary"></i>Supported formats: .csv, .xlsx</p>
+            <p class="mb-0"><i class="fas fa-shield-alt me-2 text-primary"></i>Your data is secure and will be processed privately</p>
+          </div>
         </div>
       </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+      <div class="modal-footer bg-light">
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button type="button" id="submitImport" class="btn btn-primary" disabled>
+          <i class="fas fa-upload me-2"></i>Import Now
+        </button>
       </div>
     </div>
   </div>
@@ -335,6 +362,7 @@ ob_end_flush();
 </div>
 
 
+<script src="js/students-functions.js"></script>
 <script>
 // Pass PHP session value to JavaScript
 const selectedSemester = '<?php echo $_SESSION['selected_semester'][$user_id] ?? ''; ?>';
@@ -343,118 +371,6 @@ document.addEventListener('DOMContentLoaded', function() {
     // Load students initially with the selected semester
     loadStudents(selectedSemester || null);
 
-    // Function to load students via AJAX
-    function loadStudents(semester = null) {
-        const tbody = document.getElementById('studentTableBody');
-        tbody.innerHTML = '<tr><td colspan="6" class="text-center">Loading students...</td></tr>';
-        
-        // Build the URL with semester parameter if provided
-        let url = 'php/admin/fetch-student-records.php';
-        if (semester) {
-            url += `?semester=${semester}`;
-        }
-
-        fetch(url)
-            .then(response => response.json())
-            .then(data => {
-                if (data.length === 0) {
-                    tbody.innerHTML = '<tr><td colspan="6">No students found</td></tr>';
-                    return;
-                }
-
-                tbody.innerHTML = '';
-                data.forEach(student => {
-                    const row = document.createElement('tr');
-                    row.id = `student-row-${escapeHtml(student.id_student)}`; // Add unique row id
-                    row.innerHTML = `
-                        <td>${escapeHtml(student.id_student)}</td>
-                        <td>
-                            <span class="password-mask">${'•'.repeat(student.pass_student.length)}</span>
-                            <span class="password-full" style="display:none;">${escapeHtml(student.pass_student)}</span>
-                            <button class="toggle-password-btn" onclick="togglePassword(this)"><i class="fas fa-eye"></i></button>
-                        </td>
-                        <td>${escapeHtml(student.lastname_student)}</td>
-                        <td>${escapeHtml(student.firstname_student)}</td>
-                        <td>${escapeHtml(student.year_student)}</td>
-                        <td>
-                            <button class="btn btn-warning edit-student-btn btn-sm" 
-                                    data-id="${escapeHtml(student.id_student)}"
-                                    data-password="${escapeHtml(student.pass_student)}"
-                                    data-lastname="${escapeHtml(student.lastname_student)}"
-                                    data-firstname="${escapeHtml(student.firstname_student)}"
-                                    data-year="${escapeHtml(student.year_student)}"
-                                    data-bs-toggle="modal" 
-                                    data-bs-target="#editStudentModal">
-                                <i class="fas fa-edit"></i> Edit
-                            </button>
-                            <button class="btn btn-danger delete-btn btn-sm" 
-                                onclick="showDeleteConfirmation('${escapeHtml(student.id_student)}')">
-                                <i class="fas fa-trash"></i> Delete
-                            </button>
-                            <button class="btn btn-primary show-report-btn btn-sm" 
-                                    data-id="${escapeHtml(student.id_student)}" 
-                                    data-bs-toggle="modal" 
-                                    data-bs-target="#reportModal">
-                                Show Report
-                            </button>
-                        </td>
-                    `;
-                    tbody.appendChild(row);
-                });
-
-                // Reattach event listeners for the new elements
-                attachEventListeners();
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                tbody.innerHTML = '<tr><td colspan="6" class="text-danger">Error loading students</td></tr>';
-            });
-    }
-
-    // Helper function to escape HTML
-    function escapeHtml(unsafe) {
-        if (unsafe === null || unsafe === undefined) return '';
-        return unsafe.toString()
-            .replace(/&/g, "&amp;")
-            .replace(/</g, "&lt;")
-            .replace(/>/g, "&gt;")
-            .replace(/"/g, "&quot;")
-            .replace(/'/g, "&#039;");
-    }
-    
-    // Function to attach event listeners to dynamic elements
-    function attachEventListeners() {
-        // Report button click handlers
-        document.querySelectorAll('.show-report-btn').forEach(button => {
-            button.addEventListener('click', function() {
-                const studentId = this.getAttribute('data-id');
-                document.getElementById('reportContent').innerHTML = "<p class='text-center'>Loading report...</p>";
-                
-                fetch("php/admin/fetch-student-report.php?id_student=" + studentId)
-                    .then(response => response.text())
-                    .then(data => {
-                        document.getElementById('reportContent').innerHTML = data;
-                    })
-                    .catch(error => {
-                        document.getElementById('reportContent').innerHTML = "<p class='text-danger text-center'>Error loading report.</p>";
-                        console.error("Error fetching report:", error);
-                    });
-            });
-        });
-    
-        
-        // Edit button handlers
-        document.querySelectorAll('.edit-student-btn').forEach(button => {
-            button.addEventListener('click', function() {
-                document.getElementById('edit_id_student').value = this.getAttribute('data-id');
-                document.getElementById('edit_pass_student').value = this.getAttribute('data-password');
-                document.getElementById('edit_lastname_student').value = this.getAttribute('data-lastname');
-                document.getElementById('edit_firstname_student').value = this.getAttribute('data-firstname');
-                document.getElementById('edit_year_student').value = this.getAttribute('data-year');
-            });
-        });
-    }
-    
     // If you have a semester dropdown, add change handler
     const semesterDropdown = document.getElementById('semesterDropdown');
     if (semesterDropdown) {
@@ -463,53 +379,45 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    
-// Search functionality
-const searchInput = document.getElementById('searchStudentInput');
-if (searchInput) {
-    searchInput.addEventListener('input', function() {
-        const searchTerm = this.value.toLowerCase().trim();
-        const rows = document.querySelectorAll('#studentTableBody tr');
-        let hasMatches = false;
-        
-        rows.forEach(row => {
-            if (row.id === 'noResultsRow') return; // Skip the no results row
+    // Search functionality
+    const searchInput = document.getElementById('searchStudentInput');
+    if (searchInput) {
+        searchInput.addEventListener('input', function() {
+            const searchTerm = this.value.toLowerCase().trim();
+            const rows = document.querySelectorAll('#studentTableBody tr');
+            let hasMatches = false;
             
-            const cells = row.getElementsByTagName('td');
-            let rowMatches = false;
+            rows.forEach(row => {
+                if (row.id === 'noResultsRow') return; // Skip the no results row
+                
+                const cells = row.getElementsByTagName('td');
+                let rowMatches = false;
+                
+                // Check each cell except the last one (actions)
+                for (let j = 0; j < cells.length - 1; j++) {
+                    const cellText = cells[j].textContent.toLowerCase();
+                    if (cellText.includes(searchTerm)) {
+                        rowMatches = true;
+                        hasMatches = true;
+                        break;
+                    }
+                }
+                
+                row.style.display = rowMatches ? '' : 'none';
+            });
             
-            // Check each cell except the last one (actions)
-            for (let j = 0; j < cells.length - 1; j++) {
-                const cellText = cells[j].textContent.toLowerCase();
-                if (cellText.includes(searchTerm)) {
-                    rowMatches = true;
-                    hasMatches = true;
-                    break;
+            // Handle no results message
+            const noResultsRow = document.getElementById('noResultsRow');
+            if (noResultsRow) {
+                if (searchTerm && !hasMatches) {
+                    noResultsRow.style.display = '';
+                } else {
+                    noResultsRow.style.display = 'none';
                 }
             }
-            
-            row.style.display = rowMatches ? '' : 'none';
         });
-        
-        // Handle no results message
-        const noResultsRow = document.getElementById('noResultsRow');
-        if (noResultsRow) {
-            if (searchTerm && !hasMatches) {
-                // Create the row if it doesn't exist
-                if (!noResultsRow) {
-                    const tbody = document.querySelector('#studentTableBody');
-                    noResultsRow = document.createElement('tr');
-                    noResultsRow.id = 'noResultsRow';
-                    noResultsRow.innerHTML = `<td colspan="${document.querySelector('#studentTable thead th').length}" class="text-center">No results found</td>`;
-                    tbody.appendChild(noResultsRow);
-                }
-                noResultsRow.style.display = '';
-            } else {
-                noResultsRow.style.display = 'none';
-            }
-        }
-    });
-}
+    }
+    
     // Reload students after form submission
     document.getElementById('enrollForm')?.addEventListener('submit', function(e) {
         e.preventDefault();
@@ -537,47 +445,47 @@ if (searchInput) {
         });
     });
     
-    // Handle edit form submission
     document.getElementById('editStudentForm')?.addEventListener('submit', function(e) {
-        e.preventDefault();
-        const formData = new FormData(this);
+    e.preventDefault();
+    
+    const submitBtn = this.querySelector('button[type="submit"]');
+    const originalBtnText = submitBtn.innerHTML;
+    submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Updating...';
+    submitBtn.disabled = true;
+    
+    fetch('php/admin/update_student.php', {
+        method: 'POST',
+        body: new FormData(this),
+        headers: {
+            'Accept': 'application/json' // Explicitly ask for JSON
+        }
+    })
+    .then(response => {
+        // First check if the response is JSON
+        const contentType = response.headers.get('content-type');
+        if (!contentType || !contentType.includes('application/json')) {
+            throw new Error("Server didn't return JSON");
+        }
+        return response.json();
+    })
+    .then(data => {
+        if (!data.success) {
+            throw new Error(data.message || 'Update failed');
+        }
         
-        fetch('php/admin/update_student.php', {
-            method: 'POST',
-            body: formData
-        })
-        .then(response => response.text())
-        .then(result => {
-            if (result.trim() === 'success') {
-                const modal = bootstrap.Modal.getInstance(document.getElementById('editStudentModal'));
-                modal.hide();
-                createToast('success', 'Student updated successfully!');
-                loadStudents(); // Reload the student list
-            } else {
-                createToast('error', result);
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            createToast('error', 'Something went wrong.');
-        });
+        const modal = bootstrap.Modal.getInstance(document.getElementById('editStudentModal'));
+        modal.hide();
+        createToast('success', data.message || 'Student updated successfully!');
+        loadStudents(document.getElementById('semesterDropdown')?.value || null);
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        createToast('error', error.message || 'Something went wrong. Please check the console.');
+    })
+    .finally(() => {
+        submitBtn.innerHTML = originalBtnText;
+        submitBtn.disabled = false;
     });
 });
-
-// Global function for password toggling
-function togglePassword(button) {
-    const row = button.closest('tr');
-    const passwordMask = row.querySelector('.password-mask');
-    const passwordFull = row.querySelector('.password-full');
-    
-    if (passwordMask.style.display === 'none') {
-        passwordMask.style.display = '';
-        passwordFull.style.display = 'none';
-        button.innerHTML = '<i class="fas fa-eye"></i>';
-    } else {
-        passwordMask.style.display = 'none';
-        passwordFull.style.display = '';
-        button.innerHTML = '<i class="fas fa-eye-slash"></i>';
-    }
-}
+});
 </script>

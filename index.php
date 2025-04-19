@@ -34,6 +34,12 @@ ob_start(); // Start output buffering
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
     <!-- Add jQuery (CDN version) -->
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<?php
+$versionFile = file_get_contents(__DIR__ . '/version.json');
+$versionData = json_decode($versionFile, true);
+$site_version = $versionData['version'];
+?> 
+
 
     
     <link rel="manifest" href="manifest.json">
