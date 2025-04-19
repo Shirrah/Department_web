@@ -90,7 +90,7 @@ ob_start(); // Start output buffering
 
 <script>
 $(document).ready(function(){
-    $('#login-link').click(function(e){
+    $('').click(function(e){
   e.preventDefault();
 
    // Show spinner, hide text
@@ -101,7 +101,7 @@ $(document).ready(function(){
 
    // Add 2-second delay before loading login content
    setTimeout(function() {
-      $('#main-content').load('index.php?content=log-in .content > *', function() {
+      $('#main-content').load('> *', function() {
         // After content is loaded
     
         $('#login-spinner').addClass('d-none');

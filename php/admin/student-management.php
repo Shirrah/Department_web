@@ -63,43 +63,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     }
 }
 
-// Handle deletion
-if (isset($_GET['delete_id'])) {
-    // Sanitize the delete ID
-    $delete_id = htmlspecialchars($_GET['delete_id']);
-    $deleteQuery = "DELETE FROM student WHERE id_student = ?";
-    $stmt = $db->prepare($deleteQuery);
-    $stmt->bind_param("s", $delete_id);
-
-    if ($stmt->execute()) {
-        header("Location: ?content=admin-index&admin=student-management");
-        exit();
-    } else {
-        echo "<script>alert('Error deleting student: " . $stmt->error . "');</script>";
-    }
-}
-
-// Search logic (without pagination)
-$search = isset($_GET['search']) ? htmlspecialchars($_GET['search']) : '';
-$show_all = isset($_GET['show_all']) && $_GET['show_all'] === 'true';
-
-// Query students with parameterized search to prevent SQL injection
-$search_term = "%$search%";
-if ($show_all) {
-    $query = "SELECT id_student, pass_student, lastname_student, firstname_student, year_student 
-              FROM student 
-              WHERE semester_ID = ? AND 
-                    (id_student LIKE ? OR lastname_student LIKE ? OR firstname_student LIKE ?)";
-    $stmt = $db->prepare($query);
-    $stmt->bind_param("ssss", $selected_semester, $search_term, $search_term, $search_term);
-} else {
-    $query = "SELECT id_student, pass_student, lastname_student, firstname_student, year_student 
-              FROM student 
-              WHERE semester_ID = ? AND 
-                    (id_student LIKE ? OR lastname_student LIKE ? OR firstname_student LIKE ?)";
-    $stmt = $db->prepare($query);
-    $stmt->bind_param("ssss", $selected_semester, $search_term, $search_term, $search_term);
-}
+$query = "SELECT id_student, pass_student, lastname_student, firstname_student, year_student 
+          FROM student 
+          WHERE semester_ID = ?";
+$stmt = $db->prepare($query);
+$stmt->bind_param("s", $selected_semester);
 $stmt->execute();
 $students = $stmt->get_result();
 
@@ -111,118 +79,105 @@ ob_end_flush();
 <!-- Styles and Scripts -->
 <link rel="stylesheet" href=".//.//stylesheet/admin/student-management.css">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+<script src="js/upload-students.js"></script>
 
 
-  <nav class="navbar navbar-expand-lg navbar-light bg-light">
-    <div class="container-fluid">
-      <!-- Toggle Button on the Left -->
-      <a class="navbar-brand" href="#">Manage Students</a>
-      <button class="navbar-toggler me-2" type="button" data-bs-toggle="collapse" data-bs-target="#navbarContent" aria-controls="navbarContent" aria-expanded="false" aria-label="Toggle navigation">
-        <span class="navbar-toggler-icon"></span>
-      </button>
+<nav class="navbar navbar-expand-lg navbar-light bg-light shadow-sm">
+  <div class="container-fluid">
+    <!-- Toggle Button on the Left -->
+    <a class="navbar-brand" href="#">Manage Students</a>
+    <button class="navbar-toggler me-2" type="button" data-bs-toggle="collapse" data-bs-target="#navbarContent" aria-controls="navbarContent" aria-expanded="false" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
 
-      <!-- Collapsible Navbar Content -->
-      <div class="collapse navbar-collapse" id="navbarContent">
-        <div class="navbar-nav ms-auto">
-          <div class="divider"></div>
-          <!-- <a class="nav-link" href="#"><i class="bi bi-box-arrow-down"></i>Export</a> -->
-          <div class="divider"></div>
-          <!-- <a class="nav-link" href="#" ><i class="bi bi-box-arrow-in-up"></i>Import</a> -->
-          <div class="divider"></div>
-          <!-- Enroll Button to Trigger Modal -->
-          <button id="enrollButton" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#enrollFormModal">
-          <i class="fas fa-file-csv"></i> Import
-</button>
-<button id="enrollButton" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#enrollFormModal">
-    <i class="bi bi-box-arrow-in-up"></i> Enroll Student
-</button>
-
-          <div class="divider"></div>
+    <!-- Collapsible Navbar Content -->
+    <div class="collapse navbar-collapse" id="navbarContent">
+      <div class="navbar-nav ms-auto">
+        <!-- Divider Removed for Simplicity -->
+        
+        <!-- Search Bar with Form -->
+        <div class="d-flex align-items-center">
+        <div class="input-group">
+            <input type="text" class="form-control" id="searchStudentInput" placeholder="Search students..." 
+                aria-label="Search students" aria-describedby="basic-addon2">
+            <span class="input-group-text" id="basic-addon2"><i class="fas fa-search"></i></span>
         </div>
+    </div>
+
+
+        <!-- Import Button -->
+        <button class="btn btn-outline-success ms-3" id="enrollButton" data-bs-toggle="modal" data-bs-target="#enrollCsvModal">
+          <i class="fas fa-file-csv"></i> Import
+        </button>
+
+        <!-- Enroll Button to Trigger Modal -->
+        <button class="btn btn-outline-primary ms-3" id="enrollButton" data-bs-toggle="modal" data-bs-target="#enrollFormModal">
+          <i class="bi bi-box-arrow-in-up"></i> Enroll Student
+        </button>
       </div>
     </div>
-  </nav>
+  </div>
+</nav>
 
+
+<!-- import csv modal -->
+<div class="modal fade" id="enrollCsvModal" tabindex="-1" aria-labelledby="enrollCsvModalLabel" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="enrollCsvModalLabel">Import Students by CSV</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <div class="import-container">
+          <!-- Hidden semester input -->
+          <input type="hidden" id="csv_semester_ID" name="semester_ID" value="<?php echo htmlspecialchars($selected_semester); ?>">
+          
+          <p class="text-muted small mb-3">
+            Download template: 
+            <a href="templates/student-import-template.csv" download class="text-primary">
+              <i class="fas fa-file-csv"></i> CSV Template
+            </a> or 
+            <a href="templates/student-import-template.xlsx" download class="text-success">
+              <i class="fas fa-file-excel"></i> Excel Template
+            </a>
+          </p>
+          
+          <!-- File input -->
+          <input type="file" id="studentFile" name="studentFile" accept=".csv, .xlsx" required style="display: none;">
+          
+          <button title="Import (xlsx, csv)" class="btn btn-primary" id="importButton">
+            <i class="fas fa-file-excel"></i> Choose File
+          </button>
+          
+          <div id="fileInfo" class="small mt-2 text-muted" style="display: none;"></div>
+          <div id="response" class="mt-3"></div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
 
 <!-- HTML Content -->
 <div class="student-management-body">
     <div class="student-table-con">
-
-        <!-- Enroll Form -->
-        <!-- <button id="enrollButton" onclick="openEnrollForm()">Add Student</button> -->
-
-
-        <!-- Search & Show All -->
-         <div class="manage-student-menu">
-            <div class="search-students">
-                <form method="GET" action="">
-                    <div class="search-student-con">
-                    <input type="hidden" name="content" value="admin-index">
-                    <input type="hidden" name="admin" value="student-management">
-                    <input class="search-student-input" type="text" id="searchStudentInput" name="search" placeholder="Search..." value="<?= htmlspecialchars($search) ?>" />
-                    <button type="submit">Search</button>
-                    </div>
-                </form>
-            </div>
-            <div class="manage-student-menu-list">
-                <div class="import-container">
-                    <!-- Hidden file input -->
-                    <input type="file" id="studentFile" name="studentFile" accept=".csv, .xlsx" required>
-                    <!-- Import Button that triggers the file input -->
-                    <button title="Import (xlsx, csv)" class="btn-import" id="importButton"><i class="fas fa-file-excel"></i>Import</button>
-                    <div id="response"></div>
-                </div>
-            </div>
-        </div>
-
 <!-- Student Table -->
 <table class="student-table" id="studentTable">
     <thead>
         <tr>
-            <th onclick="sortTable(0)">ID</th>
+            <th>ID</th>
             <th>Password</th>
-            <th onclick="sortTable(2)">Last Name</th>
-            <th onclick="sortTable(3)">First Name</th>
-            <th onclick="sortTable(4)">Year</th>
+            <th>Last Name</th>
+            <th>First Name</th>
+            <th>Year</th>
             <th>Actions</th>
         </tr>
     </thead>
-    <tbody>
-        <?php if ($students->num_rows > 0): ?>
-            <?php while ($row = $students->fetch_assoc()): ?>
-                <tr>
-                    <td><?= htmlspecialchars($row['id_student']) ?></td>
-                    <td>
-                        <span class="password-mask"><?= str_repeat('•', strlen($row['pass_student'])) ?></span>
-                        <span class="password-full" style="display:none;"><?= htmlspecialchars($row['pass_student']) ?></span>
-                        <button class="toggle-password-btn" onclick="togglePassword(this)"><i class="fas fa-eye"></i></button>
-                    </td>
-                    <td><?= htmlspecialchars($row['lastname_student']) ?></td>
-                    <td><?= htmlspecialchars($row['firstname_student']) ?></td>
-                    <td><?= htmlspecialchars($row['year_student']) ?></td>
-                    <td>
-                        <button class="btn btn-warning edit-student-btn btn-sm" 
-                                data-id="<?= $row['id_student'] ?>"
-                                data-password="<?= $row['pass_student'] ?>"
-                                data-lastname="<?= $row['lastname_student'] ?>"
-                                data-firstname="<?= $row['firstname_student'] ?>"
-                                data-year="<?= $row['year_student'] ?>"
-                                data-bs-toggle="modal" 
-                                data-bs-target="#editStudentModal">
-                            <i class="fas fa-edit"></i> Edit
-                        </button>
-                        <a href="?content=admin-index&admin=student-management&delete_id=<?= $row['id_student'] ?>" class="btn btn-danger delete-btn btn-sm">
-                            <i class="fas fa-trash"></i> Delete
-                        </a>
-                        <button class="btn btn-primary show-report-btn btn-sm" data-id="<?= $row['id_student'] ?>" data-bs-toggle="modal" data-bs-target="#reportModal">
-                            Show Report
-                        </button>
-                    </td>
-                </tr>
-            <?php endwhile; ?>
-        <?php else: ?>
-            <tr><td colspan="6">No students found</td></tr>
-        <?php endif; ?>
+    <tbody id="studentTableBody">
+        <!-- This will be populated by JavaScript -->
     </tbody>
 </table>
 
@@ -244,76 +199,7 @@ ob_end_flush();
 </div>
 
 
-<script>
-    document.querySelectorAll('.show-report-btn').forEach(button => {
-    button.addEventListener('click', function () {
-        const studentId = this.getAttribute('data-id');
-        document.getElementById('reportContent').innerHTML = "<p class='text-center'>Loading report...</p>";
 
-        // Fetch the student report via AJAX
-        fetch("php/admin/fetch-student-report.php?id_student=" + studentId)
-            .then(response => response.text())
-            .then(data => {
-                document.getElementById('reportContent').innerHTML = data;
-            })
-            .catch(error => {
-                document.getElementById('reportContent').innerHTML = "<p class='text-danger text-center'>Error loading report.</p>";
-                console.error("Error fetching report:", error);
-            });
-    });
-});
-
-</script>
-
-<script>
-    document.getElementById('importButton').addEventListener('click', function() {
-        // Trigger the file input click when the import button is clicked
-        document.getElementById('studentFile').click();
-    });
-
-   document.getElementById('studentFile').addEventListener('change', function(event) {
-    const file = event.target.files[0];
-    if (!file) return;
-
-    const formData = new FormData();
-    formData.append('studentFile', file);
-
-    document.getElementById('response').innerHTML = 'Uploading...';
-
-    fetch('php/admin/upload-students.php', {
-        method: 'POST',
-        body: formData
-    })
-    .then(response => response.text())
-    .then(result => {
-        document.getElementById('response').innerHTML = `<span style="color: green;">${result}</span>`;
-        location.reload(); // Reload page on successful upload
-    })
-    .catch(error => {
-        document.getElementById('response').innerHTML = `<span style="color: red;">Error: ${error.message}</span>`;
-    });
-});
-
-</script>
-<script>
-    function togglePassword(button) {
-        const passwordMask = button.parentElement.querySelector('.password-mask');
-        const passwordFull = button.parentElement.querySelector('.password-full');
-        const isHidden = passwordFull.style.display === 'none';
-
-        if (isHidden) {
-            passwordMask.style.display = 'none';
-            passwordFull.style.display = 'inline';
-            button.innerHTML = '<i class="fas fa-eye-slash"></i>';
-            button.title = 'Hide Password';
-        } else {
-            passwordMask.style.display = 'inline';
-            passwordFull.style.display = 'none';
-            button.innerHTML = '<i class="fas fa-eye"></i>';
-            button.title = 'Show Password';
-        }
-    }
-</script>
 </div>
 
         </div>
@@ -328,7 +214,8 @@ ob_end_flush();
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body" style="overflow: hidden;">
-                <form class="enrollForm" method="POST" action="">
+            <form class="enrollForm" id="enrollForm">
+
                     <div class="mb-3">
                         <label for="id_student" class="form-label">Identification Number (ID):</label>
                         <input type="text" class="form-control" id="id_student" name="id_student" required>
@@ -374,105 +261,8 @@ ob_end_flush();
     </div>
 </div>
 
-<script>
-// JavaScript to open the modal
-function openEnrollForm() {
-    var modal = document.getElementById("enrollFormModal");
-    modal.style.display = "block";
-}
 
-// JavaScript to close the modal
-function closeEnrollForm() {
-    var modal = document.getElementById("enrollFormModal");
-    modal.style.display = "none";
-}
-
-// Close modal if clicking outside of modal content
-window.onclick = function(event) {
-    var modal = document.getElementById("enrollFormModal");
-    if (event.target == modal) {
-        modal.style.display = "none";
-    }
-}
-
-// Add confirmation before deleting a student
-document.querySelectorAll('.delete-btn').forEach(function(button) {
-    button.addEventListener('click', function(e) {
-        if (!confirm("Are you sure you want to delete this student?")) {
-            e.preventDefault(); // Prevent the link from being followed
-        }
-    });
-});
-
-</script>
-
-
-
-<script>
-// JavaScript function to sort the table
-function sortTable(columnIndex) {
-    var table, rows, switching, i, x, y, shouldSwitch, dir, switchcount = 0;
-    table = document.getElementById("studentTable");
-    switching = true;
-    dir = "asc"; // Set the sorting direction to ascending initially
-
-    // Reset all arrow icons to down
-    var arrows = table.querySelectorAll('.sort-arrow');
-    arrows.forEach(function(arrow) {
-        arrow.classList.remove('asc', 'desc');
-        arrow.classList.add('desc'); // Reset all arrows to down
-    });
-
-    while (switching) {
-        switching = false;
-        rows = table.rows;
-
-        for (i = 1; i < (rows.length - 1); i++) {
-            shouldSwitch = false;
-            x = rows[i].getElementsByTagName("TD")[columnIndex];
-            y = rows[i + 1].getElementsByTagName("TD")[columnIndex];
-
-            // Check if the two rows should switch place based on the direction
-            if (dir == "asc") {
-                if (x.innerHTML.toLowerCase() > y.innerHTML.toLowerCase()) {
-                    shouldSwitch = true;
-                    break;
-                }
-            } else if (dir == "desc") {
-                if (x.innerHTML.toLowerCase() < y.innerHTML.toLowerCase()) {
-                    shouldSwitch = true;
-                    break;
-                }
-            }
-        }
-
-        if (shouldSwitch) {
-            // If a switch is needed, make the switch and mark that a switch was made
-            rows[i].parentNode.insertBefore(rows[i + 1], rows[i]);
-            switching = true;
-            switchcount++;
-        } else {
-            // If no switching happened and the direction is "asc", change direction to "desc"
-            if (switchcount == 0 && dir == "asc") {
-                dir = "desc";
-                switching = true;
-            }
-        }
-    }
-
-    // Toggle the arrow for the clicked column
-    var header = table.rows[0].cells[columnIndex];
-    var arrow = header.querySelector('.sort-arrow');
-    if (dir === "asc") {
-        arrow.classList.remove('desc');
-        arrow.classList.add('asc');
-    } else {
-        arrow.classList.remove('asc');
-        arrow.classList.add('desc');
-    }
-}
-
-</script>
+<?php include_once "././php/toast-system.php"; ?>
 
 
 <!-- Edit Student Modal -->
@@ -485,7 +275,10 @@ function sortTable(columnIndex) {
             </div>
             <div class="modal-body">
                 <form id="editStudentForm" method="POST" action="././php/admin/update_student.php">
-                    <input type="hidden" id="edit_id_student" name="id_student">
+                    <div class="mb-3">
+                        <label for="" class="form-label">Student ID:</label>
+                        <input type="text" class="form-control" id="edit_id_student" name="id_student" readonly>
+                    </div>
                     
                     <div class="mb-3">
                         <label for="edit_pass_student" class="form-label">Password:</label>
@@ -518,3 +311,273 @@ function sortTable(columnIndex) {
         </div>
     </div>
 </div>
+
+<script src="js/delete-student.js"></script>
+
+
+<!-- Delete Confirmation Modal -->
+<div class="modal fade" id="deleteConfirmationModal" tabindex="-1" aria-labelledby="deleteConfirmationModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="deleteConfirmationModalLabel">Confirm Deletion</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                Are you sure you want to delete this student? This action cannot be undone.
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-danger" id="confirmDeleteBtn">Delete</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<script>
+// Pass PHP session value to JavaScript
+const selectedSemester = '<?php echo $_SESSION['selected_semester'][$user_id] ?? ''; ?>';
+
+document.addEventListener('DOMContentLoaded', function() {
+    // Load students initially with the selected semester
+    loadStudents(selectedSemester || null);
+
+    // Function to load students via AJAX
+    function loadStudents(semester = null) {
+        const tbody = document.getElementById('studentTableBody');
+        tbody.innerHTML = '<tr><td colspan="6" class="text-center">Loading students...</td></tr>';
+        
+        // Build the URL with semester parameter if provided
+        let url = 'php/admin/fetch-student-records.php';
+        if (semester) {
+            url += `?semester=${semester}`;
+        }
+
+        fetch(url)
+            .then(response => response.json())
+            .then(data => {
+                if (data.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="6">No students found</td></tr>';
+                    return;
+                }
+
+                tbody.innerHTML = '';
+                data.forEach(student => {
+                    const row = document.createElement('tr');
+                    row.id = `student-row-${escapeHtml(student.id_student)}`; // Add unique row id
+                    row.innerHTML = `
+                        <td>${escapeHtml(student.id_student)}</td>
+                        <td>
+                            <span class="password-mask">${'•'.repeat(student.pass_student.length)}</span>
+                            <span class="password-full" style="display:none;">${escapeHtml(student.pass_student)}</span>
+                            <button class="toggle-password-btn" onclick="togglePassword(this)"><i class="fas fa-eye"></i></button>
+                        </td>
+                        <td>${escapeHtml(student.lastname_student)}</td>
+                        <td>${escapeHtml(student.firstname_student)}</td>
+                        <td>${escapeHtml(student.year_student)}</td>
+                        <td>
+                            <button class="btn btn-warning edit-student-btn btn-sm" 
+                                    data-id="${escapeHtml(student.id_student)}"
+                                    data-password="${escapeHtml(student.pass_student)}"
+                                    data-lastname="${escapeHtml(student.lastname_student)}"
+                                    data-firstname="${escapeHtml(student.firstname_student)}"
+                                    data-year="${escapeHtml(student.year_student)}"
+                                    data-bs-toggle="modal" 
+                                    data-bs-target="#editStudentModal">
+                                <i class="fas fa-edit"></i> Edit
+                            </button>
+                            <button class="btn btn-danger delete-btn btn-sm" 
+                                onclick="showDeleteConfirmation('${escapeHtml(student.id_student)}')">
+                                <i class="fas fa-trash"></i> Delete
+                            </button>
+                            <button class="btn btn-primary show-report-btn btn-sm" 
+                                    data-id="${escapeHtml(student.id_student)}" 
+                                    data-bs-toggle="modal" 
+                                    data-bs-target="#reportModal">
+                                Show Report
+                            </button>
+                        </td>
+                    `;
+                    tbody.appendChild(row);
+                });
+
+                // Reattach event listeners for the new elements
+                attachEventListeners();
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                tbody.innerHTML = '<tr><td colspan="6" class="text-danger">Error loading students</td></tr>';
+            });
+    }
+
+    // Helper function to escape HTML
+    function escapeHtml(unsafe) {
+        if (unsafe === null || unsafe === undefined) return '';
+        return unsafe.toString()
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;")
+            .replace(/'/g, "&#039;");
+    }
+    
+    // Function to attach event listeners to dynamic elements
+    function attachEventListeners() {
+        // Report button click handlers
+        document.querySelectorAll('.show-report-btn').forEach(button => {
+            button.addEventListener('click', function() {
+                const studentId = this.getAttribute('data-id');
+                document.getElementById('reportContent').innerHTML = "<p class='text-center'>Loading report...</p>";
+                
+                fetch("php/admin/fetch-student-report.php?id_student=" + studentId)
+                    .then(response => response.text())
+                    .then(data => {
+                        document.getElementById('reportContent').innerHTML = data;
+                    })
+                    .catch(error => {
+                        document.getElementById('reportContent').innerHTML = "<p class='text-danger text-center'>Error loading report.</p>";
+                        console.error("Error fetching report:", error);
+                    });
+            });
+        });
+    
+        
+        // Edit button handlers
+        document.querySelectorAll('.edit-student-btn').forEach(button => {
+            button.addEventListener('click', function() {
+                document.getElementById('edit_id_student').value = this.getAttribute('data-id');
+                document.getElementById('edit_pass_student').value = this.getAttribute('data-password');
+                document.getElementById('edit_lastname_student').value = this.getAttribute('data-lastname');
+                document.getElementById('edit_firstname_student').value = this.getAttribute('data-firstname');
+                document.getElementById('edit_year_student').value = this.getAttribute('data-year');
+            });
+        });
+    }
+    
+    // If you have a semester dropdown, add change handler
+    const semesterDropdown = document.getElementById('semesterDropdown');
+    if (semesterDropdown) {
+        semesterDropdown.addEventListener('change', function() {
+            loadStudents(this.value);
+        });
+    }
+
+    
+// Search functionality
+const searchInput = document.getElementById('searchStudentInput');
+if (searchInput) {
+    searchInput.addEventListener('input', function() {
+        const searchTerm = this.value.toLowerCase().trim();
+        const rows = document.querySelectorAll('#studentTableBody tr');
+        let hasMatches = false;
+        
+        rows.forEach(row => {
+            if (row.id === 'noResultsRow') return; // Skip the no results row
+            
+            const cells = row.getElementsByTagName('td');
+            let rowMatches = false;
+            
+            // Check each cell except the last one (actions)
+            for (let j = 0; j < cells.length - 1; j++) {
+                const cellText = cells[j].textContent.toLowerCase();
+                if (cellText.includes(searchTerm)) {
+                    rowMatches = true;
+                    hasMatches = true;
+                    break;
+                }
+            }
+            
+            row.style.display = rowMatches ? '' : 'none';
+        });
+        
+        // Handle no results message
+        const noResultsRow = document.getElementById('noResultsRow');
+        if (noResultsRow) {
+            if (searchTerm && !hasMatches) {
+                // Create the row if it doesn't exist
+                if (!noResultsRow) {
+                    const tbody = document.querySelector('#studentTableBody');
+                    noResultsRow = document.createElement('tr');
+                    noResultsRow.id = 'noResultsRow';
+                    noResultsRow.innerHTML = `<td colspan="${document.querySelector('#studentTable thead th').length}" class="text-center">No results found</td>`;
+                    tbody.appendChild(noResultsRow);
+                }
+                noResultsRow.style.display = '';
+            } else {
+                noResultsRow.style.display = 'none';
+            }
+        }
+    });
+}
+    // Reload students after form submission
+    document.getElementById('enrollForm')?.addEventListener('submit', function(e) {
+        e.preventDefault();
+        const formData = new FormData(this);
+        
+        fetch('php/admin/enroll-student.php', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.text())
+        .then(result => {
+            if (result.trim() === 'success') {
+                this.reset();
+                const modal = bootstrap.Modal.getInstance(document.getElementById('enrollFormModal'));
+                modal.hide();
+                createToast('success', 'Student enrolled successfully!');
+                loadStudents(); // Reload the student list
+            } else {
+                createToast('error', result);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            createToast('error', 'Something went wrong.');
+        });
+    });
+    
+    // Handle edit form submission
+    document.getElementById('editStudentForm')?.addEventListener('submit', function(e) {
+        e.preventDefault();
+        const formData = new FormData(this);
+        
+        fetch('php/admin/update_student.php', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.text())
+        .then(result => {
+            if (result.trim() === 'success') {
+                const modal = bootstrap.Modal.getInstance(document.getElementById('editStudentModal'));
+                modal.hide();
+                createToast('success', 'Student updated successfully!');
+                loadStudents(); // Reload the student list
+            } else {
+                createToast('error', result);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            createToast('error', 'Something went wrong.');
+        });
+    });
+});
+
+// Global function for password toggling
+function togglePassword(button) {
+    const row = button.closest('tr');
+    const passwordMask = row.querySelector('.password-mask');
+    const passwordFull = row.querySelector('.password-full');
+    
+    if (passwordMask.style.display === 'none') {
+        passwordMask.style.display = '';
+        passwordFull.style.display = 'none';
+        button.innerHTML = '<i class="fas fa-eye"></i>';
+    } else {
+        passwordMask.style.display = 'none';
+        passwordFull.style.display = '';
+        button.innerHTML = '<i class="fas fa-eye-slash"></i>';
+    }
+}
+</script>

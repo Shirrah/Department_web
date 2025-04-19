@@ -133,8 +133,8 @@ $result = $stmt->get_result();
 // Display payments in a table
 if ($result && mysqli_num_rows($result) > 0) {
     echo '
-    <table class="fees-table">
-        <thead>
+    <table class="table table-bordered table-hover align-middle text-center">
+        <thead class="table-dark">
             <tr>
                 <th>Fee Name</th>
                 <th>Due Date</th>
@@ -145,42 +145,47 @@ if ($result && mysqli_num_rows($result) > 0) {
         <tbody>';
 
     while ($row = mysqli_fetch_assoc($result)) {
-        $id_payment = $row['id_payment'];
-        $payment_name = $row['payment_name'];
-        $payment_amount = $row['payment_amount'];
-        $date_payment = date('F d, Y', strtotime($row['date_payment']));
+        $id_payment = (int)$row['id_payment'];
+        $payment_name = htmlspecialchars($row['payment_name'], ENT_QUOTES);
+        $payment_amount = (float)$row['payment_amount'];
+        $raw_date = $row['date_payment'];
+        $date_payment = date('F d, Y', strtotime($raw_date));
 
         echo '
         <tr>
-            <td>' . htmlspecialchars($payment_name, ENT_QUOTES) . '</td>
+            <td class="fw-semibold">' . $payment_name . '</td>
             <td>' . htmlspecialchars($date_payment, ENT_QUOTES) . '</td>
-            <td>PHP ' . number_format($payment_amount, 2) . '</td>
+            <td><span class="badge bg-success fs-6">PHP ' . number_format($payment_amount, 2) . '</span></td>
             <td>
-                <button class="btn btn-primary btn-sm" onclick="openEditModal(' . $id_payment . ', 
-                    \'' . addslashes(htmlspecialchars($payment_name, ENT_QUOTES)) . '\', 
-                    ' . $payment_amount . ', 
-                    \'' . addslashes($row['date_payment']) . '\')">
-                    <i class="fas fa-edit"></i> Edit
-                </button>
+                <div class="d-flex justify-content-center flex-wrap gap-2">
+                    <button class="btn btn-primary btn-sm" 
+                        onclick="openEditModal(' . $id_payment . ', 
+                            \'' . addslashes($payment_name) . '\', 
+                            ' . $payment_amount . ', 
+                            \'' . addslashes($raw_date) . '\')">
+                        <i class="fas fa-edit me-1"></i> Edit
+                    </button>
 
-                <button class="btn btn-danger btn-sm" onclick="confirmDeleteFee(' . $id_payment . ')">
-                    <i class="fas fa-trash"></i> Delete
-                </button>
+                    <button class="btn btn-danger btn-sm" onclick="confirmDeleteFee(' . $id_payment . ')">
+                        <i class="fas fa-trash me-1"></i> Delete
+                    </button>
 
-                <button class="btn btn-info btn-sm" 
-                    data-bs-toggle="modal" 
-                    data-bs-target="#fullScreenModal" 
-                    onclick="loadPaymentRecords(' . htmlspecialchars($id_payment, ENT_QUOTES, 'UTF-8') . ')">
-                    <i class="fas fa-database"></i> Show Records
-                </button>
+                    <button class="btn btn-info btn-sm" 
+                        data-bs-toggle="modal" 
+                        data-bs-target="#fullScreenModal" 
+                        onclick="loadPaymentRecords(' . $id_payment . ')">
+                        <i class="fas fa-database me-1"></i> Show Records
+                    </button>
+                </div>
             </td>
         </tr>';
     }
 
     echo '</tbody></table>';
 } else {
-    echo '<p>No fees found.</p>';
+    echo '<div class="alert alert-warning text-center" role="alert">No fees found.</div>';
 }
+
 ?>
 
 <div class="admin-fees-action">

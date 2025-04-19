@@ -103,20 +103,8 @@ $fees_count = $stmt->get_result()->fetch_assoc()['fees_count'] ?? 0;
             <div class="modal-body" id="reportContent">
 
                 <?php
-                // Include the database connection
-                require_once "././php/db-conn.php";
-                $db = Database::getInstance()->db;
-
-                // Ensure the user is logged in
-                if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] != 'yes') {
-                    header("location: ../index.php?content=log-in");
-                    exit();
-                }
-
-                // Get the logged-in student's ID
-                $id_student = $_SESSION['user_data']['id_student'];
-
                 // Fetch student details
+                $id_student = $_SESSION['user_data']['id_student'];
                 $queryStudent = "SELECT firstname_student, lastname_student, year_student FROM student WHERE id_student = ?";
                 $stmtStudent = $db->prepare($queryStudent);
                 $stmtStudent->bind_param("s", $id_student);
