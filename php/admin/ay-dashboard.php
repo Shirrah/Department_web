@@ -64,47 +64,6 @@ if (isset($_GET['edit_id'])) {
     }
 }
 
-if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    $semester_id = htmlspecialchars($_POST['semester_ID']);
-    $academic_year = htmlspecialchars($_POST['academic_year']);
-    $semester_type = htmlspecialchars($_POST['semester_type']);
-    
-    // Extract the start and end year from academic_year input
-    list($start_year, $end_year) = explode('-', $academic_year);
-
-    // Generate the new semester_ID based on the input values
-    $generated_semester_id = "AY" . $start_year . "-" . $end_year . "-" . strtolower(str_replace(" ", "", $semester_type));
-
-    if (!empty($semester_id)) {
-        // If we're updating the record, use the new generated semester_ID
-        $stmt = $db->prepare("UPDATE semester SET semester_ID = ?, academic_year = ?, semester_type = ? WHERE semester_ID = ?");
-        $stmt->bind_param("ssss", $generated_semester_id, $academic_year, $semester_type, $semester_id);
-        if ($stmt->execute()) {
-            // Store the selected semester in session after updating
-            $_SESSION['selected_semester'][$user_id] = $generated_semester_id;
-            header("Location: ?content=admin-index&admin=ay-dashboard");
-            exit();
-        } else {
-            echo "<script>alert('Error updating term: " . $stmt->error . "');</script>";
-        }
-    } else {
-        // Insert a new record if no semester_ID is provided
-        $date_created = date("Y-m-d H:i:s"); // Get current timestamp
-        $stmt = $db->prepare("INSERT INTO semester (semester_ID, academic_year, semester_type, date_created) VALUES (?, ?, ?, ?)");
-        $stmt->bind_param("ssss", $generated_semester_id, $academic_year, $semester_type, $date_created);        
-            if ($stmt->execute()) {
-                // Store the generated semester_ID in session
-                $_SESSION['selected_semester'][$user_id] = $generated_semester_id;
-                header("Location: ?content=admin-index&admin=ay-dashboard");
-                exit();
-            } else {
-                echo "<script>alert('Error adding new term: " . $stmt->error . "');</script>";
-            }
-
-    }
-}
-
-
 $current_year = date("Y");
 
 // Generate a range of years for the academic year selection
@@ -149,8 +108,22 @@ ob_end_flush(); // End output buffering
                         echo "<td>" . htmlspecialchars($row['academic_year']) . "</td>";
                         echo "<td>" . htmlspecialchars($row['semester_type']) . "</td>";
                         echo "<td>";
-                        echo "<a href='?content=admin-index&admin=ay-dashboard&edit_id=" . $row["semester_ID"] . "'><i class='fas fa-edit'></i></a>";
-                        echo "<a href='?content=admin-index&admin=ay-dashboard&delete_id=" . $row["semester_ID"] . "' class='delete-btn'><i class='fas fa-trash'></i></a>";
+                        echo "<button class='btn btn-warning btn-sm me-1 edit-btn'
+        data-id='" . $row["semester_ID"] . "'
+        data-year='" . $row["academic_year"] . "'
+        data-type='" . $row["semester_type"] . "'
+        data-bs-toggle='modal'
+        data-bs-target='#editTermModal'>
+        <i class='fas fa-edit'></i> Edit
+      </button>";
+
+      echo "<!-- Delete Button (No onclick function) -->
+      <button class='btn btn-danger btn-sm delete-btn' data-bs-toggle='modal' data-bs-target='#deleteConfirmationModal' data-id='" . htmlspecialchars($row["semester_ID"]) . "'>
+          <i class='fas fa-trash'></i> Delete
+      </button>
+      ";
+      
+                
                         echo "</td>";
                         echo "</tr>";
                     }
@@ -160,80 +133,143 @@ ob_end_flush(); // End output buffering
                 ?>
             </tbody>
         </table>
-        <button id="create-term-btn" onclick="openEnrollForm()">Start a New Term</button>
+       <!-- Change your button to use Bootstrap and trigger the modal -->
+<button id="create-term-btn" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#enrollFormModal">Start a New Term</button>
+
 
     </div>
 </div>
 
-<!-- Enrollment Form Modal -->
-<div id="enrollFormModal" class="modal">
-    <div class="modal-content">
-        <span class="close" onclick="closeEnrollForm()">&times;</span>
-        <h2 id="modal-title"><?= isset($editData) ? "Edit Term" : "Add New Term" ?></h2>
-        <form class="enrollForm" method="POST" action="">
-            <input type="hidden" id="semester_ID" name="semester_ID" value="<?= isset($editData) ? $editData['semester_ID'] : '' ?>">
+<!-- Replace your existing modal with this Bootstrap modal -->
+<div class="modal fade" id="enrollFormModal" tabindex="-1" aria-labelledby="enrollFormModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="enrollFormModalLabel"><?= isset($editData) ? "Edit Term" : "Add New Term" ?></h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+            <form class="enrollForm" id="addTermForm" method="POST" action="././php/admin/handle-term.php">
 
-            <label for="academic_year">Academic Year</label>
-            <select id="academic_year" name="academic_year" required>
-                <option value="" disabled selected>Select Academic Year</option>
-                <?php
-                foreach ($years as $year) {
-                    $selected = isset($editData) && $editData['academic_year'] == $year ? "selected" : "";
-                    echo "<option value=\"$year\" $selected>$year</option>";
-                }
-                ?>
-            </select>
+                    <input type="hidden" id="semester_ID" name="semester_ID" value="<?= isset($editData) ? $editData['semester_ID'] : '' ?>">
 
-            <label for="semester_type">Term:</label>
-            <select id="semester_type" name="semester_type" required>
-                <option value="" disabled selected>Select Term</option>
-                <option value="1st Semester" <?= isset($editData) && $editData['semester_type'] == '1st Semester' ? 'selected' : '' ?>>1st Semester</option>
-                <option value="2nd Semester" <?= isset($editData) && $editData['semester_type'] == '2nd Semester' ? 'selected' : '' ?>>2nd Semester</option>
-                <option value="Summer" <?= isset($editData) && $editData['semester_type'] == 'Summer' ? 'selected' : '' ?>>Summer</option>
-            </select>
-            <input type="submit" value="<?= isset($editData) ? 'Update Term' : 'Add New Term' ?>">
-        </form>
+                    <div class="mb-3">
+                        <label for="academic_year" class="form-label">Academic Year</label>
+                        <select class="form-select" id="academic_year" name="academic_year" required>
+                            <option value="" disabled selected>Select Academic Year</option>
+                            <?php
+                            foreach ($years as $year) {
+                                $selected = isset($editData) && $editData['academic_year'] == $year ? "selected" : "";
+                                echo "<option value=\"$year\" $selected>$year</option>";
+                            }
+                            ?>
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="semester_type" class="form-label">Term:</label>
+                        <select class="form-select" id="semester_type" name="semester_type" required>
+                            <option value="" disabled selected>Select Term</option>
+                            <option value="1st Semester" <?= isset($editData) && $editData['semester_type'] == '1st Semester' ? 'selected' : '' ?>>1st Semester</option>
+                            <option value="2nd Semester" <?= isset($editData) && $editData['semester_type'] == '2nd Semester' ? 'selected' : '' ?>>2nd Semester</option>
+                            <option value="Summer" <?= isset($editData) && $editData['semester_type'] == 'Summer' ? 'selected' : '' ?>>Summer</option>
+                        </select>
+                    </div>
+                    
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        <button type="submit" class="btn btn-primary"><?= isset($editData) ? 'Update Term' : 'Add New Term' ?></button>
+                    </div>
+                </form>
+            </div>
+        </div>
     </div>
+</div>
+
+<div class="modal fade" id="editTermModal" tabindex="-1" aria-labelledby="editTermModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <form class="modal-content" method="POST" action="././php/admin/handle-term.php">
+      <div class="modal-header">
+        <h5 class="modal-title" id="editTermModalLabel">Edit Term</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" name="semester_ID" id="edit_semester_ID">
+
+        <div class="mb-3">
+          <label for="edit_academic_year" class="form-label">Academic Year</label>
+          <select class="form-select" name="academic_year" id="edit_academic_year" required>
+            <option value="" disabled>Select Academic Year</option>
+            <?php foreach ($years as $year): ?>
+              <option value="<?= $year ?>"><?= $year ?></option>
+            <?php endforeach; ?>
+          </select>
+        </div>
+
+        <div class="mb-3">
+          <label for="edit_semester_type" class="form-label">Term</label>
+          <select class="form-select" name="semester_type" id="edit_semester_type" required>
+            <option value="" disabled>Select Term</option>
+            <option value="1st Semester">1st Semester</option>
+            <option value="2nd Semester">2nd Semester</option>
+            <option value="Summer">Summer</option>
+          </select>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button type="submit" class="btn btn-primary">Update Term</button>
+      </div>
+    </form>
+  </div>
 </div>
 
 <script>
-// Modify the modal open function to check if we are editing
-function openEnrollForm(edit = false) {
-    var modal = document.getElementById("enrollFormModal");
-    modal.style.display = "block";
+document.addEventListener('DOMContentLoaded', function () {
+    const editButtons = document.querySelectorAll('.edit-btn');
 
-    if (edit) {
-        document.getElementById('modal-title').textContent = "Edit Term";
-        // Optionally, you can add logic here to load the values if editing
-    } else {
-        document.getElementById('modal-title').textContent = "Add New Term";
-    }
-}
+    editButtons.forEach(button => {
+        button.addEventListener('click', function () {
+            const id = this.dataset.id;
+            const year = this.dataset.year;
+            const type = this.dataset.type;
 
-// Open the modal for editing specific term
-<?php if (isset($editData)) { ?>
-    openEnrollForm(true);
-<?php } ?>
-
-
-    function closeEnrollForm() {
-        var modal = document.getElementById("enrollFormModal");
-        modal.style.display = "none";
-    }
-
-    window.onclick = function(event) {
-        var modal = document.getElementById("enrollFormModal");
-        if (event.target == modal) {
-            modal.style.display = "none";
-        }
-    }
-
-// Add confirmation before deleting a student
-document.querySelectorAll('.delete-btn').forEach(function(button) {
-    button.addEventListener('click', function(e) {
-        if (!confirm("Are you sure you want to delete this term?")) {
-            e.preventDefault(); // Prevent the link from being followed
-        }
+            document.getElementById('edit_semester_ID').value = id;
+            document.getElementById('edit_academic_year').value = year;
+            document.getElementById('edit_semester_type').value = type;
+        });
     });
 });
+</script>
+<!-- Delete Confirmation Modal -->
+<div class="modal fade" id="deleteConfirmationModal" tabindex="-1" aria-labelledby="deleteConfirmationModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="deleteConfirmationModalLabel">Confirm Deletion</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        Are you sure you want to delete this semester and its associated students? This action cannot be undone.
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <a href="" id="deleteConfirmBtn" class="btn btn-danger">Delete</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// Handle deletion confirmation using data-id from the button
+const deleteModal = document.getElementById('deleteConfirmationModal');
+deleteModal.addEventListener('show.bs.modal', function (event) {
+    const button = event.relatedTarget; // Button that triggered the modal
+    const semesterID = button.getAttribute('data-id'); // Extract the semester ID
+    const confirmBtn = deleteModal.querySelector('#deleteConfirmBtn');
+    
+    // Set the URL for the delete button
+    confirmBtn.setAttribute('href', '?content=admin-index&admin=ay-dashboard&delete_id=' + semesterID);
+});
+
 </script>
