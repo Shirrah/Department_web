@@ -316,7 +316,7 @@ if (isset($_SESSION['user_data'])) {
 };
 </script>
 
-<div class="content" id="admin-content" style="position: relative; min-height: 300px;">
+<div class="content" id="admin-content">
     <div id="loading-indicator" style="display: none; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);">
         <div class="spinner-border" style="color: tomato; width: 3rem; height: 3rem;" role="status">
             <span class="visually-hidden">Loading...</span>
