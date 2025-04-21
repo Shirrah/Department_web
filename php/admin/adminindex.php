@@ -35,12 +35,6 @@ if (isset($_SESSION['user_data'])) {
 
 
 <style>
-    /* Ensure the whole page takes the full height */
-    html, body {
-        height: 100%;
-        margin: 0;
-    }
-
     .main-content-con{
         overflow: hidden;
     }

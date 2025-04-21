@@ -4,3 +4,18 @@
     margin: 1.8rem;
     background-color: white;
 }
+
+/* Extra small devices (phones) */
+@media only screen and (max-width: 576px) {
+    .admin-management-body{
+        padding: 10px;
+        margin: 10px;
+    }
+
+    .admin-table th{
+        font-size: 10px;
+    }
+    .admin-table td{
+        font-size: 10px;
+    }
+}
