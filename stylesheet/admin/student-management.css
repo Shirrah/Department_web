@@ -1,5 +1,6 @@
 .student-management-body {
     width: 100%;
+    height: auto;
     overflow: auto;
 }
 
@@ -21,7 +22,8 @@
     padding: 1.8rem;
     margin: 1.8rem;
     background-color: white;
-    overflow-x: auto
+    overflow-x: auto;
+    margin-bottom: 90px;
 }
 
 .search-students{

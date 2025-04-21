@@ -1,6 +1,6 @@
 .event-management-body{
     width: 100%;
-    height: 100%;
+    height: auto;
 }
 
 .event-management-con-body{
@@ -11,6 +11,7 @@
     display: flex;
     flex-direction: column;
     background-color: white;
+    margin-bottom: 90px;
 }
 
 .event-fee-item{
