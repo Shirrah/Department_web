@@ -25,6 +25,7 @@
   overflow: hidden;
   border-left: 6px solid;
   transition: all 0.3s ease;
+  flex-basis: auto;
 }
 
 .toast.success {

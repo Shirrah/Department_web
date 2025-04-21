@@ -21,6 +21,7 @@
     padding: 1.8rem;
     margin: 1.8rem;
     background-color: white;
+    overflow-x: auto
 }
 
 .search-students{

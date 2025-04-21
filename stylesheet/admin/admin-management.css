@@ -3,7 +3,15 @@
     padding: 1.8rem;
     margin: 1.8rem;
     background-color: white;
+    overflow-x: auto;
 }
+
+.admin-table{
+    width: 100%;
+    border-collapse: collapse;
+    border: 1px solid #e8ecf1;
+}
+
 
 /* Extra small devices (phones) */
 @media only screen and (max-width: 576px) {

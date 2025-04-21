@@ -94,7 +94,8 @@ ob_end_flush();  // End output buffering and send output to the browser
     
     <div class="admin-management-body">
     <!-- Admin Table -->
-    <table class="admin-table">
+    <div class="table-responsive">
+    <table class="table admin-table">
             <!-- Search Bar -->
             <div class="form-group">
     <form method="GET" action="">
@@ -150,6 +151,7 @@ ob_end_flush();  // End output buffering and send output to the browser
             ?>
         </tbody>
     </table>
+        </div>
     </div>
 </div>
 
