@@ -25,6 +25,7 @@
   overflow: hidden;
   border-left: 6px solid;
   transition: all 0.3s ease;
+  flex-basis: auto;
 }
 
 .toast.success {
@@ -116,7 +117,7 @@
 const notifications = document.querySelector(".notifications");
 
 const toastDetails = {
-    timer: 5000,
+    timer: 10000000,
     success: { icon: 'fa-solid fa-circle-check', text: 'Success!' },
     error: { icon: 'fa-solid fa-circle-xmark', text: 'Something went wrong.' }
 };
