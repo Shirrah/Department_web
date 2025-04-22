@@ -5,12 +5,15 @@
 .notifications {
   position: fixed;
   top: 20px;
-  right: 20px;
+  left: 50%;
+  transform: translateX(-50%);
   z-index: 9999;
   display: flex;
   flex-direction: column;
   gap: 12px;
+  align-items: center;
 }
+
 
 .notifications .toast {
   display: flex;
@@ -61,14 +64,16 @@
 }
 
 @keyframes slideIn {
-  0% { transform: translateX(120%); opacity: 0; }
-  100% { transform: translateX(0); opacity: 1; }
+  0% { transform: translateY(-120%); opacity: 0; }
+  100% { transform: translateY(0); opacity: 1; }
 }
 
+
 @keyframes slideOut {
-  0% { transform: translateX(0); opacity: 1; }
-  100% { transform: translateX(120%); opacity: 0; }
+  0% { transform: translateY(0); opacity: 1; }
+  100% { transform: translateY(-120%); opacity: 0; }
 }
+
 
 @keyframes progressBar {
   100% { width: 0%; }

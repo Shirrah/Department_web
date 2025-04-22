@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QR Attendance System</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        :root {
+            --primary: #4361ee;
+            --primary-dark: #3a56d4;
+            --success: #4cc9f0;
+            --danger: #f72585;
+            --warning: #f8961e;
+            --light: #f8f9fa;
+            --dark: #212529;
+            --gray: #6c757d;
+            --white: #ffffff;
+        }
+        
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: #f5f7fa;
+            color: var(--dark);
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 20px 0;
+            background-color: var(--white);
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+        }
+        
+        h1 {
+            color: var(--primary);
+            margin-bottom: 10px;
+        }
+        
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 500;
+            margin-bottom: 20px;
+        }
+        
+        .status-badge i {
+            margin-right: 6px;
+        }
+        
+        .online {
+            background-color: rgba(76, 201, 240, 0.2);
+            color: var(--success);
+        }
+        
+        .offline {
+            background-color: rgba(247, 37, 133, 0.2);
+            color: var(--danger);
+        }
+        
+        .scanner-card {
+            background-color: var(--white);
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+            padding: 20px;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+        
+        .scanner-container {
+            width: 100%;
+            max-width: 500px;
+            margin: 0 auto 20px;
+            position: relative;
+        }
+        
+        #scanner {
+            width: 100%;
+            height: 300px;
+            border-radius: 8px;
+            overflow: hidden;
+            background-color: #e9ecef;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+        
+        #scanner video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        .scanner-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border: 2px solid var(--primary);
+            border-radius: 8px;
+            pointer-events: none;
+        }
+        
+        #result {
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 8px;
+            background-color: #f8f9fa;
+            font-size: 16px;
+            min-height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+        }
+        
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: none;
+            margin: 5px;
+        }
+        
+        .btn i {
+            margin-right: 8px;
+        }
+        
+        .btn-primary {
+            background-color: var(--primary);
+            color: var(--white);
+        }
+        
+        .btn-primary:hover {
+            background-color: var(--primary-dark);
+        }
+        
+        .btn-outline {
+            background-color: transparent;
+            border: 2px solid var(--primary);
+            color: var(--primary);
+        }
+        
+        .btn-outline:hover {
+            background-color: var(--primary);
+            color: var(--white);
+        }
+        
+        .btn-danger {
+            background-color: var(--danger);
+            color: var(--white);
+        }
+        
+        .btn-danger:hover {
+            background-color: #e5177b;
+        }
+        
+        .pending-sync {
+            background-color: var(--white);
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+            padding: 20px;
+        }
+        
+        .pending-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        
+        .pending-count {
+            background-color: var(--warning);
+            color: var(--white);
+            padding: 3px 10px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 500;
+        }
+        
+        .pending-list {
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        
+        .pending-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 15px;
+            border-bottom: 1px solid #e9ecef;
+            transition: background-color 0.3s ease;
+        }
+        
+        .pending-item:last-child {
+            border-bottom: none;
+        }
+        
+        .pending-item:hover {
+            background-color: #f8f9fa;
+        }
+        
+        .pending-info {
+            flex: 1;
+        }
+        
+        .pending-code {
+            font-weight: 500;
+            margin-bottom: 3px;
+        }
+        
+        .pending-time {
+            font-size: 12px;
+            color: var(--gray);
+        }
+        
+        .sync-status {
+            font-size: 12px;
+            padding: 3px 8px;
+            border-radius: 3px;
+        }
+        
+        .synced {
+            background-color: rgba(76, 201, 240, 0.2);
+            color: var(--success);
+        }
+        
+        .pending {
+            background-color: rgba(248, 150, 30, 0.2);
+            color: var(--warning);
+        }
+        
+        @media (max-width: 600px) {
+            .container {
+                padding: 15px;
+            }
+            
+            #scanner {
+                height: 250px;
+            }
+            
+            .btn {
+                padding: 8px 15px;
+                font-size: 14px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1><i class="fas fa-qrcode"></i> QR Attendance System</h1>
+            <div id="connectionStatus" class="status-badge offline">
+                <i class="fas fa-wifi"></i>
+                <span>Offline</span>
+            </div>
+        </header>
+        
+        <div class="scanner-card">
+            <div class="scanner-container">
+                <div id="scanner">
+                    <div class="scanner-overlay"></div>
+                    <p id="scannerPlaceholder">Scanner will appear here</p>
+                </div>
+            </div>
+            
+            <div id="result">
+                <p>Scan a QR code to record attendance</p>
+            </div>
+            
+            <div class="scanner-controls">
+                <button id="startScanner" class="btn btn-primary">
+                    <i class="fas fa-play"></i> Start Scanner
+                </button>
+                <button id="stopScanner" class="btn btn-outline" disabled>
+                    <i class="fas fa-stop"></i> Stop Scanner
+                </button>
+            </div>
+        </div>
+        
+        <div class="pending-sync">
+            <div class="pending-header">
+                <h2><i class="fas fa-sync-alt"></i> Pending Sync</h2>
+                <span id="pendingCount" class="pending-count">0</span>
+            </div>
+            
+            <button id="syncNow" class="btn btn-primary" style="width: 100%; margin-bottom: 15px;">
+                <i class="fas fa-cloud-upload-alt"></i> Sync Now
+            </button>
+            
+            <div id="pendingList" class="pending-list"></div>
+        </div>
+    </div>
+    
+    <script src="https://cdn.jsdelivr.net/npm/jsqr/dist/jsQR.min.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
