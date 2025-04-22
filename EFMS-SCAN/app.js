@@ -44,6 +44,7 @@ function updateOnlineStatus() {
 }
 
 // Scanner functions
+// Scanner functions
 async function startScanner() {
     try {
         scannerActive = true;
@@ -52,9 +53,30 @@ async function startScanner() {
         resultDiv.innerHTML = '<p><i class="fas fa-spinner fa-spin"></i> Starting scanner...</p>';
         scannerPlaceholder.style.display = 'none';
         
-        // Start the scanning loop
-        await scanningLoop();
+        // Get video stream
+        videoStream = await navigator.mediaDevices.getUserMedia({ 
+            video: { 
+                facingMode: "environment",
+                width: { ideal: 1280 },
+                height: { ideal: 1280 } // Square aspect ratio
+            } 
+        });
         
+        // Create video element
+        const video = document.createElement('video');
+        video.srcObject = videoStream;
+        video.setAttribute('playsinline', true);
+        video.style.width = '100%';
+        video.style.height = '100%';
+        video.style.objectFit = 'cover';
+        scannerElement.innerHTML = ''; // Clear previous
+        scannerElement.appendChild(video);
+        video.play();
+        
+        // Start scanning loop
+        scanLoop(video);
+        
+        resultDiv.innerHTML = '<p><i class="fas fa-check-circle"></i> Scanner ready</p>';
     } catch (error) {
         console.error('Scanner error:', error);
         resultDiv.innerHTML = `<p><i class="fas fa-exclamation-circle"></i> Error: ${error.message}</p>`;
@@ -62,92 +84,30 @@ async function startScanner() {
     }
 }
 
-// Main scanning loop with auto-restart
-async function scanningLoop() {
-    while (scannerActive) {
-        // Start a new scanning session
-        await startScanningSession();
+// Continuous scanning loop
+function scanLoop(video) {
+    if (!scannerActive) return;
+    
+    if (video.readyState === video.HAVE_ENOUGH_DATA) {
+        const canvas = document.createElement('canvas');
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
         
-        // Only continue if scanner is still active
-        if (scannerActive) {
-            // Brief pause before restarting
-            await new Promise(resolve => setTimeout(resolve, 500));
-            resultDiv.innerHTML = '<p>Ready for next scan</p>';
+        const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+        const code = jsQR(imageData.data, imageData.width, imageData.height);
+        
+        if (code) {
+            handleScanResult(code.data);
+            // Brief pause to prevent duplicate scans
+            setTimeout(() => scanLoop(video), 1000);
+        } else {
+            requestAnimationFrame(() => scanLoop(video));
         }
+    } else {
+        requestAnimationFrame(() => scanLoop(video));
     }
-}
-
-// Individual scanning session
-async function startScanningSession() {
-    // Get video stream
-    const stream = await navigator.mediaDevices.getUserMedia({ 
-        video: { 
-            facingMode: "environment",
-            width: { ideal: 1280 },
-            height: { ideal: 1280 }
-        } 
-    });
-    videoStream = stream;
-    
-    // Create video element
-    const video = document.createElement('video');
-    video.srcObject = stream;
-    video.setAttribute('playsinline', true);
-    video.style.width = '100%';
-    video.style.height = '100%';
-    video.style.objectFit = 'cover';
-    
-    // Clear previous and add new video
-    scannerElement.innerHTML = '';
-    scannerElement.appendChild(video);
-    await video.play();
-    
-    // Wait for scan result
-    const scanResult = await waitForScan(video);
-    
-    // Clean up
-    stream.getTracks().forEach(track => track.stop());
-    scannerElement.removeChild(video);
-    
-    // Process result if found
-    if (scanResult) {
-        handleScanResult(scanResult);
-    }
-    
-    return scanResult;
-}
-
-// Wait for QR code to be detected
-function waitForScan(video) {
-    return new Promise((resolve) => {
-        const scanFrame = () => {
-            if (!scannerActive) {
-                resolve(null);
-                return;
-            }
-            
-            if (video.readyState === video.HAVE_ENOUGH_DATA) {
-                const canvas = document.createElement('canvas');
-                canvas.width = video.videoWidth;
-                canvas.height = video.videoHeight;
-                const ctx = canvas.getContext('2d');
-                ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-                
-                const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-                const code = jsQR(imageData.data, imageData.width, imageData.height);
-                
-                if (code) {
-                    resolve(code.data);
-                } else {
-                    requestAnimationFrame(scanFrame);
-                }
-            } else {
-                requestAnimationFrame(scanFrame);
-            }
-        };
-        
-        scanFrame();
-    });
 }
 
 function stopScanner() {
