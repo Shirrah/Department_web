@@ -124,7 +124,7 @@ ob_end_flush();
 <div class="modal fade" id="enrollCsvModal" tabindex="-1" aria-labelledby="enrollCsvModalLabel" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
   <div class="modal-dialog modal-dialog-centered">
     <div class="modal-content border-0 shadow">
-      <div class="modal-header bg-primary text-white">
+      <div class="modal-header text-white" style="background-color: tomato;">
         <h5 class="modal-title" id="enrollCsvModalLabel">
           <i class="fas fa-file-import me-2"></i>Import Students
         </h5>
@@ -152,13 +152,13 @@ ob_end_flush();
           <div class="file-upload-area border-2 border-dashed rounded-3 p-4 mb-3 bg-light">
             <input type="file" id="studentFile" name="studentFile" accept=".csv, .xlsx" required class="d-none">
             
-            <div class="file-upload-icon text-primary mb-3">
+            <div class="file-upload-icon mb-3" style="color: tomato;">
               <i class="fas fa-cloud-upload-alt fa-3x"></i>
             </div>
             <h5 class="mb-2">Drag & drop your file here</h5>
             <p class="small text-muted mb-3">or</p>
             
-            <button id="importButton" class="btn btn-primary px-4">
+            <button id="importButton" class="btn px-4 text-white" style="background-color: tomato;">
               <i class="fas fa-folder-open me-2"></i>Browse Files
             </button>
             
@@ -173,14 +173,14 @@ ob_end_flush();
           <div id="response" class="mt-3"></div>
           
           <div class="text-start mt-3 small text-muted">
-            <p class="mb-1"><i class="fas fa-info-circle me-2 text-primary"></i>Supported formats: .csv, .xlsx</p>
-            <p class="mb-0"><i class="fas fa-shield-alt me-2 text-primary"></i>Your data is secure and will be processed privately</p>
+            <p class="mb-1"><i class="fas fa-info-circle me-2" style="color: tomato;"></i>Supported formats: .csv, .xlsx</p>
+            <p class="mb-0"><i class="fas fa-shield-alt me-2" style="color: tomato;"></i>Your data is secure and will be processed privately</p>
           </div>
         </div>
       </div>
       <div class="modal-footer bg-light">
         <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
-        <button type="button" id="submitImport" class="btn btn-primary" disabled>
+        <button type="button" id="submitImport" class="btn text-white" style="background-color: tomato;" disabled>
           <i class="fas fa-upload me-2"></i>Import Now
         </button>
       </div>

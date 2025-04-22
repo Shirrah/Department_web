@@ -22,24 +22,33 @@
                     exit;
                 }
                 
-                $id_student = $_SESSION['user_data']['id_student']; // Correct way to get student ID
+                $id_student = $_SESSION['user_data']['id_student'];
                 
+                // Get selected semester from session
+                $selected_semester = $_SESSION['selected_semester'][$id_student] ?? null;
+                if (!$selected_semester) {
+                    echo '<p class="text-center text-danger">Error: No semester selected.</p>';
+                    exit;
+                }
 
-                // Fetch fees related to the logged-in student
+                // Fetch fees related to the logged-in student for the selected semester
                 $query = "SELECT p.id_payment, p.payment_name, p.payment_amount, p.date_payment, 
-                                 sfr.status_payment 
+                                 sfr.status_payment, p.semester_ID
                           FROM payments p
                           LEFT JOIN student_fees_record sfr 
                           ON p.id_payment = sfr.id_payment AND sfr.id_student = ?
+                          WHERE p.semester_ID = ?
                           ORDER BY p.date_payment ASC";
 
                 $stmt = $db->prepare($query);
-                $stmt->bind_param("i", $id_student);
+                $stmt->bind_param("is", $id_student, $selected_semester);
                 $stmt->execute();
                 $result = $stmt->get_result();
 
-                if ($result && mysqli_num_rows($result) > 0) {
-                    while ($row = mysqli_fetch_assoc($result)) {
+                if ($result && $result->num_rows > 0) {
+                    echo '<div class="alert alert-info mb-3">Showing fees for semester: ' . htmlspecialchars($selected_semester) . '</div>';
+                    
+                    while ($row = $result->fetch_assoc()) {
                         $id_payment = $row['id_payment'];
                         $payment_name = $row['payment_name'];
                         $payment_amount = $row['payment_amount'];
@@ -62,7 +71,7 @@
                         echo '</div>';
                     }
                 } else {
-                    echo '<p class="text-center text-muted">No fees found.</p>';
+                    echo '<div class="alert alert-info">No fees found for semester: ' . htmlspecialchars($selected_semester) . '</div>';
                 }
                 ?>
             </div>

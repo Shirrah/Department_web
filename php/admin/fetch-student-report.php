@@ -136,9 +136,10 @@ $resultAttendance = $stmtAttendance->get_result();
                 <th>Event Name</th>
                 <th>Attendance Type</th>
                 <th>Date</th>
-                <th>Status</th>
-                <th>Penalty Requirements</th>
                 <th>Penalty Type</th>
+                <th>Penalty Requirements</th>
+                <th>Status</th>
+                
             </tr>
         </thead>
         <tbody>
@@ -152,13 +153,7 @@ $resultAttendance = $stmtAttendance->get_result();
                         <td><?= htmlspecialchars($row['name_event']) ?></td>
                         <td><?= htmlspecialchars($row['type_attendance']) ?></td>
                         <td><?= htmlspecialchars($formatted_date_attendance) ?></td>
-                        <td>
-                            <?php if ($row['status_attendance'] === 'Present'): ?>
-                                <span class="badge bg-success"><i class="bi bi-check-circle"></i> Present</span>
-                            <?php else: ?>
-                                <span class="badge bg-danger"><i class="bi bi-x-circle"></i> Absent</span>
-                            <?php endif; ?>
-                        </td>
+                        <td><?= htmlspecialchars($row['penalty_type']) ?></td>
                         <td>
                             <?php if ($row['Penalty_requirements'] == 0): ?>
                                 <span class="text-success"><i class="bi bi-check-circle-fill"></i></span>
@@ -166,7 +161,16 @@ $resultAttendance = $stmtAttendance->get_result();
                                 <?= htmlspecialchars($row['Penalty_requirements']) ?>
                             <?php endif; ?>
                         </td>
-                        <td><?= htmlspecialchars($row['penalty_type']) ?></td>
+                        <td>
+                            <?php if ($row['status_attendance'] === 'Present'): ?>
+                                <span class="badge bg-success"><i class="bi bi-check-circle"></i> Present</span>
+                            <?php elseif ($row['status_attendance'] === 'Cleared'): ?>
+                                <span class="badge bg-success"><i class="bi bi-check-circle"></i> Cleared</span>
+                            <?php else: ?>
+                                <span class="badge bg-danger"><i class="bi bi-x-circle"></i> Absent</span>
+                            <?php endif; ?>
+                        </td>
+
                     </tr>
                 <?php endwhile; ?>
             <?php else: ?>

@@ -305,7 +305,7 @@ $events = $stmt->get_result();
     <i class="bi bi-calendar-plus"></i> Add Attendance
 </button>
 
-                        <h5>Attendances:</h5>
+<h5>Attendances:</h5>
 <div class="table-responsive">
   <table class="table table-sm table-striped">
     <thead>
@@ -349,9 +349,7 @@ document.addEventListener('DOMContentLoaded', function () {
     loadAttendances();
     setInterval(loadAttendances, 30000);
 });
-
 </script>
-
 
 
                     </div>
@@ -834,11 +832,13 @@ function openEditModal(id, name, date, start_time, end_time, description) {
                 <th>Year Level</th>
                 <th>Date and Time</th>
                 <th>Status</th>
+                <th></th>
               </tr>
             </thead>
-            <tbody id="attendanceBody">
-              <tr><td colspan="6" class="text-center">Select an attendance record to display data.</td></tr>
-            </tbody>
+            <tbody id="attendanceBody" class="accordion" id="accordionTable">
+  <tr><td colspan="6" class="text-center">Select an attendance record to display data.</td></tr>
+</tbody>
+
           </table>
         </div>
       </div>
@@ -946,7 +946,5 @@ function showAttendanceRecords(id_attendance, event_name, type_attendance, start
         },
     });
 }
-
-
 
 </script>

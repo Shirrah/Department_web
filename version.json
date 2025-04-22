@@ -1,3 +1,4 @@
 {
-    "version": "1.2.10"
+    "version": "$status_badge_class = ($student['status_attendance'] == 'Present' || $student['status_attendance'] == 'Cleared') ? 'bg-success' : 'bg-danger';
+"
 }

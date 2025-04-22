@@ -18,7 +18,7 @@ if (isset($_GET['semester']) && !empty($_GET['semester'])) {
 }
 
 // Fetch the semesters from the database
-$query = "SELECT semester_ID, academic_year, semester_type FROM semester";
+$query = "SELECT semester_ID, academic_year, semester_type, status FROM semester";
 $semester = $db->query($query);
 
 // Handle deletion
@@ -79,6 +79,30 @@ ob_end_flush(); // End output buffering
 <link rel="stylesheet" href=".//.//stylesheet/admin/ay-dashboard.css">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+$(document).ready(function () {
+    $('.status-toggle').on('change', function () {
+        const semesterId = $(this).data('id');
+        const status = $(this).is(':checked') ? 'active' : 'inactive';
+
+        $.ajax({
+            url: '././php/admin/update-semester-status.php',
+            method: 'POST',
+            data: { semester_ID: semesterId, status: status },
+            success: function (response) {
+                console.log('Status updated:', response);
+            },
+            error: function () {
+                alert('Error updating status.');
+            }
+        });
+    });
+});
+</script>
+
+
 <div class="ay-dashboard-body">
     <div class="ay-dashboard-con">
         <div class="ay-dashboard-header">
@@ -93,9 +117,11 @@ ob_end_flush(); // End output buffering
         <table class="semester-table">
             <thead>
                 <tr>
+                
                     <th>Semester ID</th>
                     <th>Academic Year</th>
                     <th>Semester Type</th>
+                    <th>Status</th>
                     <th>Actions</th>
                 </tr>
             </thead>
@@ -107,6 +133,15 @@ ob_end_flush(); // End output buffering
                         echo "<td>" . htmlspecialchars($row['semester_ID']) . "</td>";
                         echo "<td>" . htmlspecialchars($row['academic_year']) . "</td>";
                         echo "<td>" . htmlspecialchars($row['semester_type']) . "</td>";
+                        echo "<td>
+    <div class='form-check form-switch'>
+        <input class='form-check-input status-toggle' type='checkbox'
+            data-id='" . $row["semester_ID"] . "'
+            " . ($row['status'] === 'active' ? 'checked' : '') . ">
+        <label class='form-check-label'>" . ucfirst($row['status']) . "</label>
+    </div>
+</td>";
+
                         echo "<td>";
                         echo "<button class='btn btn-warning btn-sm me-1 edit-btn'
         data-id='" . $row["semester_ID"] . "'
