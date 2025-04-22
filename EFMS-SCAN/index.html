@@ -51,6 +51,30 @@
             color: var(--primary);
             margin-bottom: 10px;
         }
+        .delete-btn {
+            background: none;
+            border: none;
+            color: var(--danger);
+            cursor: pointer;
+            margin-left: 10px;
+            font-size: 14px;
+        }
+        
+        .delete-btn:hover {
+            color: #d1146a;
+        }
+        
+        .scanned-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .scanned-info {
+            flex: 1;
+        }
         
         .status-badge {
             display: inline-flex;
@@ -87,14 +111,15 @@
         
         .scanner-container {
             width: 100%;
-            max-width: 500px;
+            max-width: 400px; /* Reduced width for square aspect */
             margin: 0 auto 20px;
             position: relative;
+            aspect-ratio: 1/1; /* Makes it square */
         }
         
         #scanner {
             width: 100%;
-            height: 300px;
+            height: 100%; /* Fill the container */
             border-radius: 8px;
             overflow: hidden;
             background-color: #e9ecef;
@@ -103,7 +128,6 @@
             justify-content: center;
             position: relative;
         }
-        
         #scanner video {
             width: 100%;
             height: 100%;
@@ -270,6 +294,13 @@
                 font-size: 14px;
             }
         }
+        .scan-history {
+            margin-top: 20px;
+            background-color: var(--white);
+            border-radius: 10px;
+            padding: 15px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
     </style>
 </head>
 <body>
@@ -316,6 +347,11 @@
             
             <div id="pendingList" class="pending-list"></div>
         </div>
+    </div>
+    
+    <div class="scan-history">
+        <h2><i class="fas fa-history"></i> Recent Scans</h2>
+        <div id="recentScans"></div>
     </div>
     
     <script src="https://cdn.jsdelivr.net/npm/jsqr/dist/jsQR.min.js"></script>

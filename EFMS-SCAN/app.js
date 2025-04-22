@@ -44,6 +44,7 @@ function updateOnlineStatus() {
 }
 
 // Scanner functions
+// Scanner functions
 async function startScanner() {
     try {
         scannerActive = true;
@@ -57,7 +58,7 @@ async function startScanner() {
             video: { 
                 facingMode: "environment",
                 width: { ideal: 1280 },
-                height: { ideal: 720 }
+                height: { ideal: 1280 } // Square aspect ratio
             } 
         });
         
@@ -68,17 +69,44 @@ async function startScanner() {
         video.style.width = '100%';
         video.style.height = '100%';
         video.style.objectFit = 'cover';
+        scannerElement.innerHTML = ''; // Clear previous
         scannerElement.appendChild(video);
         video.play();
         
-        // Start scanning
-        requestAnimationFrame(() => scanQRCode(video));
+        // Start scanning loop
+        scanLoop(video);
         
         resultDiv.innerHTML = '<p><i class="fas fa-check-circle"></i> Scanner ready</p>';
     } catch (error) {
         console.error('Scanner error:', error);
         resultDiv.innerHTML = `<p><i class="fas fa-exclamation-circle"></i> Error: ${error.message}</p>`;
         stopScanner();
+    }
+}
+
+// Continuous scanning loop
+function scanLoop(video) {
+    if (!scannerActive) return;
+    
+    if (video.readyState === video.HAVE_ENOUGH_DATA) {
+        const canvas = document.createElement('canvas');
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+        
+        const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+        const code = jsQR(imageData.data, imageData.width, imageData.height);
+        
+        if (code) {
+            handleScanResult(code.data);
+            // Brief pause to prevent duplicate scans
+            setTimeout(() => scanLoop(video), 1000);
+        } else {
+            requestAnimationFrame(() => scanLoop(video));
+        }
+    } else {
+        requestAnimationFrame(() => scanLoop(video));
     }
 }
 
@@ -143,17 +171,62 @@ function handleScanResult(code) {
     // Add to pending scans
     addPendingScan(scanData);
     
+    // Add to recent scans
+    addRecentScan(scanData);
+    
     // Try to sync if online
     if (navigator.onLine) {
         syncPendingScans();
     }
+}
+
+// Recent scans functionality
+let recentScans = [];
+
+function addRecentScan(scanData) {
+    recentScans.unshift(scanData);
+    if (recentScans.length > 5) {
+        recentScans = recentScans.slice(0, 5);
+    }
+    updateRecentScansUI();
+}
+
+function deleteRecentScan(index) {
+    recentScans.splice(index, 1);
+    updateRecentScansUI();
+}
+
+function updateRecentScansUI() {
+    const recentScansDiv = document.getElementById('recentScans');
+    recentScansDiv.innerHTML = '';
     
-    // Continue scanning after a brief pause
-    setTimeout(() => {
-        if (scannerActive) {
-            resultDiv.innerHTML = '<p>Ready to scan next QR code</p>';
-        }
-    }, 2000);
+    if (recentScans.length === 0) {
+        recentScansDiv.innerHTML = '<p style="text-align: center; color: var(--gray);">No recent scans</p>';
+        return;
+    }
+    
+    recentScans.forEach((scan, index) => {
+        const scanDiv = document.createElement('div');
+        scanDiv.className = 'scanned-item';
+        scanDiv.innerHTML = `
+            <div class="scanned-info">
+                <div>${scan.code}</div>
+                <small>${new Date(scan.timestamp).toLocaleTimeString()}</small>
+            </div>
+            <button class="delete-btn" data-index="${index}">
+                <i class="fas fa-trash-alt"></i>
+            </button>
+        `;
+        recentScansDiv.appendChild(scanDiv);
+    });
+    
+    // Add event listeners to delete buttons
+    document.querySelectorAll('.delete-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            const index = parseInt(e.currentTarget.getAttribute('data-index'));
+            deleteRecentScan(index);
+        });
+    });
 }
 
 // Local storage functions
