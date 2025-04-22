@@ -120,7 +120,7 @@ if (isset($_SESSION['user_data'])) {
                 </a>
                 <!-- Dropdown menu with proper positioning -->
                 <ul class="dropdown-menu position-absolute" style="right: 0; left: auto; z-index: 1000;">
-                    <li><a class="dropdown-item" href="#">Version 1.0.0</a></li>
+                    <li><a class="dropdown-item" href="#">Version <?php echo $site_version; ?></a></li>
                     <li><hr class="dropdown-divider"></li>
                     <li><a class="dropdown-item" href="?content=logout">Sign out</a></li>
                 </ul>

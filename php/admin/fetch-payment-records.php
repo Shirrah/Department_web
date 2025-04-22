@@ -5,18 +5,32 @@ $db = Database::getInstance()->db;
 if (isset($_GET['payment_id'])) {
     $payment_id = $_GET['payment_id'];
 
-    // Fetch student fee records associated with the selected payment
+    // Get selected semester from session (assuming it's stored in session)
+    session_start();
+    $selected_semester = $_SESSION['selected_semester'][$_SESSION['user_data']['id_admin'] ?? null] ?? null;
+    if (!$selected_semester) {
+        die("No semester selected in session");
+    }
+
+    // Fetch student fee records associated with the selected payment and semester
     $stmt = $db->prepare("
         SELECT s.id_student, s.lastname_student, s.firstname_student, s.year_student, 
                sfr.status_payment, sfr.date_payment, sfr.payment_amount 
         FROM student_fees_record sfr
         JOIN student s ON sfr.id_student = s.id_student
-        WHERE sfr.id_payment = ?
+        JOIN payments p ON sfr.id_payment = p.id_payment
+        WHERE sfr.id_payment = ? 
+        AND s.semester_ID = ?
+        AND p.semester_ID = ?
     ");
-    $stmt->bind_param("i", $payment_id);
+    $stmt->bind_param("iss", $payment_id, $selected_semester, $selected_semester);
     $stmt->execute();
     $result = $stmt->get_result();
     ?>
+    
+    <div class="alert alert-info mb-3">
+        Showing payment records for semester: <?php echo htmlspecialchars($selected_semester); ?>
+    </div>
     
     <table class="table table-striped" id="paymentRecordsTable">
         <thead>
@@ -76,10 +90,8 @@ if (isset($_GET['payment_id'])) {
                             </td>
                           </tr>";
                 }
-                
-                
             } else {
-                echo "<tr><td colspan='7' class='text-center'>No payment records found.</td></tr>";
+                echo "<tr><td colspan='5' class='text-center'>No payment records found for semester: " . htmlspecialchars($selected_semester) . "</td></tr>";
             }
             ?>
         </tbody>
