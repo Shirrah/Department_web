@@ -51,30 +51,6 @@
             color: var(--primary);
             margin-bottom: 10px;
         }
-        .delete-btn {
-            background: none;
-            border: none;
-            color: var(--danger);
-            cursor: pointer;
-            margin-left: 10px;
-            font-size: 14px;
-        }
-        
-        .delete-btn:hover {
-            color: #d1146a;
-        }
-        
-        .scanned-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 10px;
-            border-bottom: 1px solid #eee;
-        }
-        
-        .scanned-info {
-            flex: 1;
-        }
         
         .status-badge {
             display: inline-flex;
@@ -111,15 +87,15 @@
         
         .scanner-container {
             width: 100%;
-            max-width: 400px; /* Reduced width for square aspect */
+            max-width: 400px;
             margin: 0 auto 20px;
             position: relative;
-            aspect-ratio: 1/1; /* Makes it square */
+            aspect-ratio: 1/1;
         }
         
         #scanner {
             width: 100%;
-            height: 100%; /* Fill the container */
+            height: 100%;
             border-radius: 8px;
             overflow: hidden;
             background-color: #e9ecef;
@@ -128,6 +104,7 @@
             justify-content: center;
             position: relative;
         }
+        
         #scanner video {
             width: 100%;
             height: 100%;
@@ -143,6 +120,7 @@
             border: 2px solid var(--primary);
             border-radius: 8px;
             pointer-events: none;
+            box-shadow: inset 0 0 0 200px rgba(0,0,0,0.3);
         }
         
         #result {
@@ -280,13 +258,47 @@
             color: var(--warning);
         }
         
+        .scan-history {
+            margin-top: 20px;
+            background-color: var(--white);
+            border-radius: 10px;
+            padding: 15px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+        
+        .scanned-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .scanned-info {
+            flex: 1;
+        }
+        
+        .delete-btn {
+            background: none;
+            border: none;
+            color: var(--danger);
+            cursor: pointer;
+            margin-left: 10px;
+            font-size: 14px;
+        }
+        
+        .delete-btn:hover {
+            color: #d1146a;
+        }
+        
+        /* Ensure square scanner on all devices */
         @media (max-width: 600px) {
             .container {
                 padding: 15px;
             }
             
-            #scanner {
-                height: 250px;
+            .scanner-container {
+                max-width: 300px;
             }
             
             .btn {
@@ -294,12 +306,11 @@
                 font-size: 14px;
             }
         }
-        .scan-history {
-            margin-top: 20px;
-            background-color: var(--white);
-            border-radius: 10px;
-            padding: 15px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        
+        @media (max-width: 400px) {
+            .scanner-container {
+                max-width: 280px;
+            }
         }
     </style>
 </head>
@@ -308,7 +319,7 @@
         <header>
             <h1><i class="fas fa-qrcode"></i> QR Attendance System</h1>
             <div id="connectionStatus" class="status-badge offline">
-                <i class="fas fa-wifi"></i>
+                <i class="fas fa-wifi-slash"></i>
                 <span>Offline</span>
             </div>
         </header>
@@ -347,14 +358,14 @@
             
             <div id="pendingList" class="pending-list"></div>
         </div>
-    </div>
-    
-    <div class="scan-history">
-        <h2><i class="fas fa-history"></i> Recent Scans</h2>
-        <div id="recentScans"></div>
+        
+        <div class="scan-history">
+            <h2><i class="fas fa-history"></i> Recent Scans</h2>
+            <div id="recentScans"></div>
+        </div>
     </div>
     
     <script src="https://cdn.jsdelivr.net/npm/jsqr/dist/jsQR.min.js"></script>
-    <script src="app.js"></script>
+<script src="app.js"></script>
 </body>
 </html>
