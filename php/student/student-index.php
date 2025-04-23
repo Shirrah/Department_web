@@ -153,6 +153,12 @@ if (isset($_SESSION['user_data'])) {
                 </a>
             </li>
             <li>
+            <a href="?content=student-index&student=student-qrcode" class="nav-link text-white">
+            <i class="fa-solid fa-qrcode"></i>
+                    <span class="ms-1 d-none d-sm-inline">Qr code</span>
+                </a>
+            </li>
+            <li>
             <a href="?content=student-index&student=notifications" class="nav-link text-white">
                     <i class="bi bi-bell"></i>
                     <span class="ms-1 d-none d-sm-inline">Notifications</span>
@@ -187,6 +193,13 @@ if (isset($_SESSION['user_data'])) {
                 <a href="?content=student-index&student=student-fees" class="nav-link text-white">
                     <i class="bi bi-cash-coin"></i>
                     <span class="ms-1">Fees</span>
+                </a>
+            </li>
+
+            <li>
+            <a href="?content=student-index&student=student-qrcode" class="nav-link text-white">
+            <i class="fa-solid fa-qrcode"></i>
+                    <span class="ms-1 d-none d-sm-inline">Qr code</span>
                 </a>
             </li>
 
@@ -262,6 +275,9 @@ if (isset($_SESSION['user_data'])) {
                 break;
             case "student-fees":
                 include 'php/student/student-fees.php';
+                break;
+            case "student-qrcode":
+                include 'php/student/student-qrcode.php';
                 break;
             case "notifications":
                 include 'php/student/notifications.php';
