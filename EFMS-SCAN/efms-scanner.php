@@ -1,49 +1,36 @@
 <?php
 require_once './../php/db-conn.php';
 
-// Debug received parameters
-echo "<pre>";
-print_r($_GET);
-echo "</pre>";
-
 // Get parameters
 $semesterId = $_GET['semester'] ?? 0;
 $eventId = $_GET['event'] ?? 0;
 $attendanceId = $_GET['attendance'] ?? 0;
 
 if (!$semesterId || !$eventId || !$attendanceId) {
-    // Redirect with error if any parameter is missing
     header("Location: index.php?error=missing_parameters");
     exit();
 }
-// Verify the attendance exists and get related information
-if ($attendanceId > 0 && $eventId > 0 && $semesterId > 0) {
-    $database = Database::getInstance();
-    $db = $database->db;
+
+// Verify the attendance exists
+$database = Database::getInstance();
+$db = $database->db;
     
-    // Get attendance details
-    $query = "SELECT a.*, e.name_event, s.academic_year, s.semester_type 
-          FROM attendances a
-          JOIN events e ON a.id_event = e.id_event COLLATE utf8mb4_unicode_ci
-          JOIN semester s ON e.semester_ID = s.semester_ID COLLATE utf8mb4_unicode_ci
-          WHERE a.id_attendance = ? AND a.id_event = ? AND e.semester_ID = ?";
-    $stmt = $db->prepare($query);
-    $stmt->bind_param('iii', $attendanceId, $eventId, $semesterId);
-    $stmt->execute();
-    $result = $stmt->get_result();
-    
-    if ($result->num_rows === 0) {
-        // Invalid parameters, redirect back
-        header("Location: index.php");
-        exit();
-    }
-    
-    $attendanceData = $result->fetch_assoc();
-} else {
-    // Missing parameters, redirect back
+$query = "SELECT a.*, e.name_event, s.academic_year, s.semester_type 
+      FROM attendances a
+      JOIN events e ON a.id_event = e.id_event COLLATE utf8mb4_unicode_ci
+      JOIN semester s ON e.semester_ID = s.semester_ID COLLATE utf8mb4_unicode_ci
+      WHERE a.id_attendance = ? AND a.id_event = ? AND e.semester_ID = ?";
+$stmt = $db->prepare($query);
+$stmt->bind_param('iii', $attendanceId, $eventId, $semesterId);
+$stmt->execute();
+$result = $stmt->get_result();
+
+if ($result->num_rows === 0) {
     header("Location: index.php");
     exit();
 }
+
+$attendanceData = $result->fetch_assoc();
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -338,6 +325,31 @@ if ($attendanceId > 0 && $eventId > 0 && $semesterId > 0) {
             color: #d1146a;
         }
         
+        /* Camera error styles */
+        .camera-error {
+            background-color: #f8d7da;
+            color: #721c24;
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 10px;
+        }
+        
+        .scanner-help {
+            font-size: 0.9rem;
+            color: #6c757d;
+        }
+        
+        .scanner-help ul {
+            padding-left: 20px;
+            margin-top: 5px;
+        }
+        
+        /* Manual entry styles */
+        .manual-entry {
+            margin-top: 20px;
+            display: none;
+        }
+        
         /* Ensure square scanner on all devices */
         @media (max-width: 600px) {
             .container {
@@ -353,36 +365,10 @@ if ($attendanceId > 0 && $eventId > 0 && $semesterId > 0) {
                 font-size: 14px;
             }
         }
-        
-        @media (max-width: 400px) {
-            .scanner-container {
-                max-width: 280px;
-            }
-        }
-        .info-card {
-            background-color: var(--white);
-            border-radius: 10px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
-            padding: 20px;
-            margin-bottom: 20px;
-        }
-        
-        .info-item {
-            margin-bottom: 10px;
-        }
-        
-        .info-label {
-            font-weight: 500;
-            color: var(--gray);
-        }
-        
-        .info-value {
-            font-weight: 400;
-        }
     </style>
 </head>
 <body>
-    < <div class="container">
+    <div class="container">
         <header>
             <h1><i class="fas fa-qrcode"></i> QR Attendance System</h1>
             <div id="connectionStatus" class="status-badge offline">
@@ -418,7 +404,10 @@ if ($attendanceId > 0 && $eventId > 0 && $semesterId > 0) {
             <div class="scanner-container">
                 <div id="scanner">
                     <div class="scanner-overlay"></div>
-                    <p id="scannerPlaceholder">Scanner will appear here</p>
+                    <div id="scannerPlaceholder">
+                        <p>Scanner will appear here</p>
+                        <!-- Error will appear here if camera fails -->
+                    </div>
                 </div>
             </div>
             
@@ -433,6 +422,19 @@ if ($attendanceId > 0 && $eventId > 0 && $semesterId > 0) {
                 <button id="stopScanner" class="btn btn-outline" disabled>
                     <i class="fas fa-stop"></i> Stop Scanner
                 </button>
+            </div>
+            
+            <!-- Manual entry fallback -->
+            <div id="manualEntry" class="manual-entry">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title"><i class="fas fa-keyboard"></i> Manual Entry</h5>
+                        <div class="input-group mb-3">
+                            <input type="text" id="manualCode" class="form-control" placeholder="Enter student code">
+                            <button id="submitManual" class="btn btn-primary">Submit</button>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
         
@@ -455,224 +457,216 @@ if ($attendanceId > 0 && $eventId > 0 && $semesterId > 0) {
         </div>
     </div>
     
-    <<script>
-        // Store attendance data in JavaScript
-        const attendanceData = {
-            id: <?= $attendanceId ?>,
-            eventId: <?= $eventId ?>,
-            semesterId: <?= $semesterId ?>
-        };
-    </>
-    
     <script src="https://cdn.jsdelivr.net/npm/jsqr/dist/jsQR.min.js"></script>
     <script>
     // Global variables
-        let scannerActive = false;
-        let videoStream = null;
-        let pendingScans = [];
-        let recentScans = [];
+    let scannerActive = false;
+    let videoStream = null;
+    let pendingScans = [];
+    let recentScans = [];
 
-        // DOM elements
-        const startBtn = document.getElementById('startScanner');
-        const stopBtn = document.getElementById('stopScanner');
-        const syncBtn = document.getElementById('syncNow');
-        const resultDiv = document.getElementById('result');
-        const statusDiv = document.getElementById('connectionStatus');
-        const pendingCountSpan = document.getElementById('pendingCount');
-        const pendingListDiv = document.getElementById('pendingList');
-        const scannerElement = document.getElementById('scanner');
-        const scannerPlaceholder = document.getElementById('scannerPlaceholder');
-        const recentScansDiv = document.getElementById('recentScans');
+    // DOM elements
+    const startBtn = document.getElementById('startScanner');
+    const stopBtn = document.getElementById('stopScanner');
+    const syncBtn = document.getElementById('syncNow');
+    const resultDiv = document.getElementById('result');
+    const statusDiv = document.getElementById('connectionStatus');
+    const pendingCountSpan = document.getElementById('pendingCount');
+    const pendingListDiv = document.getElementById('pendingList');
+    const scannerElement = document.getElementById('scanner');
+    const scannerPlaceholder = document.getElementById('scannerPlaceholder');
+    const recentScansDiv = document.getElementById('recentScans');
+    const manualEntryDiv = document.getElementById('manualEntry');
+    const submitManualBtn = document.getElementById('submitManual');
+    const manualCodeInput = document.getElementById('manualCode');
 
-        // Initialize
-        document.addEventListener('DOMContentLoaded', () => {
-            // Load pending scans from local storage
-            loadPendingScans();
-            
-            // Check online status
-            updateOnlineStatus();
-            window.addEventListener('online', updateOnlineStatus);
-            window.addEventListener('offline', updateOnlineStatus);
-            
-            // Event listeners
-            startBtn.addEventListener('click', startScanner);
-            stopBtn.addEventListener('click', stopScanner);
-            syncBtn.addEventListener('click', syncPendingScans);
-            
-            // Load recent scans
-            updateRecentScansUI();
-        });
+    // Store attendance data
+    const attendanceData = {
+        id: <?= $attendanceId ?>,
+        eventId: <?= $eventId ?>,
+        semesterId: <?= $semesterId ?>
+    };
 
-        // Online/offline status
-        function updateOnlineStatus() {
-            if (navigator.onLine) {
-                statusDiv.innerHTML = '<i class="fas fa-wifi"></i><span>Online</span>';
-                statusDiv.className = 'status-badge online';
-                // Try to sync when coming online
-                syncPendingScans();
-            } else {
-                statusDiv.innerHTML = '<i class="fas fa-wifi-slash"></i><span>Offline</span>';
-                statusDiv.className = 'status-badge offline';
-            }
+    // Initialize
+    document.addEventListener('DOMContentLoaded', () => {
+        loadPendingScans();
+        updateOnlineStatus();
+        window.addEventListener('online', updateOnlineStatus);
+        window.addEventListener('offline', updateOnlineStatus);
+        
+        startBtn.addEventListener('click', startScanner);
+        stopBtn.addEventListener('click', stopScanner);
+        syncBtn.addEventListener('click', syncPendingScans);
+        submitManualBtn.addEventListener('click', submitManualCode);
+        
+        updateRecentScansUI();
+    });
+
+    // Online/offline status
+    function updateOnlineStatus() {
+        if (navigator.onLine) {
+            statusDiv.innerHTML = '<i class="fas fa-wifi"></i><span>Online</span>';
+            statusDiv.className = 'status-badge online';
+            syncPendingScans();
+        } else {
+            statusDiv.innerHTML = '<i class="fas fa-wifi-slash"></i><span>Offline</span>';
+            statusDiv.className = 'status-badge offline';
         }
+    }
 
-        // Scanner functions with zoom
-        async function startScanner() {
-            try {
-                scannerActive = true;
-                startBtn.disabled = true;
-                stopBtn.disabled = false;
-                resultDiv.innerHTML = '<p><i class="fas fa-spinner fa-spin"></i> Starting scanner...</p>';
-                scannerPlaceholder.style.display = 'none';
-                
-                // Get video stream with zoom constraints
-                videoStream = await navigator.mediaDevices.getUserMedia({ 
-                    video: { 
-                        facingMode: "environment",
-                        width: { ideal: 1280 },
-                        height: { ideal: 1280 }
-                    } 
-                });
-                
-                // Create video element
-                const video = document.createElement('video');
-                video.srcObject = videoStream;
-                video.setAttribute('playsinline', true);
-                video.style.width = '100%';
-                video.style.height = '100%';
-                video.style.objectFit = 'cover';
-                scannerElement.innerHTML = '';
-                scannerElement.appendChild(video);
-                
-                await video.play();
-                
-                // Apply zoom (50%)
-                applyZoom(videoStream, 0.5);
-                
-                // Start scanning loop
-                scanLoop(video);
-                
-                resultDiv.innerHTML = '<p><i class="fas fa-check-circle"></i> Scanner ready</p>';
-            } catch (error) {
-                console.error('Scanner error:', error);
-                resultDiv.innerHTML = `<p><i class="fas fa-exclamation-circle"></i> Error: ${error.message}</p>`;
-                stopScanner();
-            }
-        }
+    // Scanner functions
+    async function startScanner() {
+        try {
+            scannerActive = true;
+            startBtn.disabled = true;
+            stopBtn.disabled = false;
+            resultDiv.innerHTML = '<p><i class="fas fa-spinner fa-spin"></i> Starting scanner...</p>';
+            scannerPlaceholder.style.display = 'none';
+            manualEntryDiv.style.display = 'none';
 
-        // Apply zoom to video stream
-        function applyZoom(stream, zoomFactor) {
-            if (!stream || !stream.getVideoTracks || !stream.getVideoTracks()[0]) {
-                console.log("Zoom not supported in this browser");
-                return;
+            // Stop any existing stream
+            if (videoStream) {
+                videoStream.getTracks().forEach(track => track.stop());
             }
-            
-            const videoTrack = stream.getVideoTracks()[0];
-            
-            if (!videoTrack.getCapabilities || !videoTrack.getConstraints || !videoTrack.applyConstraints) {
-                console.log("Zoom constraints not supported");
-                return;
-            }
-            
-            const capabilities = videoTrack.getCapabilities();
-            
-            if (capabilities.zoom) {
-                const constraints = {
-                    advanced: [{
-                        zoom: zoomFactor * capabilities.zoom.max
-                    }]
-                };
-                
-                videoTrack.applyConstraints(constraints)
-                    .then(() => console.log(`Zoom set to ${zoomFactor * 100}%`))
-                    .catch(err => console.error("Error applying zoom:", err));
-            } else {
-                console.log("Zoom not supported by this device");
-                // Fallback to visual zoom
-                scannerElement.style.overflow = 'hidden';
-                videoTrack.applyConstraints({
-                    advanced: [{
-                        width: { exact: 640 },
-                        height: { exact: 640 }
-                    }]
-                }).catch(err => console.error("Error applying constraints:", err));
-            }
-        }
 
-        // Continuous scanning loop
-        function scanLoop(video) {
-            if (!scannerActive) return;
-            
-            if (video.readyState === video.HAVE_ENOUGH_DATA) {
-                const canvas = document.createElement('canvas');
-                canvas.width = video.videoWidth;
-                canvas.height = video.videoHeight;
-                const ctx = canvas.getContext('2d');
-                ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-                
-                const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-                const code = jsQR(imageData.data, imageData.width, imageData.height);
-                
-                if (code) {
-                    handleScanResult(code.data);
-                    // Brief pause to prevent duplicate scans
-                    setTimeout(() => scanLoop(video), 1000);
-                } else {
-                    requestAnimationFrame(() => scanLoop(video));
+            // Try different camera configurations
+            const constraints = {
+                video: {
+                    facingMode: "environment",
+                    width: { ideal: 1280 },
+                    height: { ideal: 720 }
                 }
+            };
+
+            // Try to get media with constraints
+            videoStream = await navigator.mediaDevices.getUserMedia(constraints)
+                .catch(async (err) => {
+                    // Fallback to any camera if environment fails
+                    console.log('Rear camera failed, trying any camera...');
+                    return await navigator.mediaDevices.getUserMedia({
+                        video: true
+                    });
+                });
+
+            const video = document.createElement('video');
+            video.srcObject = videoStream;
+            video.setAttribute('playsinline', true);
+            video.style.width = '100%';
+            video.style.height = '100%';
+            video.style.objectFit = 'cover';
+            
+            scannerElement.innerHTML = '';
+            scannerElement.appendChild(video);
+            
+            await video.play();
+            
+            resultDiv.innerHTML = '<p><i class="fas fa-check-circle"></i> Scanner ready</p>';
+            scanLoop(video);
+            
+        } catch (error) {
+            console.error('Scanner error:', error);
+            showCameraError(error);
+            stopScanner();
+        }
+    }
+
+    function showCameraError(error) {
+        scannerPlaceholder.style.display = 'block';
+        scannerPlaceholder.innerHTML = `
+            <div class="camera-error">
+                <i class="fas fa-video-slash"></i>
+                <strong>Camera Error:</strong> ${error.message}
+            </div>
+            <div class="scanner-help">
+                <p>Please ensure:</p>
+                <ul>
+                    <li>Your camera is connected and enabled</li>
+                    <li>You've granted camera permissions</li>
+                    <li>No other app is using the camera</li>
+                    <li>You're using HTTPS or localhost</li>
+                </ul>
+                <button id="retryScanner" class="btn btn-primary mt-2">
+                    <i class="fas fa-sync-alt"></i> Try Again
+                </button>
+            </div>
+        `;
+        
+        document.getElementById('retryScanner').addEventListener('click', startScanner);
+        manualEntryDiv.style.display = 'block';
+    }
+
+    function submitManualCode() {
+        const code = manualCodeInput.value.trim();
+        if (code) {
+            handleScanResult(code);
+            manualCodeInput.value = '';
+        }
+    }
+
+    // Continuous scanning loop
+    function scanLoop(video) {
+        if (!scannerActive) return;
+        
+        if (video.readyState === video.HAVE_ENOUGH_DATA) {
+            const canvas = document.createElement('canvas');
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+            
+            const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+            const code = jsQR(imageData.data, imageData.width, imageData.height);
+            
+            if (code) {
+                handleScanResult(code.data);
+                setTimeout(() => scanLoop(video), 1000);
             } else {
                 requestAnimationFrame(() => scanLoop(video));
             }
+        } else {
+            requestAnimationFrame(() => scanLoop(video));
         }
+    }
 
-        function stopScanner() {
-            scannerActive = false;
-            startBtn.disabled = false;
-            stopBtn.disabled = true;
-            
-            // Stop video stream
-            if (videoStream) {
-                videoStream.getTracks().forEach(track => track.stop());
-                videoStream = null;
-            }
-            
-            // Clear video element
-            scannerElement.innerHTML = '<div class="scanner-overlay"></div>';
-            scannerPlaceholder.style.display = 'block';
-            
-            resultDiv.innerHTML = '<p>Scanner stopped</p>';
+    function stopScanner() {
+        scannerActive = false;
+        startBtn.disabled = false;
+        stopBtn.disabled = true;
+        
+        if (videoStream) {
+            videoStream.getTracks().forEach(track => track.stop());
+            videoStream = null;
         }
+        
+        scannerElement.innerHTML = '<div class="scanner-overlay"></div>';
+        scannerPlaceholder.style.display = 'block';
+        resultDiv.innerHTML = '<p>Scanner stopped</p>';
+    }
 
-        // In the handleScanResult function, modify it to include attendance ID
-function handleScanResult(code) {
-    // Vibrate if available
-    if ('vibrate' in navigator) {
-        navigator.vibrate(200);
+    function handleScanResult(code) {
+        if ('vibrate' in navigator) {
+            navigator.vibrate(200);
+        }
+        
+        resultDiv.innerHTML = `
+            <p><i class="fas fa-check-circle" style="color: #4CAF50;"></i> Scanned successfully</p>
+            <small> Code: ${code}</small>
+        `;
+        
+        const scanData = {
+            code: code,
+            attendance_id: attendanceData.id,
+            timestamp: new Date().toISOString(),
+            synced: false
+        };
+        
+        addPendingScan(scanData);
+        addRecentScan(scanData);
+        
+        if (navigator.onLine) {
+            syncPendingScans();
+        }
     }
-    
-    resultDiv.innerHTML = `
-        <p><i class="fas fa-check-circle" style="color: #4CAF50;"></i> Scanned successfully</p>
-        <small> Code: ${code}</small>
-    `;
-    
-    const scanData = {
-        code: code,
-        attendance_id: attendanceId, // Add attendance ID to scan data
-        timestamp: new Date().toISOString(),
-        synced: false
-    };
-    
-    // Add to pending scans
-    addPendingScan(scanData);
-    
-    // Add to recent scans
-    addRecentScan(scanData);
-    
-    // Try to sync if online
-    if (navigator.onLine) {
-        syncPendingScans();
-    }
-}
 
 // Modify the syncPendingScans function to include all attendance data
 async function syncPendingScans() {
