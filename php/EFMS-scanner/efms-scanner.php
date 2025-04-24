@@ -273,6 +273,12 @@
         </footer>
     </div>
 
+    <!-- Hidden audio element for scan sound -->
+    <audio id="scan-audio" preload="auto" style="display:none">
+        <source src="../../assets/sounds/beep-07a.mp3" type="audio/mpeg">
+        Your browser does not support the audio element.
+    </audio>
+
     <script>
         // Database configuration
         const DB_NAME = "EFMS_SCAN_DB";
@@ -285,6 +291,7 @@
         let scanning = false;
         let stream = null;
         let scanCooldown = false;
+        let scanSound = null;
         
         // DOM elements
         const video = document.getElementById("video");
@@ -318,6 +325,37 @@
                     reject(event.target.error);
                 };
             });
+        }
+        
+        // Initialize scan sound
+        function initScanSound() {
+            // Try both methods for better browser compatibility
+            const audioElement = document.getElementById("scan-audio");
+            if (audioElement) {
+                scanSound = audioElement;
+            } else {
+                scanSound = new Audio();
+                scanSound.src = "../../assets/sounds/beep-07a.mp3";
+                scanSound.preload = "auto";
+                scanSound.load();
+            }
+        }
+        
+        // Play scan sound
+        function playScanSound() {
+            if (!scanSound) initScanSound();
+            
+            try {
+                scanSound.currentTime = 0; // Rewind if already playing
+                scanSound.play().catch(e => {
+                    console.log("Audio play blocked, trying fallback:", e);
+                    // Fallback for browsers that block audio without user interaction
+                    initScanSound();
+                    setTimeout(() => scanSound.play(), 100);
+                });
+            } catch (e) {
+                console.log("Audio play failed:", e);
+            }
         }
         
         // Save scan to local database
@@ -417,22 +455,22 @@
                             const code = jsQR(imageData.data, imageData.width, imageData.height);
                             
                             if (code && !scanCooldown) {
-    // Enter cooldown period
-    scanCooldown = true;
-    scanButton.classList.add("btn-disabled");
-    
-    // Process the scan
-    updateStatus(`QR Code detected`, "online");
-    playBeep();  // This plays the new two-tone beep
-    saveScan(code.data);
-    
-    // Set timeout to exit cooldown
-    setTimeout(() => {
-        scanCooldown = false;
-        scanButton.classList.remove("btn-disabled");
-        updateStatus("Ready to scan again", "online");
-    }, SCAN_DELAY);
-}
+                                // Enter cooldown period
+                                scanCooldown = true;
+                                scanButton.classList.add("btn-disabled");
+                                
+                                // Process the scan
+                                updateStatus(`QR Code detected`, "online");
+                                playScanSound();
+                                saveScan(code.data);
+                                
+                                // Set timeout to exit cooldown
+                                setTimeout(() => {
+                                    scanCooldown = false;
+                                    scanButton.classList.remove("btn-disabled");
+                                    updateStatus("Ready to scan again", "online");
+                                }, SCAN_DELAY);
+                            }
                         }
                         
                         requestAnimationFrame(scanFrame);
@@ -550,65 +588,11 @@
             }, SYNC_INTERVAL);
         }
         
-        // Improved beep function with preloaded sound
-        let beepSound = null;
-        
-        function initBeep() {
-    // Create audio context only when needed
-    if (typeof AudioContext !== 'undefined' || typeof webkitAudioContext !== 'undefined') {
-        const AudioContext = window.AudioContext || window.webkitAudioContext;
-        const ctx = new AudioContext();
-        
-        return {
-            play: function() {
-                // Create oscillator and gain node
-                const oscillator = ctx.createOscillator();
-                const gainNode = ctx.createGain();
-                
-                oscillator.type = "square"; // Gives a more digital/beep-like sound
-                oscillator.connect(gainNode);
-                gainNode.connect(ctx.destination);
-                
-                // Configure the two-tone beep (high-low pattern)
-                const now = ctx.currentTime;
-                
-                // First beep (higher pitch)
-                oscillator.frequency.setValueAtTime(1200, now);
-                gainNode.gain.setValueAtTime(0, now);
-                gainNode.gain.linearRampToValueAtTime(1, now + 0.01);
-                gainNode.gain.linearRampToValueAtTime(0, now + 0.1);
-                
-                // Second beep (lower pitch)
-                oscillator.frequency.setValueAtTime(800, now + 0.15);
-                gainNode.gain.linearRampToValueAtTime(1, now + 0.16);
-                gainNode.gain.linearRampToValueAtTime(0, now + 0.25);
-                
-                // Start and stop the oscillator
-                oscillator.start(now);
-                oscillator.stop(now + 0.3); // Total duration ~300ms
-            }
-        };
-    }
-    
-    return {
-        play: function() {
-            // Fallback for browsers without Web Audio API
-            console.log("Beep! Beep!");
-        }
-    };
-}
-        
-        function playBeep() {
-            if (!beepSound) {
-                beepSound = initBeep();
-            }
-            beepSound.play();
-        }
-        
         // Initialize app
         async function init() {
             try {
                 await initDB();
+                initScanSound();
                 setupScanner();
                 monitorConnection();
                 loadPreviousScans();
