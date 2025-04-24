@@ -1,6 +1,5 @@
 <?php
-require_once './../php/db-conn.php';
-
+require_once '..//..//php/db-conn.php';
 header('Content-Type: application/json');
 
 if (!isset($_GET['event_ID'])) {

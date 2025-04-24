@@ -2,40 +2,47 @@
 require_once "././php/db-conn.php";
 $db = Database::getInstance()->db;
 
+// Redirect if not logged in
 if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] != 'yes') {
     header("location: ../index.php?content=log-in");
     exit();
 }
 
+// Identify user ID (admin or student)
 $user_id = $_SESSION['user_data']['id_admin'] ?? $_SESSION['user_data']['id_student'];
 
-// Check if semester is set via GET and store it in session and cookies
+// Set semester from GET and store in session and cookie
 if (isset($_GET['semester']) && !empty($_GET['semester'])) {
     $_SESSION['selected_semester'][$user_id] = $_GET['semester'];
-    setcookie('selected_semester', $_GET['semester'], time() + (86400 * 30), "/"); // Store in cookie for 30 days
+    setcookie('selected_semester', $_GET['semester'], time() + (86400 * 30), "/"); // Store for 30 days
 }
 
-// Use selected semester from session or cookie, fallback to latest active semester
+// Determine selected semester from session or cookie, or fallback
 if (isset($_SESSION['selected_semester'][$user_id]) && !empty($_SESSION['selected_semester'][$user_id])) {
     $selected_semester = $_SESSION['selected_semester'][$user_id];
 } elseif (isset($_COOKIE['selected_semester']) && !empty($_COOKIE['selected_semester'])) {
     $selected_semester = $_COOKIE['selected_semester'];
+    $_SESSION['selected_semester'][$user_id] = $selected_semester; // Sync back to session
 } else {
-    // If no semester selected, fetch the latest active semester
+    // Fetch latest active semester
     $query = "SELECT semester_ID FROM semester WHERE status = 'active' ORDER BY semester_ID DESC LIMIT 1";
     $stmt = $db->prepare($query);
     $stmt->execute();
     $result = $stmt->get_result();
     $selected_semester = ($result && $row = $result->fetch_assoc()) ? $row['semester_ID'] : null;
+    if ($selected_semester) {
+        $_SESSION['selected_semester'][$user_id] = $selected_semester;
+        setcookie('selected_semester', $selected_semester, time() + (86400 * 30), "/");
+    }
 }
 
-// Dropdown: only active semesters
+// Fetch active semesters for dropdown
 $sql = "SELECT semester_ID, academic_year, semester_type FROM semester WHERE status = 'active'";
 $stmt = $db->prepare($sql);
 $stmt->execute();
 $allSemesters = $stmt->get_result();
 
-// Student count
+// Count students in selected semester
 $query = "SELECT COUNT(*) AS student_count FROM student WHERE semester_ID = ?";
 $stmt = $db->prepare($query);
 $stmt->bind_param("s", $selected_semester);
@@ -43,7 +50,7 @@ $stmt->execute();
 $result = $stmt->get_result();
 $student_count = ($result) ? $result->fetch_assoc()['student_count'] : 0;
 
-// Events count
+// Count events in selected semester
 $query = "SELECT COUNT(*) AS events_count FROM events WHERE semester_ID = ?";
 $stmt = $db->prepare($query);
 $stmt->bind_param("s", $selected_semester);
@@ -51,7 +58,7 @@ $stmt->execute();
 $result = $stmt->get_result();
 $events_count = ($result) ? $result->fetch_assoc()['events_count'] : 0;
 
-// Fees count
+// Count fees/payments in selected semester
 $query = "SELECT COUNT(*) AS fees_count FROM payments WHERE semester_ID = ?";
 $stmt = $db->prepare($query);
 $stmt->bind_param("s", $selected_semester);
@@ -59,7 +66,7 @@ $stmt->execute();
 $result = $stmt->get_result();
 $fees_count = ($result) ? $result->fetch_assoc()['fees_count'] : 0;
 
-// Updated fetch for dropdown
+// Fetch all semesters (active and inactive) for admin views
 $sql = "SELECT semester_ID, academic_year, semester_type, status FROM semester ORDER BY semester_ID DESC";
 $result = $db->query($sql);
 ?>

@@ -80,16 +80,17 @@ if (isset($_GET['event_id'])) {
     <i class="fas fa-clock"></i> Add Time
 </button>
 
-                    <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#EditAttendanceModal"
-                        onclick="openEditAttendanceModal(
-                            <?php echo $attendance['id_attendance']; ?>,
-                            '<?php echo $attendance['type_attendance']; ?>',
-                            '<?php echo $attendance['penalty_type']; ?>',
-                            '<?php echo addslashes($attendance['penalty_requirements']); ?>',
-                            '<?php echo $attendance['start_time']; ?>',
-                            '<?php echo $attendance['end_time']; ?>')">
-                            <i class="fas fa-edit"></i> Edit
-                        </button>
+<button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#EditAttendanceModal"
+    onclick="openEditAttendanceModal(
+        <?php echo $attendance['id_attendance']; ?>,
+        '<?php echo $attendance['type_attendance']; ?>',
+        '<?php echo $attendance['penalty_type']; ?>',
+        '<?php echo addslashes($attendance['penalty_requirements']); ?>',
+        '<?php echo $attendance['start_time']; ?>',
+        '<?php echo $attendance['end_time']; ?>')">
+    <i class="fas fa-edit"></i> Edit
+</button>
+
                    <button class="btn btn-danger btn-sm" onclick="confirmDeleteAttendance(<?php echo $attendance['id_attendance']; ?>)">
                         <i class="fas fa-trash"></i> Delete
                     </button>

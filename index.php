@@ -49,8 +49,8 @@ $site_version = $versionData['version'];
 <body>
     <div class="main-container">
         <?php
-        $exclude_header_pages = ['log-in', 'admin-index', 'student-index'];
-        $exclude_footer_pages = ['admin-index', 'log-in', 'student-index'];
+        $exclude_header_pages = ['log-in', 'admin-index', 'student-index', 'efms-scanner-index', 'efms-scanner-app'];
+        $exclude_footer_pages = ['admin-index', 'log-in', 'student-index', 'efms-scanner-index', 'efms-scanner-app'];
         $content_pg = isset($_GET['content']) ? $_GET['content'] : 'default';
 
         // Include header if not excluded
@@ -73,6 +73,12 @@ $site_version = $versionData['version'];
             break;
         case "student-index":
             include 'php/student/student-index.php';
+            break;
+        case "efms-scanner-index":
+            include 'php/EFMS-scanner/index.php';
+            break;
+        case "efms-scanner-app":
+            include 'php/EFMS-scanner/efms-scanner.php';
             break;
         case "logout":
             session_destroy();

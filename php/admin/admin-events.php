@@ -283,15 +283,29 @@ $events = $stmt->get_result();
 
                         <p><strong>Created By:</strong> <?php echo $event['creator_firstname'] . ' ' . $event['creator_lastname']; ?></p>
                         <p><strong>Actions:</strong></p>
+                        <script>
+function handleEditClick(button) {
+    const id = button.getAttribute('data-id');
+    const name = button.getAttribute('data-name');
+    const date = button.getAttribute('data-date');
+    const start = button.getAttribute('data-start');
+    const end = button.getAttribute('data-end');
+    const desc = button.getAttribute('data-desc');
+
+    openEditModal(id, name, date, start, end, desc);
+}
+</script>
+
                         <!-- Edit Button with Icon -->
-<button type="button" class="btn btn-success btn-sm" data-bs-toggle="tooltip" data-bs-placement="top" title="Edit" onclick="openEditModal(
-                          '<?php echo $event['id_event']; ?>',
-                          '<?php echo addslashes($event['name_event']); ?>',
-                          '<?php echo date('Y-m-d', strtotime($event['date_event'])); ?>',
-                          '<?php echo date('H:i', strtotime($event['event_start_time'])); ?>',
-                          '<?php echo date('H:i', strtotime($event['event_end_time'])); ?>',
-                          '<?php echo addslashes($event['event_desc']); ?>'
-                      )">
+                        <button type="button"
+        class="btn btn-success btn-sm"
+        data-id="<?= htmlspecialchars($event['id_event']) ?>"
+        data-name="<?= htmlspecialchars($event['name_event'], ENT_QUOTES) ?>"
+        data-date="<?= date('Y-m-d', strtotime($event['date_event'])) ?>"
+        data-start="<?= date('H:i', strtotime($event['event_start_time'])) ?>"
+        data-end="<?= date('H:i', strtotime($event['event_end_time'])) ?>"
+        data-desc="<?= htmlspecialchars($event['event_desc'], ENT_QUOTES) ?>"
+        onclick="handleEditClick(this)">
     <i class="fas fa-edit"></i> Edit
 </button>
 
@@ -316,8 +330,7 @@ $events = $stmt->get_result();
         <th>End Time</th>
         <th>Penalty Type</th>
         <th>Penalty Requirements</th>
-        <th>Actions</th>
-      </tr>
+        <th style="text-align: center;">Action buttons</th>
     </thead>
     <tbody id="attendanceTableBody_<?php echo $event['id_event']; ?>">
   <!-- Attendance records will be dynamically loaded here -->
@@ -516,18 +529,6 @@ function confirmDelete(eventId) {
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
       <div class="modal-body">
-        
-        <!-- Display Attendance Data Here -->
-        <div id="attendanceDataDisplay" class="mb-4 p-3 border rounded bg-light">
-          <h6>Attendance Details:</h6>
-          <p><strong>ID:</strong> <span id="display_id_attendance"></span></p>
-          <p><strong>Type:</strong> <span id="display_type_attendance"></span></p>
-          <p><strong>Penalty Type:</strong> <span id="display_penalty_type"></span></p>
-          <p><strong>Penalty Requirements:</strong> <span id="display_penalty_requirements"></span></p>
-          <p><strong>Start Time:</strong> <span id="display_start_time"></span></p>
-          <p><strong>End Time:</strong> <span id="display_end_time"></span></p>
-        </div>
-
         <form method="POST" action="">
           <input type="hidden" id="id_attendance" name="id_attendance" value="">
           <div class="mb-3">
@@ -570,51 +571,68 @@ function confirmDelete(eventId) {
   </div>
 </div>
 
+<!-- Floating Attendance Data Preview -->
+<div id="attendanceDataDisplay" class="position-fixed top-50 start-50 translate-middle-y d-none"
+     style="left: 70%; width: 300px; z-index: 1060; background: #f8f9fa; border: 1px solid tomato; border-radius: 10px; padding: 1rem;">
+  <h5 class="mb-3" style="color: tomato;">Current Data Preview</h5>
+  <ul class="list-group">
+    <li class="list-group-item"><strong>Type:</strong> <span id="preview_type_attendance">-</span></li>
+    <li class="list-group-item"><strong>Penalty Type:</strong> <span id="preview_penalty_type">-</span></li>
+    <li class="list-group-item"><strong>Penalty Requirements:</strong> <span id="preview_penalty_requirements">-</span></li>
+    <li class="list-group-item"><strong>Start Time:</strong> <span id="preview_start_time">-</span></li>
+    <li class="list-group-item"><strong>End Time:</strong> <span id="preview_end_time">-</span></li>
+  </ul>
+</div>
+
+
 <script>
-// Function to open the modal and populate it with data for editing
-function openEditAttendanceModal(idAttendance, typeAttendance, penaltyType, penaltyRequirements, startTime, endTime, attendanceDate) {
-    console.log("idAttendance:", idAttendance);
-    console.log("typeAttendance:", typeAttendance);
-    console.log("penaltyType:", penaltyType);
-    console.log("penaltyRequirements:", penaltyRequirements);
-    console.log("startTime:", startTime);  
-    console.log("endTime:", endTime);      
+function openEditAttendanceModal(id, type, penaltyType, penaltyReq, start, end) {
+  document.getElementById('id_attendance').value = id;
+  document.getElementById('type_attendance').value = type;
+  document.getElementById('penalty_type').value = penaltyType;
+  document.getElementById('penalty_requirements').value = penaltyReq;
+  document.getElementById('start_time').value = start;
+  document.getElementById('end_time').value = end;
 
-    // Populate modal form fields
-    document.getElementById('id_attendance').value = idAttendance;
-    document.getElementById('type_attendance').value = typeAttendance;
-    document.getElementById('penalty_type').value = penaltyType;
-    document.getElementById('penalty_requirements').value = penaltyRequirements;
-    document.getElementById('start_time').value = startTime;
-    document.getElementById('end_time').value = endTime;
+  // Format time to 12-hour
+  document.getElementById('preview_type_attendance').textContent = type;
+  document.getElementById('preview_penalty_type').textContent = penaltyType;
+  document.getElementById('preview_penalty_requirements').textContent = penaltyReq;
+  document.getElementById('preview_start_time').textContent = formatTo12Hour(start);
+  document.getElementById('preview_end_time').textContent = formatTo12Hour(end);
 
-    // Display the data in plain text
-    document.getElementById('display_id_attendance').innerText = idAttendance;
-    document.getElementById('display_type_attendance').innerText = typeAttendance;
-    document.getElementById('display_penalty_type').innerText = penaltyType;
-    document.getElementById('display_penalty_requirements').innerText = penaltyRequirements;
-    document.getElementById('display_start_time').innerText = startTime;
-    document.getElementById('display_end_time').innerText = endTime;
+  document.getElementById('attendanceDataDisplay').classList.remove('d-none');
 
-    // Update the penalty requirements input based on the penalty type selected
-    updatePenaltyRequirements();
+  const modalElement = document.getElementById('EditAttendanceModal');
+  modalElement.addEventListener('hidden.bs.modal', () => {
+    document.getElementById('attendanceDataDisplay').classList.add('d-none');
+  });
+
+  updatePenaltyRequirements(penaltyType);
 }
 
-// Function to update the penalty requirements input based on the selected penalty type
-function updatePenaltyRequirements() {
-    const penaltyType = document.getElementById('penalty_type').value;
-    const penaltyRequirements = document.getElementById('penalty_requirements');
-    
-    if (penaltyType === 'Fee') {
-      penaltyRequirements.type = 'number';
-      penaltyRequirements.placeholder = 'Enter amount (e.g., 4.00)';
-      penaltyRequirements.step = '0.01'; // Allows decimals
-    } else {
-      penaltyRequirements.type = 'text';
-      penaltyRequirements.placeholder = 'Enter penalty requirements';
-      penaltyRequirements.removeAttribute('step');
-    }
+function formatTo12Hour(timeStr) {
+  const [hour, minute] = timeStr.split(":").map(Number);
+  const ampm = hour >= 12 ? "PM" : "AM";
+  const hour12 = hour % 12 || 12;
+  return `${hour12}:${minute.toString().padStart(2, "0")} ${ampm}`;
+}
+
+
+function updatePenaltyRequirements(penaltyType) {
+  const penaltyRequirements = document.getElementById('penalty_requirements');
+  
+  if (penaltyType === 'Fee') {
+    penaltyRequirements.type = 'number';
+    penaltyRequirements.placeholder = 'Enter amount (e.g., 4.00)';
+    penaltyRequirements.step = '0.01';
+  } else {
+    penaltyRequirements.type = 'text';
+    penaltyRequirements.placeholder = 'Enter penalty requirements';
+    penaltyRequirements.removeAttribute('step');
   }
+}
+
 </script>
 
 <!-- Delete Confirmation Modal -->
@@ -789,21 +807,23 @@ $message = isset($_GET['message']) ? $_GET['message'] : '';
   </div>
 </div>
 
+
 <script>
 function openEditModal(id, name, date, start_time, end_time, description) {
+    console.log("Opening edit modal with:", id, name, date, start_time, end_time, description);
+    
     // Set modal fields with the event data
     document.getElementById('edit_event_id').value = id;
     document.getElementById('edit_name_event').value = name;
     document.getElementById('edit_date_event').value = date;
     document.getElementById('edit_event_start_time').value = start_time;
     document.getElementById('edit_event_end_time').value = end_time;
-    document.getElementById('edit_event_desc').value = description; // Make sure this is set
+    document.getElementById('edit_event_desc').value = description;
+    
     // Show the modal
     var myModal = new bootstrap.Modal(document.getElementById('editEventModal'));
     myModal.show();
 }
-
-
 </script>
 
 
