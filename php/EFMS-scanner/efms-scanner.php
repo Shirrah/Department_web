@@ -423,7 +423,7 @@
     
     // Process the scan
     updateStatus(`QR Code detected`, "online");
-    playBeep();  // This is where the beep is triggered
+    playBeep();  // This plays the new two-tone beep
     saveScan(code.data);
     
     // Set timeout to exit cooldown
@@ -561,24 +561,31 @@
         
         return {
             play: function() {
-                // Create oscillator and gain node for each beep to ensure clean start/stop
+                // Create oscillator and gain node
                 const oscillator = ctx.createOscillator();
                 const gainNode = ctx.createGain();
                 
-                oscillator.type = "sine";
-                oscillator.frequency.value = 800;
+                oscillator.type = "square"; // Gives a more digital/beep-like sound
                 oscillator.connect(gainNode);
                 gainNode.connect(ctx.destination);
                 
-                // Configure the beep to last 1 second
+                // Configure the two-tone beep (high-low pattern)
                 const now = ctx.currentTime;
-                gainNode.gain.setValueAtTime(0, now);
-                gainNode.gain.linearRampToValueAtTime(1, now + 0.01); // quick fade in
-                gainNode.gain.setValueAtTime(1, now + 0.01);
-                gainNode.gain.linearRampToValueAtTime(0, now + 1); // fade out over 1s
                 
+                // First beep (higher pitch)
+                oscillator.frequency.setValueAtTime(1200, now);
+                gainNode.gain.setValueAtTime(0, now);
+                gainNode.gain.linearRampToValueAtTime(1, now + 0.01);
+                gainNode.gain.linearRampToValueAtTime(0, now + 0.1);
+                
+                // Second beep (lower pitch)
+                oscillator.frequency.setValueAtTime(800, now + 0.15);
+                gainNode.gain.linearRampToValueAtTime(1, now + 0.16);
+                gainNode.gain.linearRampToValueAtTime(0, now + 0.25);
+                
+                // Start and stop the oscillator
                 oscillator.start(now);
-                oscillator.stop(now + 1); // stop after 1 second
+                oscillator.stop(now + 0.3); // Total duration ~300ms
             }
         };
     }
@@ -586,7 +593,7 @@
     return {
         play: function() {
             // Fallback for browsers without Web Audio API
-            console.log("Beep!");
+            console.log("Beep! Beep!");
         }
     };
 }
