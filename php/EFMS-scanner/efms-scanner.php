@@ -126,6 +126,11 @@
             background-color: var(--tomato-dark);
         }
         
+        .btn-disabled {
+            background-color: #95a5a6;
+            cursor: not-allowed;
+        }
+        
         .status-container {
             background-color: var(--white);
             border-radius: 8px;
@@ -273,11 +278,13 @@
         const DB_NAME = "EFMS_SCAN_DB";
         const STORE_NAME = "scans";
         const SYNC_INTERVAL = 30000; // 30 seconds
+        const SCAN_DELAY = 1000; // 1 second delay after successful scan
         
         // App state
         let db;
         let scanning = false;
         let stream = null;
+        let scanCooldown = false;
         
         // DOM elements
         const video = document.getElementById("video");
@@ -409,12 +416,22 @@
                             const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
                             const code = jsQR(imageData.data, imageData.width, imageData.height);
                             
-                            if (code) {
+                            if (code && !scanCooldown) {
+                                // Enter cooldown period
+                                scanCooldown = true;
+                                scanButton.classList.add("btn-disabled");
+                                
+                                // Process the scan
                                 updateStatus(`QR Code detected`, "online");
+                                playBeep();
                                 saveScan(code.data);
                                 
-                                // Optional beep sound
-                                if (typeof beep === 'function') beep();
+                                // Set timeout to exit cooldown
+                                setTimeout(() => {
+                                    scanCooldown = false;
+                                    scanButton.classList.remove("btn-disabled");
+                                    updateStatus("Ready to scan again", "online");
+                                }, SCAN_DELAY);
                             }
                         }
                         
@@ -438,8 +455,9 @@
                 stream.getTracks().forEach(track => track.stop());
             }
             scanButton.textContent = "Start Scanner";
-            scanButton.classList.remove("btn-stop");
+            scanButton.classList.remove("btn-stop", "btn-disabled");
             scanning = false;
+            scanCooldown = false;
             updateStatus("Scanner stopped", navigator.onLine ? "online" : "offline");
         }
         
@@ -532,15 +550,49 @@
             }, SYNC_INTERVAL);
         }
         
-        // Simple beep function (optional)
-        function beep() {
-            const ctx = new (window.AudioContext || window.webkitAudioContext)();
-            const osc = ctx.createOscillator();
-            osc.type = "sine";
-            osc.frequency.value = 800;
-            osc.connect(ctx.destination);
-            osc.start();
-            osc.stop(ctx.currentTime + 0.1);
+        // Improved beep function with preloaded sound
+        let beepSound = null;
+        
+        function initBeep() {
+            // Create audio context only when needed
+            if (typeof AudioContext !== 'undefined' || typeof webkitAudioContext !== 'undefined') {
+                const AudioContext = window.AudioContext || window.webkitAudioContext;
+                const ctx = new AudioContext();
+                
+                // Create oscillator and gain node
+                const oscillator = ctx.createOscillator();
+                const gainNode = ctx.createGain();
+                
+                oscillator.type = "sine";
+                oscillator.frequency.value = 800;
+                oscillator.connect(gainNode);
+                gainNode.connect(ctx.destination);
+                
+                // Configure the beep
+                oscillator.start(0);
+                gainNode.gain.setValueAtTime(0, ctx.currentTime);
+                
+                return {
+                    play: function() {
+                        gainNode.gain.setValueAtTime(1, ctx.currentTime);
+                        gainNode.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.1);
+                    }
+                };
+            }
+            
+            return {
+                play: function() {
+                    // Fallback for browsers without Web Audio API
+                    console.log("Beep!");
+                }
+            };
+        }
+        
+        function playBeep() {
+            if (!beepSound) {
+                beepSound = initBeep();
+            }
+            beepSound.play();
         }
         
         // Initialize app
@@ -562,5 +614,3 @@
     </script>
 </body>
 </html>
-
-<!--  -->
