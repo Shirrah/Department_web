@@ -43,17 +43,19 @@ html, body {
 }
 
 /* Buttons */
-#installBtn {
+#installBtn , .efms-scan-btn{
     background-color: #f94415;
     color: white;
     border: none;
     padding: 10px 20px;
     border-radius: 4px;
     cursor: pointer;
+    text-decoration: none;
 }
 
-#installBtn:hover {
-    background-color: green;
+#installBtn:hover , .efms-scan-btn:hover{
+    background-color: rgb(250, 125, 87);
+    color: white;
 }
 
 .logout-btn-dropdown {

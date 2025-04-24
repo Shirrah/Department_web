@@ -63,6 +63,7 @@ if (isset($_POST['event_id'])) {
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- Font Awesome for icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
     <style>
         :root {
             --primary-color: #3498db;
@@ -137,6 +138,7 @@ if (isset($_POST['event_id'])) {
     </style>
 </head>
 <body>
+<a href="?content=logout">logout</a>
     <div class="container py-5">
         <div class="row justify-content-center">
             <div class="col-lg-8">

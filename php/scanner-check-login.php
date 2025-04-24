@@ -2,9 +2,13 @@
 session_set_cookie_params(0);
 session_start();
 
-header('Content-Type: application/json'); // Important for AJAX
+header('Content-Type: application/json');
 
-require_once "db-conn.php";
+ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
+error_reporting(E_ALL);
+
+require_once "././db-conn.php";
 $db = Database::getInstance()->db;
 
 // Login lockout logic
@@ -20,6 +24,9 @@ if (isset($_SESSION['lockout_time']) && time() < $_SESSION['lockout_time']) {
 }
 
 if ($_SERVER["REQUEST_METHOD"] === "POST") {
+    // Debugging: Log POST data
+    error_log('POST Data: ' . print_r($_POST, true));
+
     if (empty($_POST['id']) || empty($_POST['psw'])) {
         echo json_encode([
             'status' => 'error',
@@ -31,7 +38,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     $id = $_POST['id'];
     $pword = $_POST['psw'];
 
-    // Check Admins
+// Check Admins where role is exactly "Class Mayor"
 $stmt = $db->prepare("SELECT * FROM `admins` WHERE `id_admin` = ?");
 $stmt->bind_param("s", $id);
 $stmt->execute();
@@ -39,51 +46,35 @@ $admin_result = $stmt->get_result();
 
 if ($admin_result->num_rows > 0) {
     $row = $admin_result->fetch_assoc();
-    if ($pword === $row["pass_admin"]) {
-        // Block login if the role is 'Class Mayor'
-        if (strtolower($row['role_admin']) === 'class mayor') {
-            echo json_encode([
-                'status' => 'error',
-                'message' => 'Access denied. 😈'
-            ]);
-            exit();
-        }
 
+    // Allow login if password matches
+    if ($pword === $row["pass_admin"]) {
+        // Allow login for any role
         $_SESSION['login_attempts'] = 0;
-        $_SESSION['logged_in'] = 'yes';
+        $_SESSION['logged_in_scanner'] = 'yes';
         $_SESSION['user_data'] = $row;
 
         echo json_encode([
             'status' => 'success',
             'message' => 'Login successful!',
-            'redirect' => 'index.php?content=admin-index'
+            'redirect' => 'index.php?content=efms-scanner-index'
+        ]);
+        exit();
+    } else {
+        echo json_encode([
+            'status' => 'error',
+            'message' => 'Invalid password!'
         ]);
         exit();
     }
+} else {
+    echo json_encode([
+        'status' => 'error',
+        'message' => 'Admin not found!'
+    ]);
+    exit();
 }
 
-
-    // Check Students
-    $stmt = $db->prepare("SELECT * FROM `student` WHERE `id_student` = ?");
-    $stmt->bind_param("s", $id);
-    $stmt->execute();
-    $student_result = $stmt->get_result();
-
-    if ($student_result->num_rows > 0) {
-        $row = $student_result->fetch_assoc();
-        if ($pword === $row["pass_student"]) {
-            $_SESSION['login_attempts'] = 0;
-            $_SESSION['logged_in'] = 'yes';
-            $_SESSION['user_data'] = $row;
-
-            echo json_encode([
-                'status' => 'success',
-                'message' => 'Login successful!',
-                'redirect' => 'index.php?content=student-index'
-            ]);
-            exit();
-        }
-    }
 
     // Handle failed login
     $_SESSION['login_attempts'] = ($_SESSION['login_attempts'] ?? 0) + 1;
@@ -102,3 +93,4 @@ if ($admin_result->num_rows > 0) {
     ]);
     exit();
 }
+?>

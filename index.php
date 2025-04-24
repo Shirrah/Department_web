@@ -49,8 +49,8 @@ $site_version = $versionData['version'];
 <body>
     <div class="main-container">
         <?php
-        $exclude_header_pages = ['log-in', 'admin-index', 'student-index', 'efms-scanner-index', 'efms-scanner-app'];
-        $exclude_footer_pages = ['admin-index', 'log-in', 'student-index', 'efms-scanner-index', 'efms-scanner-app'];
+        $exclude_header_pages = ['log-in', 'admin-index', 'student-index', 'efms-scanner-index', 'efms-scanner-app', 'efms-scanner-login'];
+        $exclude_footer_pages = ['admin-index', 'log-in', 'student-index', 'efms-scanner-index', 'efms-scanner-app', 'efms-scanner-login'];
         $content_pg = isset($_GET['content']) ? $_GET['content'] : 'default';
 
         // Include header if not excluded
@@ -80,9 +80,15 @@ $site_version = $versionData['version'];
         case "efms-scanner-app":
             include 'php/EFMS-scanner/efms-scanner.php';
             break;
+        case "efms-scanner-login":
+            include 'php/EFMS-scanner/login.php';
+            break;
         case "logout":
             session_destroy();
             header("Location: index.php?content=log-in");
+        case "logout":
+            include 'php/EFMS-scanner/scanner-logout.php';
+            header("Location: index.php?content=efms-scanner-login");
             exit;
             break;
         default:
