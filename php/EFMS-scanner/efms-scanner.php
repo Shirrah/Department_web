@@ -68,15 +68,18 @@
         .video-container {
             position: relative;
             width: 100%;
-            max-width: 500px;
+            max-width: 400px; /* Reduced max-width for better square shape */
             margin: 0 auto 20px;
             border: 3px solid var(--tomato-light);
             border-radius: 8px;
             overflow: hidden;
+            aspect-ratio: 1; /* This makes the container square */
         }
         
         #video {
             width: 100%;
+            height: 100%;
+            object-fit: cover; /* Ensures video fills the square */
             display: block;
         }
         
@@ -96,7 +99,7 @@
             display: flex;
             flex-direction: column;
             gap: 15px;
-            max-width: 500px;
+            max-width: 400px; /* Match video container width */
             margin: 0 auto;
         }
         
@@ -183,6 +186,12 @@
             padding-bottom: 5px;
         }
         
+        #results {
+            max-height: 300px; /* Fixed height for results container */
+            overflow-y: auto; /* Make it scrollable */
+            padding-right: 5px; /* Prevents content from touching scrollbar */
+        }
+        
         .scan-result {
             padding: 10px;
             margin-bottom: 10px;
@@ -222,6 +231,14 @@
         @media (max-width: 600px) {
             .container {
                 padding: 10px;
+            }
+            
+            .video-container {
+                max-width: 300px; /* Smaller square on mobile */
+            }
+            
+            .controls {
+                max-width: 300px; /* Match video container width */
             }
             
             .scan-result {
