@@ -1,5 +1,5 @@
 <?php
-$secret = 'your-secret-token'; // Set this in GitHub Webhook
+$secret = 'you_are_here_you_piece_of_shit'; // Set this in GitHub Webhook
 $json = file_get_contents('php://input');
 $data = json_decode($json, true);
 
