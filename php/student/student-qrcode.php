@@ -69,10 +69,6 @@ try {
                                     <span class="text-end"><?php echo htmlspecialchars($student_data['firstname_student'] . ' ' . $student_data['lastname_student']); ?></span>
                                 </div>
                                 <div class="list-group-item d-flex justify-content-between align-items-center py-3">
-                                    <span class="fw-bold">Role:</span>
-                                    <span class="text-end"><?php echo htmlspecialchars($student_data['role_student']); ?></span>
-                                </div>
-                                <div class="list-group-item d-flex justify-content-between align-items-center py-3">
                                     <span class="fw-bold">Year Level:</span>
                                     <span class="text-end"><?php echo htmlspecialchars($student_data['year_student']); ?></span>
                                 </div>

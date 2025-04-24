@@ -9,16 +9,20 @@ if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] != 'yes') {
 
 $user_id = $_SESSION['user_data']['id_admin'] ?? $_SESSION['user_data']['id_student'];
 
-// Store selected semester in session
+// Check if semester is set via GET and store it in session and cookies
 if (isset($_GET['semester']) && !empty($_GET['semester'])) {
     $_SESSION['selected_semester'][$user_id] = $_GET['semester'];
+    setcookie('selected_semester', $_GET['semester'], time() + (86400 * 30), "/"); // Store in cookie for 30 days
 }
 
-// Use selected or fallback to latest active semester
+// Use selected semester from session or cookie, fallback to latest active semester
 if (isset($_SESSION['selected_semester'][$user_id]) && !empty($_SESSION['selected_semester'][$user_id])) {
     $selected_semester = $_SESSION['selected_semester'][$user_id];
+} elseif (isset($_COOKIE['selected_semester']) && !empty($_COOKIE['selected_semester'])) {
+    $selected_semester = $_COOKIE['selected_semester'];
 } else {
-    $query = "SELECT semester_ID, academic_year, semester_type FROM semester WHERE status = 'active' ORDER BY semester_ID DESC LIMIT 1";
+    // If no semester selected, fetch the latest active semester
+    $query = "SELECT semester_ID FROM semester WHERE status = 'active' ORDER BY semester_ID DESC LIMIT 1";
     $stmt = $db->prepare($query);
     $stmt->execute();
     $result = $stmt->get_result();
@@ -58,7 +62,6 @@ $fees_count = ($result) ? $result->fetch_assoc()['fees_count'] : 0;
 // Updated fetch for dropdown
 $sql = "SELECT semester_ID, academic_year, semester_type, status FROM semester ORDER BY semester_ID DESC";
 $result = $db->query($sql);
-
 ?>
 
 <link rel="stylesheet" href=".//.//stylesheet/admin/dashboard.css">

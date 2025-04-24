@@ -12,28 +12,32 @@ if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] != 'yes') {
 // Get user ID (admin or student)
 $user_id = $_SESSION['user_data']['id_admin'] ?? $_SESSION['user_data']['id_student'];
 
-// Handle semester selection
+// Handle semester selection from URL and save to session and cookie
 if (isset($_GET['semester']) && !empty($_GET['semester'])) {
     $_SESSION['selected_semester'][$user_id] = $_GET['semester'];
+    setcookie('selected_semester', $_GET['semester'], time() + (86400 * 30), "/"); // 30 days
 }
 
 // Determine the selected semester
 if (!empty($_SESSION['selected_semester'][$user_id])) {
     $selected_semester = $_SESSION['selected_semester'][$user_id];
+} elseif (!empty($_COOKIE['selected_semester'])) {
+    $selected_semester = $_COOKIE['selected_semester'];
+    $_SESSION['selected_semester'][$user_id] = $selected_semester; // sync back to session
 } else {
-    // Check for cookie if no session value
-    if (isset($_COOKIE['selected_semester'])) {
-        $selected_semester = $_COOKIE['selected_semester'];
-    } else {
-        // Default semester logic (for first-time or no selection)
-        $query = "SELECT semester_ID FROM semester ORDER BY semester_ID DESC LIMIT 1";
-        $stmt = $db->prepare($query);
-        $stmt->execute();
-        $result = $stmt->get_result();
-        $selected_semester = ($result && $row = $result->fetch_assoc()) ? $row['semester_ID'] : null;
+    // Default semester logic: select the first created active semester
+    $query = "SELECT semester_ID FROM semester WHERE status = 'Active' ORDER BY semester_ID ASC LIMIT 1";
+    $stmt = $db->prepare($query);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    $selected_semester = ($result && $row = $result->fetch_assoc()) ? $row['semester_ID'] : null;
+
+    // Save default to session and cookie
+    if ($selected_semester) {
+        $_SESSION['selected_semester'][$user_id] = $selected_semester;
+        setcookie('selected_semester', $selected_semester, time() + (86400 * 30), "/"); // 30 days
     }
 }
-
 
 // Fetch semesters for dropdown
 $semesters = $db->query("SELECT semester_ID, academic_year, semester_type FROM semester WHERE status = 'Active'");

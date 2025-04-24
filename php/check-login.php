@@ -44,27 +44,11 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
             $_SESSION['logged_in'] = 'yes';
             $_SESSION['user_data'] = $row;
 
-            // Get semester
-            $stmt = $db->prepare("SELECT * FROM `semester` ORDER BY `date_created` DESC LIMIT 1");
-            $stmt->execute();
-            $semester_result = $stmt->get_result();
-
-            if ($semester_result->num_rows > 0) {
-                $semester_row = $semester_result->fetch_assoc();
-                $_SESSION['semester_data'] = $semester_row;
-                $semester_id = $semester_row['semester_ID'];
-                echo json_encode([
-                    'status' => 'success',
-                    'message' => 'Login successful!',
-                    'redirect' => 'index.php?content=admin-index&semester=' . $semester_id
-                ]);
-            } else {
-                echo json_encode([
-                    'status' => 'success',
-                    'message' => 'Login successful!',
-                    'redirect' => 'index.php?content=admin-index'
-                ]);
-            }
+            echo json_encode([
+                'status' => 'success',
+                'message' => 'Login successful!',
+                'redirect' => 'index.php?content=admin-index'
+            ]);
             exit();
         }
     }
@@ -81,6 +65,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
             $_SESSION['login_attempts'] = 0;
             $_SESSION['logged_in'] = 'yes';
             $_SESSION['user_data'] = $row;
+
             echo json_encode([
                 'status' => 'success',
                 'message' => 'Login successful!',
@@ -107,4 +92,3 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     ]);
     exit();
 }
-?>
