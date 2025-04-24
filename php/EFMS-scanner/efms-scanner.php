@@ -417,22 +417,22 @@
                             const code = jsQR(imageData.data, imageData.width, imageData.height);
                             
                             if (code && !scanCooldown) {
-                                // Enter cooldown period
-                                scanCooldown = true;
-                                scanButton.classList.add("btn-disabled");
-                                
-                                // Process the scan
-                                updateStatus(`QR Code detected`, "online");
-                                playBeep();
-                                saveScan(code.data);
-                                
-                                // Set timeout to exit cooldown
-                                setTimeout(() => {
-                                    scanCooldown = false;
-                                    scanButton.classList.remove("btn-disabled");
-                                    updateStatus("Ready to scan again", "online");
-                                }, SCAN_DELAY);
-                            }
+    // Enter cooldown period
+    scanCooldown = true;
+    scanButton.classList.add("btn-disabled");
+    
+    // Process the scan
+    updateStatus(`QR Code detected`, "online");
+    playBeep();  // This is where the beep is triggered
+    saveScan(code.data);
+    
+    // Set timeout to exit cooldown
+    setTimeout(() => {
+        scanCooldown = false;
+        scanButton.classList.remove("btn-disabled");
+        updateStatus("Ready to scan again", "online");
+    }, SCAN_DELAY);
+}
                         }
                         
                         requestAnimationFrame(scanFrame);
@@ -554,12 +554,14 @@
         let beepSound = null;
         
         function initBeep() {
-            // Create audio context only when needed
-            if (typeof AudioContext !== 'undefined' || typeof webkitAudioContext !== 'undefined') {
-                const AudioContext = window.AudioContext || window.webkitAudioContext;
-                const ctx = new AudioContext();
-                
-                // Create oscillator and gain node
+    // Create audio context only when needed
+    if (typeof AudioContext !== 'undefined' || typeof webkitAudioContext !== 'undefined') {
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        const ctx = new AudioContext();
+        
+        return {
+            play: function() {
+                // Create oscillator and gain node for each beep to ensure clean start/stop
                 const oscillator = ctx.createOscillator();
                 const gainNode = ctx.createGain();
                 
@@ -568,25 +570,26 @@
                 oscillator.connect(gainNode);
                 gainNode.connect(ctx.destination);
                 
-                // Configure the beep
-                oscillator.start(0);
-                gainNode.gain.setValueAtTime(0, ctx.currentTime);
+                // Configure the beep to last 1 second
+                const now = ctx.currentTime;
+                gainNode.gain.setValueAtTime(0, now);
+                gainNode.gain.linearRampToValueAtTime(1, now + 0.01); // quick fade in
+                gainNode.gain.setValueAtTime(1, now + 0.01);
+                gainNode.gain.linearRampToValueAtTime(0, now + 1); // fade out over 1s
                 
-                return {
-                    play: function() {
-                        gainNode.gain.setValueAtTime(1, ctx.currentTime);
-                        gainNode.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.1);
-                    }
-                };
+                oscillator.start(now);
+                oscillator.stop(now + 1); // stop after 1 second
             }
-            
-            return {
-                play: function() {
-                    // Fallback for browsers without Web Audio API
-                    console.log("Beep!");
-                }
-            };
+        };
+    }
+    
+    return {
+        play: function() {
+            // Fallback for browsers without Web Audio API
+            console.log("Beep!");
         }
+    };
+}
         
         function playBeep() {
             if (!beepSound) {
