@@ -1,18 +1,15 @@
 #!/bin/bash
 
-# Navigate to your project directory
 cd /home/hpo-admin/htdocs/Department_web || exit
 
-# Pull the latest code, discarding local changes
+# Reset & pull from main
 git reset --hard origin/main
 git pull origin main
 
-# Set the correct owner and permissions (replace web1 with actual web user if needed)
-chown -R web1:web1 /home/hpo-admin/htdocs/Department_web
+# Fix ownership and permissions
+chown -R hpo-admin:hpo-admin /home/hpo-admin/htdocs/Department_web
 chmod -R 775 /home/hpo-admin/htdocs/Department_web
 
-# Restart PHP 8.4 FPM to clear cache
-systemctl restart php8.4-fpm
-
-# Reload NGINX to apply changes
-systemctl reload nginx
+# Restart services with sudo
+sudo systemctl restart php8.4-fpm
+sudo systemctl reload nginx
