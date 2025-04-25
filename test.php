@@ -1,100 +1,105 @@
 <?php
-require_once './php/db-conn.php';
+// Enable full error reporting
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
 
-$database = Database::getInstance();
-$db = $database->db;
-
-// Get all semesters
-$semesterQuery = "SELECT semester_ID, academic_year, semester_type, status FROM semester ORDER BY academic_year DESC";
-$semesters = $db->query($semesterQuery);
-
-// Get events by semester
-if (isset($_POST['semester_id'])) {
-    $semesterId = $_POST['semester_id'];
-    $eventQuery = "SELECT * FROM events WHERE semester_ID = ? ORDER BY date_event, event_start_time";
-    $stmt = $db->prepare($eventQuery);
-    $stmt->bind_param("s", $semesterId);
-    $stmt->execute();
-    $events = $stmt->get_result();
-    $output = '';
-
-    if ($events->num_rows > 0) {
-        while ($event = $events->fetch_assoc()) {
-            $output .= '<tr>
-                            <td>' . htmlspecialchars($event['name_event']) . '</td>
-                            <td>' . date('F j, Y', strtotime($event['date_event'])) . '</td>
-                            <td>' . date('g:i A', strtotime($event['event_start_time'])) . ' - ' . date('g:i A', strtotime($event['event_end_time'])) . '</td>
-                            <td>' . htmlspecialchars($event['event_desc']) . '</td>
-                        </tr>';
-        }
-    } else {
-        $output .= '<tr><td colspan="4">No events found for this semester.</td></tr>';
-    }
-    echo $output;
-    exit;
+// Start session
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
 }
+
+// Database connection
+try {
+    require_once "./php/db-conn.php";
+    $db = Database::getInstance()->db;
+    
+    if (!$db) {
+        throw new Exception("Database connection failed");
+    }
+} catch (Exception $e) {
+    die("Database Error: " . $e->getMessage());
+}
+
+// Get attendance ID (with test fallback)
+$id_attendance = $_GET['id_attendance'] ?? 174; // Default test ID
+if (!is_numeric($id_attendance)) {
+    die("Error: Invalid attendance ID format");
+}
+$id_attendance = (int)$id_attendance;
+
+// Debug message if using test ID
+if (!isset($_GET['id_attendance'])) {
+    echo "<div class='alert alert-warning'>Using test attendance ID: $id_attendance</div>";
+}
+
+// Get user ID from session
+$user_id = $_SESSION['user_data']['id_admin'] ?? $_SESSION['user_data']['id_student'] ?? null;
+if (!$user_id) {
+    die("Error: No user ID found in session");
+}
+
+// Get selected semester
+$selected_semester = $_SESSION['selected_semester'][$user_id] ?? null;
+if (!$selected_semester) {
+    die("Error: No semester selected for this user");
+}
+
+// Prepare and execute query
+$sql = "
+    SELECT s.id_student, s.lastname_student, s.firstname_student, s.year_student
+    FROM student s
+    LEFT JOIN student_attendance sa ON s.id_student = sa.id_student AND sa.id_attendance = ?
+    WHERE sa.id_attendance IS NULL AND s.semester_ID = ?
+    ORDER BY s.lastname_student, s.firstname_student
+";
+
+$stmt = $db->prepare($sql);
+if (!$stmt) {
+    die("Error preparing query: " . $db->error);
+}
+
+if (!$stmt->bind_param("is", $id_attendance, $selected_semester)) {
+    die("Error binding parameters: " . $stmt->error);
+}
+
+if (!$stmt->execute()) {
+    die("Error executing query: " . $stmt->error);
+}
+
+$result = $stmt->get_result();
+if (!$result) {
+    die("Error getting result set: " . $stmt->error);
+}
+
+// Display results
+$year_levels = [1 => "1st Year", 2 => "2nd Year", 3 => "3rd Year", 4 => "4th Year"];
+
+if ($result->num_rows > 0) {
+    while ($row = $result->fetch_assoc()) {
+        $id_student = htmlspecialchars($row['id_student']);
+        $lastname = htmlspecialchars($row['lastname_student']);
+        $firstname = htmlspecialchars($row['firstname_student']);
+        $year_student = $year_levels[$row['year_student']] ?? "Unknown";
+
+        echo "
+        <tr>
+            <td>{$id_student}</td>
+            <td>{$lastname}</td>
+            <td>{$firstname}</td>
+            <td>{$year_student}</td>
+            <td colspan='2'>
+                <button class='btn btn-sm btn-success add-attendance' 
+                        data-student-id='{$id_student}' 
+                        data-attendance-id='{$id_attendance}'>
+                    Add to Attendance
+                </button>
+            </td>
+        </tr>
+        ";
+    }
+} else {
+    echo "<tr><td colspan='6' class='text-center'>All students in this semester are already in the attendance record.</td></tr>";
+}
+
+$stmt->close();
 ?>
-
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Semester Events</title>
-    <style>
-        /* Add your styles here */
-    </style>
-</head>
-<body>
-    <h1>View Events by Semester</h1>
-
-    <label for="semester">Select Semester:</label>
-    <select name="semester" id="semester">
-        <option value="">-- Select Semester --</option>
-        <?php while ($semester = $semesters->fetch_assoc()) : ?>
-            <option value="<?php echo $semester['semester_ID']; ?>">
-                <?php echo htmlspecialchars($semester['academic_year']) . ' - ' . htmlspecialchars($semester['semester_type']); ?>
-            </option>
-        <?php endwhile; ?>
-    </select>
-
-    <h2>Events</h2>
-    <table id="events-table" border="1">
-        <thead>
-            <tr>
-                <th>Event Name</th>
-                <th>Date</th>
-                <th>Time</th>
-                <th>Description</th>
-            </tr>
-        </thead>
-        <tbody>
-            <!-- Event rows will be populated here via AJAX -->
-        </tbody>
-    </table>
-
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script>
-        $(document).ready(function() {
-            // When the semester dropdown value changes
-            $('#semester').change(function() {
-                var semesterId = $(this).val();
-
-                if (semesterId) {
-                    // Use AJAX to fetch events for the selected semester
-                    $.ajax({
-                        url: '', // Current page
-                        type: 'POST',
-                        data: { semester_id: semesterId },
-                        success: function(response) {
-                            $('#events-table tbody').html(response); // Display the events
-                        }
-                    });
-                } else {
-                    $('#events-table tbody').html('<tr><td colspan="4">Please select a semester to see events.</td></tr>');
-                }
-            });
-        });
-    </script>
-</body>
-</html>

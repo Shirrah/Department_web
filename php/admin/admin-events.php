@@ -833,6 +833,9 @@ function openEditModal(id, name, date, start_time, end_time, description) {
     <div class="modal-content">
       <div class="modal-header">
         <h5 class="modal-title" id="attendanceRecordsModalLabel">Attendance Records</h5>
+        
+      <button type="button" class="btn btn-success ms-1" onclick="exportToCSV()">Export to CSV</button>
+      <button type="button" class="btn btn-primary ms-1" id="fetchRecordsBtn">Fetch Records</button>
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
       <div class="modal-body">
@@ -856,8 +859,8 @@ function openEditModal(id, name, date, start_time, end_time, description) {
               </tr>
             </thead>
             <tbody id="attendanceBody" class="accordion" id="accordionTable">
-  <tr><td colspan="6" class="text-center">Select an attendance record to display data.</td></tr>
-</tbody>
+            <tr><td colspan="6" class="text-center">Select an attendance record to display data.</td></tr>
+            </tbody>
 
           </table>
         </div>
@@ -871,15 +874,32 @@ function openEditModal(id, name, date, start_time, end_time, description) {
 
 <!-- JavaScript for Search Filter -->
 <script>
-  document.getElementById('searchInput').addEventListener('keyup', function() {
-      let filter = this.value.toUpperCase();
-      let rows = document.querySelectorAll("#attendanceBody tr");
-
-      rows.forEach(row => {
-          let text = row.innerText.toUpperCase();
-          row.style.display = text.includes(filter) ? "" : "none";
-      });
-  });
+document.getElementById('searchInput').addEventListener('keyup', function() {
+    let filter = this.value.toUpperCase();
+    let rows = document.querySelectorAll("#attendanceBody tr");
+    
+    // We need to process rows in pairs (main row and accordion row)
+    for (let i = 0; i < rows.length; i += 2) {
+        const mainRow = rows[i];
+        const accordionRow = rows[i+1];
+        
+        if (!mainRow || !accordionRow) continue;
+        
+        let text = mainRow.innerText.toUpperCase();
+        if (text.includes(filter)) {
+            mainRow.style.display = "";
+            // Only show accordion row if it's expanded
+            if (mainRow.querySelector('button').getAttribute('aria-expanded') === 'true') {
+                accordionRow.style.display = "";
+            } else {
+                accordionRow.style.display = "none";
+            }
+        } else {
+            mainRow.style.display = "none";
+            accordionRow.style.display = "none";
+        }
+    }
+});
 </script>
 
 
@@ -945,26 +965,140 @@ function submitAddTime() {
 
 <script>
 
-function showAttendanceRecords(id_attendance, event_name, type_attendance, start_time, end_time) {
-    // Format title as: name_event - type_attendance (start_time - end_time)
-    let formattedTitle = `${event_name} - ${type_attendance} (${start_time} - ${end_time})`;
+// Define globally
+let currentEventName = "";
+let currentAttendanceType = "";
+let currentAttendanceId = null;
+let currentStartTime = "";
+let currentEndTime = "";
 
-    // Update modal title
+function showAttendanceRecords(id_attendance, event_name, type_attendance, start_time, end_time) {
+    currentEventName = event_name;
+    currentAttendanceType = type_attendance;
+    currentAttendanceId = id_attendance;
+    currentStartTime = start_time;
+    currentEndTime = end_time;
+
+    // Format title
+    let formattedTitle = `${event_name} - ${type_attendance} (${start_time} - ${end_time})`;
     document.getElementById("attendanceRecordsModalLabel").textContent = formattedTitle;
 
-    // Fetch attendance records via AJAX
+    // Load attendance records
+    loadAttendanceRecords();
+}
+
+function loadAttendanceRecords() {
+    if (!currentAttendanceId) return;
+    
     $.ajax({
         url: "./php/admin/fetch-attendance-records.php",
         type: "GET",
-        data: { id_attendance: id_attendance },
-        success: function (response) {
-            $("#attendanceBody").html(response); // Update modal content
-            $("#attendanceRecordsModal").modal("show"); // Show modal
+        data: { id_attendance: currentAttendanceId },
+        success: function(response) {
+            $("#attendanceBody").html(response);
+            $("#attendanceRecordsModal").modal("show");
         },
-        error: function () {
+        error: function() {
             alert("Failed to fetch attendance records.");
-        },
+        }
     });
+}
+
+$(document).on('click', '#fetchRecordsBtn', function() {
+    if (!currentAttendanceId) {
+        alert("No attendance record selected");
+        return;
+    }
+    
+    // Confirm before adding all missing students
+    if (confirm("Add all missing students to this attendance record?")) {
+        $.ajax({
+            url: "./php/admin/fetch-students-not-in-record.php",
+            type: "GET",
+            data: { id_attendance: currentAttendanceId },
+            success: function(response) {
+                // Show success message
+                $("#attendanceBody").html(response);
+                
+                // Refresh the attendance records after 1 second
+                setTimeout(loadAttendanceRecords, 1000);
+            },
+            error: function() {
+                alert("Failed to process records.");
+            }
+        });
+    }
+});
+
+$(document).on('click', '.add-attendance', function() {
+    var studentId = $(this).data('student-id');
+    var attendanceId = $(this).data('attendance-id');
+
+    $.ajax({
+        url: './php/admin/add-attendance-record.php',
+        type: 'POST',
+        data: {
+            student_id: studentId,
+            attendance_id: attendanceId
+        },
+        success: function(response) {
+            alert(response.message);
+            if (response.success) {
+                // Refresh just the attendance records instead of full page reload
+                loadAttendanceRecords();
+            }
+        },
+        error: function() {
+            alert("Error adding attendance record");
+        }
+    });
+});
+function exportToCSV() {
+    let table = document.querySelector("#attendanceBody").closest("table");
+    let rows = Array.from(table.querySelectorAll("tr:not(.collapse)"));
+
+    if (rows.length <= 1) {
+        alert("No records available to export.");
+        return;
+    }
+
+    let csvContent = "";
+    const headers = ["ID", "Lastname", "Firstname", "Year Level", "Date and Time", "Status"];
+    csvContent += headers.map(h => `"${h}"`).join(",") + "\r\n";
+
+    rows.forEach(row => {
+        const cols = row.querySelectorAll("td");
+        if (cols.length === 7) {
+            // Ensure correct data from columns and capture status from the correct column
+            let data = [
+                cols[0].innerText.trim(), // ID
+                cols[1].innerText.trim(), // Lastname
+                cols[2].innerText.trim(), // Firstname
+                cols[3].innerText.trim(), // Year Level
+                // Combine the two date/time columns into one
+                cols[4].innerText.trim(),
+                cols[5].innerText.trim()
+            ];
+
+            // If the status is "Absent", make sure it's included properly
+            if (data[5].toLowerCase() === "absent") {
+                data[5] = "Absent"; // Ensure "Absent" status is used
+            }
+
+            csvContent += data.map(val => `"${val}"`).join(",") + "\r\n";
+        }
+    });
+
+    const fileName = `${currentEventName} - ${currentAttendanceType}`.replace(/[\\/:*?"<>|]/g, "") + ".csv";
+
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.setAttribute("download", fileName);
+    link.style.display = "none";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
 }
 
 </script>

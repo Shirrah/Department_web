@@ -84,8 +84,8 @@ if ($status == 'Absent' || $status == 'Cleared') {
     $action_buttons = "No action needed";
 }
 
-            echo "
-<tr>
+echo "
+<tr class='accordion-item'>
   <td>{$id_student}</td>
   <td>{$lastname}</td>
   <td>{$firstname}</td>
@@ -98,7 +98,7 @@ if ($status == 'Absent' || $status == 'Cleared') {
     </button>
   </td>
 </tr>
-<tr class='collapse accordion-collapse' id='accordionRow{$id_student}' data-bs-parent='#accordionTable'>
+<tr class='collapse accordion-collapse accordion-item' id='accordionRow{$id_student}' data-bs-parent='#accordionTable'>
   <td colspan='7'>
     <div class='card card-body bg-light'>
       <div class='row'>
@@ -167,6 +167,25 @@ $(document).on('click', '.not-cleared-penalty', function() {
                 alert("Error updating penalty status");
             }
         });
+    }
+});
+</script>
+
+<script>
+    // Handle accordion state changes
+document.getElementById('attendanceBody').addEventListener('show.bs.collapse', function(e) {
+    const targetRow = e.target.closest('tr');
+    if (targetRow) {
+        targetRow.style.display = "";
+    }
+});
+
+document.getElementById('attendanceBody').addEventListener('hide.bs.collapse', function(e) {
+    const targetRow = e.target.closest('tr');
+    const searchInput = document.getElementById('searchInput');
+    if (targetRow && searchInput.value) {
+        // Only hide if there's an active search
+        targetRow.style.display = "none";
     }
 });
 </script>
