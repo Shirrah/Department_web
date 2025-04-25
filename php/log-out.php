@@ -5,4 +5,4 @@ session_destroy();
 http_response_code(200); // Respond with success
 exit();
 ?>
-    
+     
