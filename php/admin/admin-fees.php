@@ -9,7 +9,7 @@
             /
             <span>Events & Fees</span>
             /
-            <span>Manage Events</span>
+            <span>Manage Fees</span>
         </div>
     </div>
 
