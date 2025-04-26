@@ -51,6 +51,20 @@ if (isset($_POST['event_id'])) {
     echo $attendanceOptions;
     exit;
 }
+
+// Get attendance details for display
+if (isset($_POST['get_attendance_details'])) {
+    $attendanceId = $_POST['attendance_id'];
+    // This would be replaced with your actual query to get attendance details
+    $response = [
+        'present' => 24,
+        'absent' => 3,
+        'late' => 2,
+        'rate' => 85
+    ];
+    echo json_encode($response);
+    exit;
+}
 ?>
 
 <!DOCTYPE html>
@@ -135,6 +149,22 @@ if (isset($_POST['event_id'])) {
             margin-top: 20px;
             text-align: center;
         }
+        
+        /* Modal styles */
+        .modal-lg .modal-content {
+            border-radius: 15px;
+        }
+        
+        .modal-header {
+            background-color: var(--primary-color);
+            color: white;
+            border-radius: 15px 15px 0 0;
+        }
+        
+        .modal-body iframe {
+            border: none;
+            min-height: 500px;
+        }
     </style>
 </head>
 <body>
@@ -216,11 +246,26 @@ if (isset($_POST['event_id'])) {
                         </div>
                         <div id="attendanceDetails"></div>
                         <div id="scannerButtonContainer">
-                            <a href="#" id="proceedToScanner" class="btn btn-success btn-lg">
+                            <button id="proceedToScanner" class="btn btn-success btn-lg" data-bs-toggle="modal" data-bs-target="#scannerModal">
                                 <i class="fas fa-qrcode me-2"></i> Proceed to Scanner
-                            </a>
+                            </button>
                         </div>
                     </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Scanner Modal -->
+    <div class="modal fade" id="scannerModal" tabindex="-1" aria-labelledby="scannerModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="scannerModalLabel">Attendance Scanner</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <iframe id="scannerFrame" src="" style="width:100%; height:500px; border:none;"></iframe>
                 </div>
             </div>
         </div>
@@ -232,6 +277,8 @@ if (isset($_POST['event_id'])) {
     
     <script>
         $(document).ready(function() {
+            let currentAttendanceId = null;
+            
             // When semester is selected
             $('#semester').change(function() {
                 var semesterId = $(this).val();
@@ -321,9 +368,9 @@ if (isset($_POST['event_id'])) {
             
             // When attendance is selected
             $('#attendance').change(function() {
-                var attendanceId = $(this).val();
+                currentAttendanceId = $(this).val();
                 
-                if (attendanceId) {
+                if (currentAttendanceId) {
                     // Show results card
                     $('#resultsCard').fadeIn();
                     $('#emptyState').hide();
@@ -331,61 +378,86 @@ if (isset($_POST['event_id'])) {
                     // Show the scanner button
                     $('#scannerButtonContainer').fadeIn();
                     
-                    // Update the scanner button link
-                    $('#proceedToScanner').attr('href', 'index.php?content=efms-scanner-app?attendance_id=' + attendanceId);
-                    
-                    // Here you would typically fetch the attendance details
-                    // For now we'll just show a placeholder
+                    // Load attendance details
                     $('#attendanceDetails').html(`
                         <div class="alert alert-info">
                             <h4><i class="fas fa-spinner fa-spin me-2"></i>Loading attendance details...</h4>
-                            <p>In a real implementation, this would show detailed attendance records for the selected event.</p>
                         </div>
                     `);
                     
-                    // Simulate loading data (replace with actual AJAX call)
-                    setTimeout(function() {
-                        $('#attendanceDetails').html(`
-                            <div class="row">
-                                <div class="col-md-6">
-                                    <div class="card mb-3">
-                                        <div class="card-body">
-                                            <h5 class="card-title"><i class="fas fa-info-circle me-2"></i>Attendance Summary</h5>
-                                            <ul class="list-group list-group-flush">
-                                                <li class="list-group-item d-flex justify-content-between align-items-center">
-                                                    Total Present
-                                                    <span class="badge bg-success rounded-pill">24</span>
-                                                </li>
-                                                <li class="list-group-item d-flex justify-content-between align-items-center">
-                                                    Total Absent
-                                                    <span class="badge bg-danger rounded-pill">3</span>
-                                                </li>
-                                                <li class="list-group-item d-flex justify-content-between align-items-center">
-                                                    Total Late
-                                                    <span class="badge bg-warning rounded-pill">2</span>
-                                                </li>
-                                            </ul>
+                    // Fetch actual attendance details
+                    $.ajax({
+                        url: '',
+                        type: 'POST',
+                        data: { 
+                            get_attendance_details: true,
+                            attendance_id: currentAttendanceId 
+                        },
+                        success: function(response) {
+                            const data = JSON.parse(response);
+                            $('#attendanceDetails').html(`
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="card mb-3">
+                                            <div class="card-body">
+                                                <h5 class="card-title"><i class="fas fa-info-circle me-2"></i>Attendance Summary</h5>
+                                                <ul class="list-group list-group-flush">
+                                                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                                                        Total Present
+                                                        <span class="badge bg-success rounded-pill">${data.present}</span>
+                                                    </li>
+                                                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                                                        Total Absent
+                                                        <span class="badge bg-danger rounded-pill">${data.absent}</span>
+                                                    </li>
+                                                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                                                        Total Late
+                                                        <span class="badge bg-warning rounded-pill">${data.late}</span>
+                                                    </li>
+                                                </ul>
+                                            </div>
                                         </div>
                                     </div>
-                                </div>
-                                <div class="col-md-6">
-                                    <div class="card">
-                                        <div class="card-body">
-                                            <h5 class="card-title"><i class="fas fa-users me-2"></i>Attendance Rate</h5>
-                                            <div class="progress mb-3" style="height: 30px;">
-                                                <div class="progress-bar bg-success" role="progressbar" style="width: 85%" aria-valuenow="85" aria-valuemin="0" aria-valuemax="100">85%</div>
+                                    <div class="col-md-6">
+                                        <div class="card">
+                                            <div class="card-body">
+                                                <h5 class="card-title"><i class="fas fa-users me-2"></i>Attendance Rate</h5>
+                                                <div class="progress mb-3" style="height: 30px;">
+                                                    <div class="progress-bar bg-success" role="progressbar" style="width: ${data.rate}%" 
+                                                        aria-valuenow="${data.rate}" aria-valuemin="0" aria-valuemax="100">${data.rate}%</div>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
                                 </div>
-                            </div>
-                        `);
-                    }, 1500);
+                            `);
+                        },
+                        error: function() {
+                            $('#attendanceDetails').html(`
+                                <div class="alert alert-danger">
+                                    <h4><i class="fas fa-exclamation-triangle me-2"></i>Error loading details</h4>
+                                </div>
+                            `);
+                        }
+                    });
                 } else {
                     $('#emptyState').show();
                     $('#attendanceDetails').empty();
                     $('#scannerButtonContainer').hide();
                 }
+            });
+            
+            // When scanner button is clicked
+            $('#proceedToScanner').click(function() {
+                if (currentAttendanceId) {
+                    // Set the iframe source with the proper URL
+                    $('#scannerFrame').attr('src', 'index.php?content=efms-scanner-app&attendance_id=' + currentAttendanceId);
+                }
+            });
+            
+            // Reset iframe when modal is closed
+            $('#scannerModal').on('hidden.bs.modal', function () {
+                $('#scannerFrame').attr('src', '');
             });
         });
     </script>
