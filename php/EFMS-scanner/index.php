@@ -127,26 +127,11 @@ if (isset($_POST['get_attendance_details'])) {
 
                         <!-- Scanner Button -->
                         <div id="scannerButtonContainer" class="text-center" style="display: none;">
-                            <button id="proceedToScanner" class="btn btn-success btn-lg" data-bs-toggle="modal" data-bs-target="#scannerModal">
-                                <i class="fas fa-qrcode me-2"></i> Proceed to Scanner
-                            </button>
-                        </div>
+    <a id="proceedToScanner" href="#" class="btn btn-success btn-lg">
+        <i class="fas fa-qrcode me-2"></i> Proceed to Scanner
+    </a>
+</div>
                     </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Scanner Modal -->
-    <div class="modal fade" id="scannerModal" tabindex="-1" aria-labelledby="scannerModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-lg">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">Attendance Scanner</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body">
-                    <iframe id="scannerFrame" src="" style="width: 100%; height: 500px;"></iframe>
                 </div>
             </div>
         </div>
@@ -195,12 +180,14 @@ if (isset($_POST['get_attendance_details'])) {
                 }
             });
 
-            $('#proceedToScanner').click(function() {
-                let attendanceId = $('#attendance').val();
-                if (attendanceId) {
-                    $('#scannerFrame').attr('src', 'php/EFMS-scanner/efms-scanner.php?attendance_id=' + attendanceId);
-                }
-            });
+// To this:
+$('#proceedToScanner').click(function(e) {
+    e.preventDefault();
+    let attendanceId = $('#attendance').val();
+    if (attendanceId) {
+        window.location.href = '?content=efms-scanner-app&attendance_id=' + attendanceId;
+    }
+});
         });
     </script>
 </body>
