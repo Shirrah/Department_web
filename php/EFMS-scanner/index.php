@@ -62,7 +62,6 @@ if (isset($_POST['get_attendance_details'])) {
 
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="./php/EFMS-scanner/style.css">
 </head>
 
 <body>
@@ -73,6 +72,9 @@ if (isset($_POST['get_attendance_details'])) {
                     <div class="card-header d-flex justify-content-between align-items-center">
                         <h2><i class="fas fa-calendar-alt me-2"></i>View Events & Attendance</h2>
                         <span class="badge bg-light text-dark"><i class="fas fa-database me-1"></i> Live</span>
+                        <a href="?content=log-out" class="btn btn-outline-danger btn-sm">
+            <i class="fas fa-sign-out-alt me-1"></i> Logout
+        </a>
                     </div>
                     <div class="card-body">
                         <form id="attendanceForm">

@@ -9,48 +9,87 @@ include "././php/auth-check.php";
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>EFMS-SCAN | Attendance QR Scanner</title>
     <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="./php/EFMS-scanner/style.css">
+    <script src="https://kit.fontawesome.com/your-fontawesome-kit.js" crossorigin="anonymous"></script> <!-- Replace with your FA kit if needed -->
 </head>
-<body>
-    <div class="container">
-        <header>
-            <div class="logo">EFMS-SCAN</div>
-            <div class="tagline">Attendance QR Code Scanner</div>
-        </header>
-        
-        <div class="scanner-container">
-            <div class="video-container">
-                <video id="video" playsinline></video>
-                <div class="scan-frame"></div>
-            </div>
-            
-            <div class="controls">
-                <button id="scan-button" class="btn">Start Scanner</button>
-            </div>
-        </div>
-        
-        <div class="status-container">
-            <div class="status-title">
-                <div id="status-icon" class="status-icon"></div>
-                <span>System Status</span>
-            </div>
-            <div id="status-message" class="status-message">Initializing scanner...</div>
-        </div>
-        
-        <div class="results-container">
-            <div class="results-title">
-                <span>Scan Results</span>
-                <span id="scan-count" class="badge">0 scans</span>
-            </div>
-            <div id="results">
-                <div class="empty-results">No scans yet. Start the scanner to begin.</div>
-            </div>
-        </div>
-        
-        <footer>
-            EFMS-SCAN v2.0 | &copy; 2023
-        </footer>
+<body class="bg-light text-dark">
+
+<div class="container py-4">
+<header class="bg-danger text-white p-3 rounded-top shadow-sm position-relative">
+    <div class="d-flex justify-content-center align-items-center flex-column">
+        <div class="fs-3 fw-bold">EFMS-SCAN</div>
+        <div class="fs-6">Attendance QR Code Scanner</div>
     </div>
+    <a href="?content=log-out" class="btn btn-outline-light btn-sm position-absolute top-0 end-0 m-3">
+        <i class="fas fa-sign-out-alt me-1"></i> Logout
+    </a>
+</header>
+
+
+    <!-- Scanner -->
+    <div class="scanner-container bg-white rounded-bottom p-4 shadow-sm mb-4">
+        <div class="video-container mx-auto mb-3 position-relative border border-danger rounded overflow-hidden" style="max-width: 400px; aspect-ratio: 1;">
+            <video id="video" class="w-100 h-100 object-fit-cover" playsinline></video>
+            <div class="scan-frame position-absolute top-50 start-50 translate-middle border border-danger rounded"></div>
+        </div>
+
+        <div class="controls d-flex flex-column gap-2 mx-auto" style="max-width: 400px;">
+            <button id="scan-button" class="btn btn-danger fw-bold">Start Scanner</button>
+        </div>
+    </div>
+
+    <!-- Status -->
+    <div class="status-container bg-white rounded p-3 shadow-sm mb-4 border-start border-4 border-danger">
+        <div class="d-flex align-items-center mb-2 text-danger fw-bold">
+            <div id="status-icon" class="status-icon rounded-circle me-2" style="width: 12px; height: 12px;"></div>
+            <span>System Status</span>
+        </div>
+        <div id="status-message" class="small">Initializing scanner...</div>
+    </div>
+
+    <!-- Results -->
+    <div class="results-container bg-white rounded p-3 shadow-sm">
+        <div class="results-title d-flex justify-content-between align-items-center mb-3 text-danger border-bottom pb-2">
+            <span class="fw-bold">Scan Results</span>
+            <span id="scan-count" class="badge bg-danger">0 scans</span>
+        </div>
+        <div id="results">
+            <div class="empty-results text-center text-muted py-4 fst-italic">No scans yet. Start the scanner to begin.</div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="text-center text-muted small mt-4">
+        EFMS-SCAN v2.0 | &copy; 2023
+    </footer>
+</div>
+
+<style>
+    .bg-danger {
+        background-color: #FF6347 !important;
+    }
+    .border-danger {
+        border-color: #FF6347 !important;
+    }
+    .text-danger {
+        color: #FF6347 !important;
+    }
+    .btn-danger {
+        background-color: #FF6347 !important;
+        border-color: #FF6347 !important;
+    }
+    .btn-danger:hover {
+        background-color: #e5533d !important;
+        border-color: #e5533d !important;
+    }
+</style>
+
+
+<!-- Bootstrap JS (optional if you use Bootstrap components like modals, toasts) -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
 
     <audio id="scan-audio" preload="auto" style="display:none">
         <source src="./assets/sounds/beep-07a.mp3" type="audio/mpeg">
