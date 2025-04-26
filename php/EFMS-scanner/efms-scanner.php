@@ -5,281 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>EFMS-SCAN | Attendance QR Scanner</title>
     <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
-    <style>
-        :root {
-            --tomato-primary: #FF6347;
-            --tomato-secondary: #E74C3C;
-            --tomato-light: #FFA07A;
-            --tomato-dark: #C0392B;
-            --white: #FFFFFF;
-            --light-gray: #F5F5F5;
-            --dark-gray: #333333;
-            --success-color: #28a745;
-            --warning-color: #ffc107;
-            --danger-color: #dc3545;
-        }
-        
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        }
-        
-        body {
-            background-color: var(--light-gray);
-            color: var(--dark-gray);
-            line-height: 1.6;
-        }
-        
-        .container {
-            max-width: 100%;
-            width: 100%;
-            padding: 20px;
-            margin: 0 auto;
-        }
-        
-        header {
-            background-color: var(--tomato-primary);
-            color: var(--white);
-            padding: 15px 0;
-            text-align: center;
-            border-radius: 8px 8px 0 0;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-        }
-        
-        .logo {
-            font-size: 24px;
-            font-weight: bold;
-            letter-spacing: 1px;
-        }
-        
-        .tagline {
-            font-size: 14px;
-            opacity: 0.9;
-            margin-top: 5px;
-        }
-        
-        .scanner-container {
-            background-color: var(--white);
-            border-radius: 0 0 8px 8px;
-            padding: 20px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-            margin-bottom: 20px;
-        }
-        
-        .video-container {
-            position: relative;
-            width: 100%;
-            max-width: 400px;
-            margin: 0 auto 20px;
-            border: 3px solid var(--tomato-light);
-            border-radius: 8px;
-            overflow: hidden;
-            aspect-ratio: 1;
-        }
-        
-        #video {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            display: block;
-        }
-        
-        .scan-frame {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            width: 70%;
-            height: 70%;
-            border: 3px solid var(--tomato-primary);
-            border-radius: 8px;
-            box-shadow: 0 0 0 1000px rgba(0, 0, 0, 0.5);
-        }
-        
-        .controls {
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-            max-width: 400px;
-            margin: 0 auto;
-        }
-        
-        .btn {
-            background-color: var(--tomato-primary);
-            color: var(--white);
-            border: none;
-            padding: 12px 20px;
-            border-radius: 6px;
-            font-size: 16px;
-            font-weight: bold;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            text-align: center;
-        }
-        
-        .btn:hover {
-            background-color: var(--tomato-secondary);
-            transform: translateY(-2px);
-        }
-        
-        .btn:active {
-            transform: translateY(0);
-        }
-        
-        .btn-stop {
-            background-color: var(--tomato-dark);
-        }
-        
-        .btn-disabled {
-            background-color: #95a5a6;
-            cursor: not-allowed;
-        }
-        
-        .status-container {
-            background-color: var(--white);
-            border-radius: 8px;
-            padding: 15px;
-            margin-bottom: 20px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-            border-left: 4px solid var(--tomato-primary);
-        }
-        
-        .status-title {
-            display: flex;
-            align-items: center;
-            margin-bottom: 10px;
-            color: var(--tomato-dark);
-            font-weight: bold;
-        }
-        
-        .status-icon {
-            width: 12px;
-            height: 12px;
-            border-radius: 50%;
-            margin-right: 10px;
-        }
-        
-        .online-icon {
-            background-color: var(--success-color);
-        }
-        
-        .offline-icon {
-            background-color: var(--danger-color);
-        }
-        
-        .status-message {
-            font-size: 14px;
-        }
-        
-        .results-container {
-            background-color: var(--white);
-            border-radius: 8px;
-            padding: 15px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-        }
-        
-        .results-title {
-            color: var(--tomato-dark);
-            margin-bottom: 15px;
-            font-size: 18px;
-            font-weight: bold;
-            border-bottom: 2px solid var(--tomato-light);
-            padding-bottom: 5px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        
-        #results {
-            max-height: 300px;
-            overflow-y: auto;
-            padding-right: 5px;
-        }
-        
-        .scan-result {
-            padding: 10px;
-            margin-bottom: 10px;
-            border-radius: 4px;
-            background-color: var(--light-gray);
-            border-left: 3px solid var(--tomato-primary);
-        }
-        
-        .scan-data {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 5px;
-        }
-        
-        .student-id {
-            font-weight: bold;
-            word-break: break-all;
-        }
-        
-        .scan-status {
-            font-size: 12px;
-            padding: 2px 8px;
-            border-radius: 10px;
-            color: white;
-            font-weight: bold;
-        }
-        
-        .status-pending {
-            background-color: var(--warning-color);
-        }
-        
-        .status-synced {
-            background-color: var(--success-color);
-        }
-        
-        .status-error {
-            background-color: var(--danger-color);
-        }
-        
-        .scan-time {
-            color: #666;
-            font-size: 12px;
-        }
-        
-        .empty-results {
-            color: #666;
-            text-align: center;
-            padding: 20px;
-            font-style: italic;
-        }
-        
-        .badge {
-            display: inline-block;
-            padding: 3px 8px;
-            border-radius: 4px;
-            font-size: 12px;
-            font-weight: bold;
-            background-color: var(--tomato-light);
-            color: var(--dark-gray);
-        }
-        
-        footer {
-            text-align: center;
-            margin-top: 30px;
-            color: #666;
-            font-size: 12px;
-        }
-        
-        @media (max-width: 600px) {
-            .container {
-                padding: 10px;
-            }
-            
-            .video-container {
-                max-width: 300px;
-            }
-            
-            .controls {
-                max-width: 300px;
-            }
-        }
-    </style>
+    <link rel="stylesheet" href="./php/EFMS-scanner/style.css">
 </head>
 <body>
     <div class="container">
@@ -323,19 +49,14 @@
     </div>
 
     <audio id="scan-audio" preload="auto" style="display:none">
-        <source src="../../assets/sounds/beep-07a.mp3" type="audio/mpeg">
+        <source src="./assets/sounds/beep-07a.mp3" type="audio/mpeg">
     </audio>
 
     <script>
         // Configuration
-        const DB_NAME = "EFMS_SCAN_DB";
-        const STORE_NAME = "scans";
-        const SYNC_INTERVAL = 30000;
         const SCAN_DELAY = 1000;
-        const MAX_SCAN_HISTORY = 20;
         
         // App state
-        let db;
         let scanning = false;
         let stream = null;
         let scanCooldown = false;
@@ -354,144 +75,67 @@
         const resultsContainer = document.getElementById("results");
         const scanCountElement = document.getElementById("scan-count");
 
-        // Initialize IndexedDB
-        async function initDB() {
-            return new Promise((resolve, reject) => {
-                const request = indexedDB.open(DB_NAME, 2); // Version 2 for schema updates
-                
-                request.onupgradeneeded = (event) => {
-                    const db = event.target.result;
-                    if (!db.objectStoreNames.contains(STORE_NAME)) {
-                        const store = db.createObjectStore(STORE_NAME, { keyPath: "id", autoIncrement: true });
-                        store.createIndex("synced", "synced", { unique: false });
-                        store.createIndex("timestamp", "timestamp", { unique: false });
-                        store.createIndex("attendanceId", "attendanceId", { unique: false });
-                    }
-                };
-                
-                request.onsuccess = (event) => {
-                    db = event.target.result;
-                    updateStatus("Database initialized", "online");
-                    resolve(db);
-                };
-                
-                request.onerror = (event) => {
-                    updateStatus("Database error", "offline");
-                    reject(event.target.error);
-                };
-            });
+        // Extract student ID from scanned data
+        function extractStudentId(scanData) {
+            return scanData; // Return the raw scan data as-is
         }
 
-        // Extract student ID from scanned data
-        // Accept all scanned data without validation
-function extractStudentId(scanData) {
-    return scanData; // Return the raw scan data as-is
-}
-        // Save scan to local database
-async function saveScan(scanData) {
-    if (!db) await initDB();
-    
-    // Accept the raw scan data without validation
-    const idStudent = scanData; // Use the raw scan data directly
-    
-    return new Promise((resolve, reject) => {
-        const transaction = db.transaction(STORE_NAME, "readwrite");
-        const store = transaction.objectStore(STORE_NAME);
-        
-        const scan = {
-            studentId: idStudent,
-            rawData: scanData,
-            attendanceId: attendanceId,
-            timestamp: Date.now(),
-            synced: false,
-            status: "pending"
-        };
-        
-        const request = store.add(scan);
-        
-        request.onsuccess = () => {
+        // Process scan data
+        async function processScan(scanData) {
+            const idStudent = scanData;
+            
+            const scan = {
+                studentId: idStudent,
+                rawData: scanData,
+                attendanceId: attendanceId,
+                timestamp: Date.now(),
+                status: "pending"
+            };
+            
             scanCount++;
             updateScanCount();
             addResultToUI(scan);
-            if (navigator.onLine) {
-                syncScans();
-            }
-            resolve(scan);
-        };
-        
-        request.onerror = (event) => {
-            console.error("Error saving scan:", event.target.error);
-            updateStatus("Scan save failed", "offline");
-            reject(event.target.error);
-        };
-    });
-}
-
-        // Sync scans with server
-        async function syncScans() {
-            if (!db) await initDB();
-            if (!navigator.onLine) {
-                updateStatus("Offline - scans will sync when back online", "offline");
-                return;
-            }
-
-            updateStatus("Syncing scans with server...", "online");
             
-            const transaction = db.transaction(STORE_NAME, "readwrite");
-            const store = transaction.objectStore(STORE_NAME);
-            const index = store.index("synced");
-            const request = index.openCursor(IDBKeyRange.only(false));
+            if (navigator.onLine) {
+                await syncScan(scan);
+            }
+            
+            return scan;
+        }
 
-            request.onsuccess = async (event) => {
-                const cursor = event.target.result;
-                if (cursor) {
-                    const scan = cursor.value;
-                    try {
-                        const response = await fetch('./php/EFMS-scanner/efms-sync.php', {
-    method: 'POST',
-    headers: {
-        'Content-Type': 'application/json'
-    },
-    body: JSON.stringify({
-        id_student: scan.studentId,
-        id_attendance: scan.attendanceId || attendanceId
-    })
-});
+        // Sync scan with server
+        async function syncScan(scan) {
+            updateStatus("Syncing scan with server...", "online");
+            
+            try {
+                const response = await fetch('./php/EFMS-scanner/efms-sync.php', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        id_student: scan.studentId,
+                        id_attendance: scan.attendanceId || attendanceId
+                    })
+                });
 
-                        const result = await response.json();
-                        
-                        if (response.ok && result.success) {
-                            await cursor.update({ 
-                                ...scan, 
-                                synced: true,
-                                status: "synced",
-                                syncTime: Date.now()
-                            });
-                            updateScanInUI(scan.id, "synced");
-                        } else {
-                            await cursor.update({ 
-                                ...scan, 
-                                status: "error",
-                                error: result.error || "Server rejected the scan"
-                            });
-                            updateScanInUI(scan.id, "error", result.error);
-                            console.error("Sync failed:", result.error);
-                        }
-                        cursor.continue();
-                    } catch (error) {
-                        console.error("Sync error:", error);
-                        await cursor.update({ 
-                            ...scan, 
-                            status: "error",
-                            error: error.message
-                        });
-                        updateScanInUI(scan.id, "error", error.message);
-                        cursor.continue();
-                    }
-                } else {
+                const result = await response.json();
+                
+                if (response.ok && result.success) {
+                    updateScanInUI(scan.timestamp, "synced");
                     updateStatus("Sync complete", "online");
+                    return true;
+                } else {
+                    updateScanInUI(scan.timestamp, "error", result.error || "Server rejected the scan");
+                    updateStatus("Sync failed: " + (result.error || "Server error"), "offline");
+                    return false;
                 }
-            };
+            } catch (error) {
+                console.error("Sync error:", error);
+                updateScanInUI(scan.timestamp, "error", error.message);
+                updateStatus("Sync failed: " + error.message, "offline");
+                return false;
+            }
         }
 
         // Setup QR code scanner
@@ -537,25 +181,22 @@ async function saveScan(scanData) {
                                 scanCooldown = true;
                                 scanButton.classList.add("btn-disabled");
                                 
-                                const idStudent = extractStudentId(code.data);
-                                if (idStudent) {
-                                    updateStatus(`Student detected: ${idStudent}`, "online");
-                                    playScanSound();
-                                    saveScan(code.data)
-                                        .then(() => {
-                                            if (navigator.onLine) {
-                                                updateStatus(`Saved & syncing: ${idStudent}`, "online");
-                                            } else {
-                                                updateStatus(`Saved (offline): ${idStudent}`, "offline");
-                                            }
-                                        })
-                                        .catch(e => {
-                                            updateStatus("Scan failed", "offline");
-                                            console.error("Scan error:", e);
-                                        });
-                                } else {
-                                    updateStatus("Invalid student ID", "offline");
-                                }
+                                const scannedData = code.data;
+                                updateStatus(`Data detected: ${scannedData}`, "online");
+                                playScanSound();
+                                
+                                processScan(scannedData)
+                                    .then(() => {
+                                        if (navigator.onLine) {
+                                            updateStatus(`Processing: ${scannedData}`, "online");
+                                        } else {
+                                            updateStatus(`Processed (offline): ${scannedData}`, "offline");
+                                        }
+                                    })
+                                    .catch(e => {
+                                        updateStatus("Scan processing failed", "offline");
+                                        console.error("Scan error:", e);
+                                    });
                                 
                                 setTimeout(() => {
                                     scanCooldown = false;
@@ -597,7 +238,7 @@ async function saveScan(scanData) {
             
             const resultElement = document.createElement("div");
             resultElement.className = "scan-result";
-            resultElement.id = `scan-${scan.id}`;
+            resultElement.id = `scan-${scan.timestamp}`;
             resultElement.innerHTML = `
                 <div class="scan-data">
                     <span class="student-id">${scan.studentId}</span>
@@ -635,29 +276,6 @@ async function saveScan(scanData) {
             }
         }
 
-        // Load previous scans from database
-        async function loadPreviousScans() {
-            if (!db) await initDB();
-            
-            const transaction = db.transaction(STORE_NAME, "readonly");
-            const store = transaction.objectStore(STORE_NAME);
-            const request = store.openCursor(null, "prev");
-            
-            request.onsuccess = (event) => {
-                const cursor = event.target.result;
-                if (cursor) {
-                    if (scanCount < MAX_SCAN_HISTORY) {
-                        addResultToUI(cursor.value);
-                        scanCount++;
-                        updateScanCount();
-                    }
-                    cursor.continue();
-                } else if (scanCount === 0) {
-                    resultsContainer.innerHTML = '<div class="empty-results">No scans yet. Start the scanner to begin.</div>';
-                }
-            };
-        }
-
         // Update scan count display
         function updateScanCount() {
             scanCountElement.textContent = `${scanCount} scan${scanCount !== 1 ? 's' : ''}`;
@@ -674,7 +292,6 @@ async function saveScan(scanData) {
             function updateConnectionStatus() {
                 if (navigator.onLine) {
                     updateStatus("Online - ready to scan", "online");
-                    syncScans();
                 } else {
                     updateStatus("Offline - scans will sync when back online", "offline");
                 }
@@ -692,7 +309,7 @@ async function saveScan(scanData) {
                 scanSound = audioElement;
             } else {
                 scanSound = new Audio();
-                scanSound.src = "../../assets/sounds/beep-07a.mp3";
+                scanSound.src = "././assets/sounds/beep-07a.mp3";
                 scanSound.preload = "auto";
             }
         }
@@ -716,10 +333,8 @@ async function saveScan(scanData) {
                 }
                 
                 initScanSound();
-                await initDB();
                 setupScanner();
                 monitorConnection();
-                await loadPreviousScans();
                 updateStatus("Ready to scan", navigator.onLine ? "online" : "offline");
             } catch (error) {
                 console.error("Initialization error:", error);
