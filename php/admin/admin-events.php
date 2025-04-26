@@ -389,11 +389,6 @@ document.addEventListener('DOMContentLoaded', function () {
 <button type="button" class="btn" style="background-color: tomato; color: white; margin-top: 5px;" data-bs-toggle="modal" data-bs-target="#eventModal">
     Add Event
 </button>
-
-<a href="./Barcode" target="_blank" class="btn" style="background-color: tomato; color: white; margin-top: 5px;">
-    Start Attendance
-</a>
-
 </div>
 
 

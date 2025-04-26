@@ -12,6 +12,20 @@ if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] != 'yes') {
 // Get user ID (admin or student)
 $user_id = $_SESSION['user_data']['id_admin'] ?? $_SESSION['user_data']['id_student'];
 
+// Fetch student semester ID
+$student_id = $_SESSION['user_data']['id_student'] ?? null;
+if ($student_id) {
+    $queryStudentSemester = "SELECT semester_ID FROM student WHERE id_student = ?";
+    $stmtStudentSemester = $db->prepare($queryStudentSemester);
+    $stmtStudentSemester->bind_param("s", $student_id);
+    $stmtStudentSemester->execute();
+    $resultStudentSemester = $stmtStudentSemester->get_result();
+    $studentSemester = $resultStudentSemester->fetch_assoc();
+    $student_semester_ID = $studentSemester['semester_ID'];
+} else {
+    $student_semester_ID = null;
+}
+
 // Handle semester selection from URL and save to session and cookie
 if (isset($_GET['semester']) && !empty($_GET['semester'])) {
     $_SESSION['selected_semester'][$user_id] = $_GET['semester'];
@@ -25,13 +39,8 @@ if (!empty($_SESSION['selected_semester'][$user_id])) {
     $selected_semester = $_COOKIE['selected_semester'];
     $_SESSION['selected_semester'][$user_id] = $selected_semester; // sync back to session
 } else {
-    // Default semester logic: select the first created active semester
-    $query = "SELECT semester_ID FROM semester WHERE status = 'Active' ORDER BY semester_ID ASC LIMIT 1";
-    $stmt = $db->prepare($query);
-    $stmt->execute();
-    $result = $stmt->get_result();
-    $selected_semester = ($result && $row = $result->fetch_assoc()) ? $row['semester_ID'] : null;
-
+    // Default semester logic: select the student's current semester
+    $selected_semester = $student_semester_ID;
     // Save default to session and cookie
     if ($selected_semester) {
         $_SESSION['selected_semester'][$user_id] = $selected_semester;
@@ -39,8 +48,8 @@ if (!empty($_SESSION['selected_semester'][$user_id])) {
     }
 }
 
-// Fetch semesters for dropdown
-$semesters = $db->query("SELECT semester_ID, academic_year, semester_type FROM semester WHERE status = 'Active'");
+// Fetch semesters for dropdown, limited to the student's current semester
+$semesters = $db->query("SELECT semester_ID, academic_year, semester_type FROM semester WHERE semester_ID = '$student_semester_ID' AND status = 'Active'");
 
 // Count total events
 $stmt = $db->prepare("SELECT COUNT(*) AS events_count FROM events WHERE semester_ID = ?");
