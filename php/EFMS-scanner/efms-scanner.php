@@ -1,3 +1,7 @@
+<?php
+include "././php/auth-check.php";
+?>
+
 <!DOCTYPE html>
 <html lang="en">
 <head>

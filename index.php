@@ -3,6 +3,7 @@
 if (session_status() == PHP_SESSION_NONE) {
     session_start();
 }  
+
 // Include the database connection
 require_once "././php/db-conn.php";
 $db = Database::getInstance()->db;

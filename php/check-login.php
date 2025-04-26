@@ -50,7 +50,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 
             if (strtolower($row['role_admin']) === 'class mayor') {
                 // Class Mayor login
-                $_SESSION['logged_in_scanner'] = 'yes';
+                $_SESSION['logged_in'] = 'yes';
                 $_SESSION['user_data'] = $row;
 
                 echo json_encode([

@@ -1,11 +1,12 @@
 <?php
 require_once '././php/db-conn.php';
 
+include "././php/auth-check.php";
+
 $database = Database::getInstance();
 $db = $database->db;
 
-// Get all semesters
-$semesterQuery = "SELECT semester_ID, academic_year, semester_type, status FROM semester ORDER BY academic_year DESC";
+$semesterQuery = "SELECT semester_ID, academic_year, semester_type, status FROM semester WHERE status = 'active' ORDER BY academic_year DESC";
 $semesters = $db->query($semesterQuery);
 
 // Handle AJAX for events
@@ -61,24 +62,7 @@ if (isset($_POST['get_attendance_details'])) {
 
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-
-    <style>
-        :root {
-            --primary-color: tomato;
-            --secondary-color: #2c3e50;
-            --accent-color: #e74c3c;
-            --light-bg: #f8f9fa;
-        }
-        body { background: var(--light-bg); font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-        .card { border: none; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
-        .card-header { background: var(--primary-color); color: white; font-weight: bold; }
-        .btn-primary { background: var(--primary-color); border-color: var(--primary-color); }
-        .btn-primary:hover { background: #d84332; border-color: #d84332; }
-        .loading-spinner { display: none; color: var(--primary-color); }
-        @media (max-width: 768px) {
-            .card-header h2 { font-size: 1.5rem; }
-        }
-    </style>
+    <link rel="stylesheet" href="./php/EFMS-scanner/style.css">
 </head>
 
 <body>
