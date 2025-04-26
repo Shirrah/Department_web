@@ -39,20 +39,19 @@ try {
         throw new Exception('Database connection failed');
     }
 
-    // Using a single query approach
+    // Use custom date_attendance if provided, otherwise use NOW()
+    $date_attendance = isset($data['date_attendance']) ? $data['date_attendance'] : date('Y-m-d H:i:s');
+
     $stmt = $db->prepare("
         UPDATE student_attendance 
-        SET date_attendance = NOW(), 
+        SET date_attendance = ?, 
             status_attendance = 'Present', 
             Penalty_requirements = 0 
         WHERE id_attendance = ? AND id_student = ?
     ");
 
+    $success = $stmt->execute([$date_attendance, $data['id_attendance'], $data['id_student']]);
     
-    $success = $stmt->execute([$data['id_attendance'], $data['id_student']]);
-    
-    
-    // For MySQLi, use affected_rows instead of rowCount()
     if ($db->affected_rows === 0) {
         throw new Exception('No matching record found to update');
     }
