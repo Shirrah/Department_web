@@ -20,6 +20,9 @@ register_shutdown_function(function() {
     }
 });
 
+// Set timezone to Manila (Asia/Manila)
+date_default_timezone_set('Asia/Manila');
+
 try {
     require_once '../../php/db-conn.php';
     
@@ -39,7 +42,7 @@ try {
         throw new Exception('Database connection failed');
     }
 
-    // Use custom date_attendance if provided, otherwise use NOW()
+    // Use custom date_attendance if provided, otherwise use the current time in Manila timezone
     $date_attendance = isset($data['date_attendance']) ? $data['date_attendance'] : date('Y-m-d H:i:s');
 
     $stmt = $db->prepare("
