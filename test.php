@@ -1,31 +1,33 @@
 <?php
-// FUNCTION to check online database connection
-function checkOnlineDatabaseConnection() {
+// If it's an AJAX request, only check connection and return result
+if (isset($_GET['check_connection'])) {
+    echo checkDatabaseConnection() ? 'connected' : 'offline';
+    exit;
+}
+
+// Function to check online database connection
+function checkDatabaseConnection() {
     $host = "p:5.181.217.145"; 
     $user = "hpo-admin";
     $pass = "Shirrah+admin1234#";
     $dbname = "dcs";
 
-    // Try connecting
     $conn = @new mysqli($host, $user, $pass, $dbname);
 
     if ($conn->connect_errno) {
-        return false; // Connection failed
+        return false;
     } else {
-        $conn->close(); // Connection success
+        $conn->close();
         return true;
     }
 }
-
-// CALL the function
-$isConnected = checkOnlineDatabaseConnection();
 ?>
 
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Online Database Connection Status</title>
+    <title>Live Connection Status</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -40,6 +42,7 @@ $isConnected = checkOnlineDatabaseConnection();
             box-shadow: 0 4px 10px rgba(0,0,0,0.1);
             display: inline-block;
             margin-top: 20px;
+            transition: all 0.5s ease;
         }
         .online {
             background-color: #d4edda;
@@ -53,15 +56,43 @@ $isConnected = checkOnlineDatabaseConnection();
 </head>
 <body>
 
-<h1>Online Database Status Checker</h1>
+<h1>Live Database Connection Checker</h1>
 
-<div class="status <?php echo $isConnected ? 'online' : 'offline'; ?>">
-    <?php if ($isConnected): ?>
-        ✅ Connected to Online Database!
-    <?php else: ?>
-        ❌ Offline - Cannot connect to Online Database.
-    <?php endif; ?>
-</div>
+<div id="connectionStatus" class="status">Checking...</div>
+
+<script>
+function checkConnection() {
+    var xhr = new XMLHttpRequest();
+    xhr.open("GET", "?check_connection=1", true);
+    xhr.onload = function() {
+        var statusDiv = document.getElementById('connectionStatus');
+        if (xhr.status == 200) {
+            if (xhr.responseText.trim() == 'connected') {
+                statusDiv.textContent = '✅ Connected to Online Database!';
+                statusDiv.className = 'status online';
+            } else {
+                statusDiv.textContent = '❌ Offline - Cannot connect to Database.';
+                statusDiv.className = 'status offline';
+            }
+        } else {
+            statusDiv.textContent = '❌ Error checking connection.';
+            statusDiv.className = 'status offline';
+        }
+    };
+    xhr.onerror = function() {
+        var statusDiv = document.getElementById('connectionStatus');
+        statusDiv.textContent = '❌ Error checking connection.';
+        statusDiv.className = 'status offline';
+    };
+    xhr.send();
+}
+
+// Check connection every 5 seconds
+setInterval(checkConnection, 5000);
+
+// Check immediately on page load
+checkConnection();
+</script>
 
 </body>
 </html>
