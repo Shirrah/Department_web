@@ -52,7 +52,7 @@ try {
                             <div class="bg-light p-4 rounded-3 text-center">
                                 <div id="qrcode" class="mb-3 mx-auto" style="display: flex; align-items: center; justify-content:center;"></div>
                                 <p class="text-muted mb-0">
-                                    Scan this QR code for student verification
+                                    Scan this QR code for your Attendance.
                                 </p>
                             </div>
                         </div>

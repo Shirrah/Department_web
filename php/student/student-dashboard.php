@@ -4,64 +4,103 @@ require_once "././php/db-conn.php";
 $db = Database::getInstance()->db;
 
 // Check if the user is logged in
+if (!isset($_SESSION['logged_in'])) {
+    session_start();
+}
 if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] != 'yes') {
     header("location: ../index.php?content=log-in");
     exit();
 }
 
 // Get user ID (admin or student)
-$user_id = $_SESSION['user_data']['id_admin'] ?? $_SESSION['user_data']['id_student'];
-
-// Fetch student semester ID
-$student_id = $_SESSION['user_data']['id_student'] ?? null;
-if ($student_id) {
-    $queryStudentSemester = "SELECT semester_ID FROM student WHERE id_student = ?";
-    $stmtStudentSemester = $db->prepare($queryStudentSemester);
-    $stmtStudentSemester->bind_param("s", $student_id);
-    $stmtStudentSemester->execute();
-    $resultStudentSemester = $stmtStudentSemester->get_result();
-    $studentSemester = $resultStudentSemester->fetch_assoc();
-    $student_semester_ID = $studentSemester['semester_ID'];
-} else {
-    $student_semester_ID = null;
+$user_id = $_SESSION['user_data']['id_admin'] ?? $_SESSION['user_data']['id_student'] ?? null;
+if (!$user_id) {
+    header("location: ../index.php?content=log-in");
+    exit();
 }
 
-// Handle semester selection from URL and save to session and cookie
+// Fetch all semesters the student has been enrolled in
+$student_semesters = [];
+if (isset($_SESSION['user_data']['id_student'])) {
+    $student_id = $_SESSION['user_data']['id_student'];
+    
+    // Get all semester IDs from student records for this student
+    $queryStudentSemesters = "SELECT DISTINCT semester_ID FROM student WHERE id_student = ?";
+    $stmtStudentSemesters = $db->prepare($queryStudentSemesters);
+    $stmtStudentSemesters->bind_param("s", $student_id);
+    $stmtStudentSemesters->execute();
+    $resultStudentSemesters = $stmtStudentSemesters->get_result();
+    
+    while ($row = $resultStudentSemesters->fetch_assoc()) {
+        $student_semesters[] = $row['semester_ID'];
+    }
+}
+
+// Handle semester selection from URL
 if (isset($_GET['semester']) && !empty($_GET['semester'])) {
-    $_SESSION['selected_semester'][$user_id] = $_GET['semester'];
-    setcookie('selected_semester', $_GET['semester'], time() + (86400 * 30), "/"); // 30 days
+    // Validate the semester belongs to the student
+    if (in_array($_GET['semester'], $student_semesters)) {
+        $_SESSION['selected_semester'][$user_id] = $_GET['semester'];
+        setcookie('selected_semester', $_GET['semester'], time() + (86400 * 30), "/"); // 30 days
+    }
 }
 
 // Determine the selected semester
 if (!empty($_SESSION['selected_semester'][$user_id])) {
     $selected_semester = $_SESSION['selected_semester'][$user_id];
 } elseif (!empty($_COOKIE['selected_semester'])) {
-    $selected_semester = $_COOKIE['selected_semester'];
-    $_SESSION['selected_semester'][$user_id] = $selected_semester; // sync back to session
+    // Validate cookie value against student's semesters
+    if (in_array($_COOKIE['selected_semester'], $student_semesters)) {
+        $selected_semester = $_COOKIE['selected_semester'];
+        $_SESSION['selected_semester'][$user_id] = $selected_semester;
+    } else {
+        $selected_semester = !empty($student_semesters) ? $student_semesters[0] : null;
+    }
 } else {
-    // Default semester logic: select the student's current semester
-    $selected_semester = $student_semester_ID;
-    // Save default to session and cookie
+    // Default to most recent semester
+    $selected_semester = !empty($student_semesters) ? $student_semesters[0] : null;
     if ($selected_semester) {
         $_SESSION['selected_semester'][$user_id] = $selected_semester;
-        setcookie('selected_semester', $selected_semester, time() + (86400 * 30), "/"); // 30 days
+        setcookie('selected_semester', $selected_semester, time() + (86400 * 30), "/");
     }
 }
 
-// Fetch semesters for dropdown, limited to the student's current semester
-$semesters = $db->query("SELECT semester_ID, academic_year, semester_type FROM semester WHERE semester_ID = '$student_semester_ID' AND status = 'Active'");
+// Fetch all active semesters the student has been enrolled in
+$semesters = [];
+if (!empty($student_semesters)) {
+    $placeholders = implode(',', array_fill(0, count($student_semesters), '?'));
+    $query = "SELECT semester_ID, academic_year, semester_type FROM semester 
+              WHERE semester_ID IN ($placeholders) AND status = 'Active' 
+              ORDER BY semester_ID DESC";
+    $stmt = $db->prepare($query);
+    
+    // Bind parameters dynamically
+    $types = str_repeat('s', count($student_semesters));
+    $stmt->bind_param($types, ...$student_semesters);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    $semesters = $result->fetch_all(MYSQLI_ASSOC);
+}
 
-// Count total events
-$stmt = $db->prepare("SELECT COUNT(*) AS events_count FROM events WHERE semester_ID = ?");
-$stmt->bind_param("s", $selected_semester);
-$stmt->execute();
-$events_count = $stmt->get_result()->fetch_assoc()['events_count'] ?? 0;
+// Count total events for the selected semester
+$events_count = 0;
+if ($selected_semester) {
+    $stmt = $db->prepare("SELECT COUNT(*) AS events_count FROM events WHERE semester_ID = ?");
+    $stmt->bind_param("s", $selected_semester);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    $events_count = $result->fetch_assoc()['events_count'] ?? 0;
+}
 
-// Count total fees
-$stmt = $db->prepare("SELECT COUNT(*) AS fees_count FROM payments WHERE semester_ID = ?");
-$stmt->bind_param("s", $selected_semester);
-$stmt->execute();
-$fees_count = $stmt->get_result()->fetch_assoc()['fees_count'] ?? 0;
+// Count total fees for the selected semester
+$fees_count = 0;
+if ($selected_semester) {
+    $stmt = $db->prepare("SELECT COUNT(*) AS fees_count FROM payments WHERE semester_ID = ?");
+    $stmt->bind_param("s", $selected_semester);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    $fees_count = $result->fetch_assoc()['fees_count'] ?? 0;
+}
 ?>
 
 <div class="container mt-4">
@@ -73,12 +112,17 @@ $fees_count = $stmt->get_result()->fetch_assoc()['fees_count'] ?? 0;
             <input type="hidden" name="content" value="student-index">
             <input type="hidden" name="admin" value="dashboard">
             <!-- Semester Selection Dropdown -->
-            <select class="form-select w-auto mb-3" name="semester" id="semester" onchange="this.form.submit()">
-                <?php while ($row = $semesters->fetch_assoc()): ?>
-                    <option value="<?php echo $row['semester_ID']; ?>" <?php echo ($row['semester_ID'] == $selected_semester) ? 'selected' : ''; ?>>
-                        <?php echo htmlspecialchars('AY: ' .$row['academic_year'] . ' - ' . $row['semester_type']); ?>
-                    </option>
-                <?php endwhile; ?>
+            <select class="form-select w-auto mb-3" name="semester" id="semester" onchange="this.form.submit()" <?php echo empty($semesters) ? 'disabled' : ''; ?>>
+                <?php if (!empty($semesters)): ?>
+                    <?php foreach ($semesters as $semester): ?>
+                        <option value="<?php echo htmlspecialchars($semester['semester_ID']); ?>" 
+                            <?php echo ($semester['semester_ID'] == $selected_semester) ? 'selected' : ''; ?>>
+                            <?php echo htmlspecialchars('AY: ' . $semester['academic_year'] . ' - ' . $semester['semester_type']); ?>
+                        </option>
+                    <?php endforeach; ?>
+                <?php else: ?>
+                    <option value="">No active semesters found</option>
+                <?php endif; ?>
             </select>
         </form>
 
@@ -88,8 +132,8 @@ $fees_count = $stmt->get_result()->fetch_assoc()['fees_count'] ?? 0;
                 <div class="card border-primary shadow-sm">
                     <div class="card-body text-center">
                         <h5 class="card-title">Total Events</h5>
-                        <p class="display-5 text-primary"> <?php echo htmlspecialchars($events_count); ?> </p>
-                        <a href="?content=student-index&student=student-events" class="btn btn-primary btn-sm">View Events</a>
+                        <p class="display-5 text-primary"><?php echo htmlspecialchars($events_count); ?></p>
+                        <a href="?content=student-index&student=student-events&semester=<?php echo urlencode($selected_semester ?? ''); ?>" class="btn btn-primary btn-sm">View Events</a>
                     </div>
                 </div>
             </div>
@@ -97,8 +141,8 @@ $fees_count = $stmt->get_result()->fetch_assoc()['fees_count'] ?? 0;
                 <div class="card border-success shadow-sm">
                     <div class="card-body text-center">
                         <h5 class="card-title">Total Fees</h5>
-                        <p class="display-5 text-success"> <?php echo htmlspecialchars($fees_count); ?> </p>
-                        <a href="?content=student-index&student=student-fees" class="btn btn-success btn-sm">View Fees</a>
+                        <p class="display-5 text-success"><?php echo htmlspecialchars($fees_count); ?></p>
+                        <a href="?content=student-index&student=student-fees&semester=<?php echo urlencode($selected_semester ?? ''); ?>" class="btn btn-success btn-sm">View Fees</a>
                     </div>
                 </div>
             </div>
@@ -106,7 +150,7 @@ $fees_count = $stmt->get_result()->fetch_assoc()['fees_count'] ?? 0;
 
         <!-- Show Report Button -->
         <div class="mt-3">
-            <button type="button" class="btn btn-info" data-bs-toggle="modal" data-bs-target="#reportModal">
+            <button type="button" class="btn btn-info" data-bs-toggle="modal" data-bs-target="#reportModal" <?php echo !$selected_semester ? 'disabled' : ''; ?>>
                 Show Report
             </button>
         </div>
@@ -114,6 +158,7 @@ $fees_count = $stmt->get_result()->fetch_assoc()['fees_count'] ?? 0;
 </div>
 
 <!-- Report Modal -->
+<?php if ($selected_semester): ?>
 <div class="modal fade" id="reportModal" tabindex="-1" aria-labelledby="reportModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
@@ -122,44 +167,11 @@ $fees_count = $stmt->get_result()->fetch_assoc()['fees_count'] ?? 0;
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body" id="reportContent">
-
                 <?php
-                // Start session if not already started
-                if (session_status() === PHP_SESSION_NONE) {
-                    session_start();
-                }
-
-                require_once "././php/db-conn.php";
-                $db = Database::getInstance()->db;
                 $id_student = $_SESSION['user_data']['id_student'] ?? '';
-
                 if (!$id_student) {
                     echo "<p class='text-danger'>Invalid Student ID.</p>";
                     exit();
-                }
-
-                // Get the user ID from the session
-                $user_id = $_SESSION['user_data']['id_student'];
-
-                // Handle semester selection from GET request and store in session
-                if (isset($_GET['semester']) && !empty($_GET['semester'])) {
-                    $_SESSION['selected_semester'][$user_id] = $_GET['semester'];
-                }
-
-                // Use selected semester from session or default to latest
-                if (isset($_SESSION['selected_semester'][$user_id]) && !empty($_SESSION['selected_semester'][$user_id])) {
-                    $selected_semester = $_SESSION['selected_semester'][$user_id];
-                } else {
-                    // Get the latest semester from the database
-                    $query = "SELECT semester_ID, academic_year, semester_type FROM semester ORDER BY semester_ID DESC LIMIT 1";
-                    $stmt = $db->prepare($query);
-                    $stmt->execute();
-                    $result = $stmt->get_result();
-                    if ($result && $row = $result->fetch_assoc()) {
-                        $selected_semester = $row['semester_ID'];
-                    } else {
-                        $selected_semester = null;
-                    }
                 }
 
                 // Fetch student details
@@ -197,7 +209,6 @@ $fees_count = $stmt->get_result()->fetch_assoc()['fees_count'] ?? 0;
                         </thead>
                         <tbody>
                             <?php
-                            // Fetch payment records for the selected semester
                             $queryPayment = "
                                 SELECT 
                                     p.payment_name, 
@@ -253,7 +264,6 @@ $fees_count = $stmt->get_result()->fetch_assoc()['fees_count'] ?? 0;
                         </thead>
                         <tbody>
                             <?php
-                            // Fetch attendance records for the student in the selected semester, including penalty type
                             $queryAttendance = "
                                 SELECT 
                                     e.name_event, 
@@ -305,29 +315,25 @@ $fees_count = $stmt->get_result()->fetch_assoc()['fees_count'] ?? 0;
                         </tbody>
                     </table>
                 </div>
-
             </div>
         </div>
     </div>
 </div>
+<?php endif; ?>
 
 <script>
     // Check if semester cookie exists
     window.onload = function() {
         const cookie = document.cookie.split('; ').find(row => row.startsWith('selected_semester='));
-        if (!cookie) {
+        if (!cookie && document.querySelector('#semester').value) {
             // No cookie found, set the default semester if not selected
             const defaultSemester = document.querySelector('#semester').value;
             document.cookie = `selected_semester=${defaultSemester}; path=/;`;
-        } else {
-            // Set the semester dropdown to the value from the cookie
-            const semesterFromCookie = cookie.split('=')[1];
-            document.querySelector('#semester').value = semesterFromCookie;
         }
     }
 
     // On changing the semester selection, store it in a cookie
-    document.querySelector('#semester').addEventListener('change', function() {
+    document.querySelector('#semester')?.addEventListener('change', function() {
         const selectedSemester = this.value;
         document.cookie = `selected_semester=${selectedSemester}; path=/;`;
     });
