@@ -464,15 +464,15 @@
                     const scan = cursor.value;
                     try {
                         const response = await fetch('./php/EFMS-scanner/efms-sync.php', {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json'
-                            },
-                            body: JSON.stringify({
-                                id_student: scan.studentId,
-                                id_attendance: scan.attendanceId || attendanceId
-                            })
-                        });
+    method: 'POST',
+    headers: {
+        'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+        id_student: scan.studentId,
+        id_attendance: scan.attendanceId || attendanceId
+    })
+});
 
                         const result = await response.json();
                         
