@@ -2,15 +2,20 @@
 session_set_cookie_params(0);
 session_start();
 
-header('Content-Type: application/json'); // Important for AJAX
+header('Content-Type: application/json');
+
+ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
+error_reporting(E_ALL);
 
 require_once "db-conn.php";
 $db = Database::getInstance()->db;
 
-// Login lockout logic
+// Login lockout settings
 $max_attempts = 5;
-$lockout_time = 5 * 60;
+$lockout_time = 5 * 60; // 5 minutes
 
+// Check if locked out
 if (isset($_SESSION['lockout_time']) && time() < $_SESSION['lockout_time']) {
     echo json_encode([
         'status' => 'error',
@@ -31,37 +36,43 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     $id = $_POST['id'];
     $pword = $_POST['psw'];
 
-    // Check Admins
-$stmt = $db->prepare("SELECT * FROM `admins` WHERE `id_admin` = ?");
-$stmt->bind_param("s", $id);
-$stmt->execute();
-$admin_result = $stmt->get_result();
+    // Check Admins first
+    $stmt = $db->prepare("SELECT * FROM `admins` WHERE `id_admin` = ?");
+    $stmt->bind_param("s", $id);
+    $stmt->execute();
+    $admin_result = $stmt->get_result();
 
-if ($admin_result->num_rows > 0) {
-    $row = $admin_result->fetch_assoc();
-    if ($pword === $row["pass_admin"]) {
-        // Block login if the role is 'Class Mayor'
-        if (strtolower($row['role_admin']) === 'class mayor') {
-            echo json_encode([
-                'status' => 'error',
-                'message' => 'Access denied. 😈'
-            ]);
-            exit();
+    if ($admin_result->num_rows > 0) {
+        $row = $admin_result->fetch_assoc();
+
+        if ($pword === $row["pass_admin"]) {
+            $_SESSION['login_attempts'] = 0;
+
+            if (strtolower($row['role_admin']) === 'class mayor') {
+                // Class Mayor login
+                $_SESSION['logged_in_scanner'] = 'yes';
+                $_SESSION['user_data'] = $row;
+
+                echo json_encode([
+                    'status' => 'success',
+                    'message' => 'Welcome Class Mayor!',
+                    'redirect' => 'index.php?content=efms-scanner-index'
+                ]);
+                exit();
+            } else {
+                // Normal Admin login
+                $_SESSION['logged_in'] = 'yes';
+                $_SESSION['user_data'] = $row;
+
+                echo json_encode([
+                    'status' => 'success',
+                    'message' => 'Welcome Admin!',
+                    'redirect' => 'index.php?content=admin-index'
+                ]);
+                exit();
+            }
         }
-
-        $_SESSION['login_attempts'] = 0;
-        $_SESSION['logged_in'] = 'yes';
-        $_SESSION['user_data'] = $row;
-
-        echo json_encode([
-            'status' => 'success',
-            'message' => 'Login successful!',
-            'redirect' => 'index.php?content=admin-index'
-        ]);
-        exit();
     }
-}
-
 
     // Check Students
     $stmt = $db->prepare("SELECT * FROM `student` WHERE `id_student` = ?");
@@ -71,6 +82,7 @@ if ($admin_result->num_rows > 0) {
 
     if ($student_result->num_rows > 0) {
         $row = $student_result->fetch_assoc();
+
         if ($pword === $row["pass_student"]) {
             $_SESSION['login_attempts'] = 0;
             $_SESSION['logged_in'] = 'yes';
@@ -85,7 +97,7 @@ if ($admin_result->num_rows > 0) {
         }
     }
 
-    // Handle failed login
+    // Handle failed login attempts
     $_SESSION['login_attempts'] = ($_SESSION['login_attempts'] ?? 0) + 1;
 
     if ($_SESSION['login_attempts'] >= $max_attempts) {
@@ -102,3 +114,4 @@ if ($admin_result->num_rows > 0) {
     ]);
     exit();
 }
+?>

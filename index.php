@@ -80,9 +80,6 @@ $site_version = $versionData['version'];
         case "efms-scanner-app":
             include 'php/EFMS-scanner/efms-scanner.php';
             break;
-        case "efms-scanner-login":
-            include 'php/EFMS-scanner/login.php';
-            break;
         case "log-out":
             'php/log-out.php';
             header("Location: index.php?content=log-in");

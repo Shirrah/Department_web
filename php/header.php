@@ -22,11 +22,6 @@
     <i class="bi bi-download me-1"></i>Install PWA App
   </a>
 </li>
-<li class="nav-item" style="margin-left: 5px;">
-  <a role="button" class="efms-scan-btn" title="CCS EFMS-SCAN" class="btn btn-primary" href="?content=efms-scanner-login">
-    <i class="bi bi-camera me-1"></i>EFMS-SCANNER
-  </a>
-</li>
 
         <?php 
           require_once "php/db-conn.php";

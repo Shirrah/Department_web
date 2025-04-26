@@ -406,35 +406,44 @@
             });
         }
         
-        // Sync scans with server when online
         async function syncScans() {
-            if (!db) await initDB();
-            if (!navigator.onLine) return;
-            
-            const transaction = db.transaction(STORE_NAME, "readwrite");
-            const store = transaction.objectStore(STORE_NAME);
-            const index = store.index("synced");
-            const request = index.openCursor(IDBKeyRange.only(false));
-            
-            request.onsuccess = (event) => {
-                const cursor = event.target.result;
-                if (cursor) {
-                    const scan = cursor.value;
-                    
-                    // In a real app, you would send this to your server
-                    // Example: await fetch('/api/scans', { method: 'POST', body: JSON.stringify(scan) });
-                    
-                    // Mock server sync with delay
-                    setTimeout(() => {
-                        scan.synced = true;
-                        cursor.update(scan);
-                        updateStatus(`Synced: ${scan.data.substring(0, 30)}${scan.data.length > 30 ? '...' : ''}`, "online");
-                    }, 500);
-                    
-                    cursor.continue();
+    if (!db) await initDB();
+    if (!navigator.onLine) return;
+
+    const transaction = db.transaction(STORE_NAME, "readwrite");
+    const store = transaction.objectStore(STORE_NAME);
+    const index = store.index("synced");
+    const request = index.openCursor(IDBKeyRange.only(false));
+
+    request.onsuccess = async (event) => {
+        const cursor = event.target.result;
+        if (cursor) {
+            const scan = cursor.value;
+            try {
+                const response = await fetch('./php/EFMS-scanner/efms-sync.php', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        id_student: scan.data // the scanned QR code is id_student
+                    })
+                });
+
+                if (response.ok) {
+                    // Mark the scan as synced
+                    const updateRequest = cursor.update({ ...scan, synced: true });
+                    updateRequest.onsuccess = () => cursor.continue();
+                } else {
+                    console.error("Server rejected the scan:", await response.text());
                 }
-            };
+            } catch (error) {
+                console.error("Sync error:", error);
+            }
         }
+    };
+}
+
         
         // Setup QR code scanner
         function setupScanner() {

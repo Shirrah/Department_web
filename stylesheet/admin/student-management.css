@@ -106,18 +106,6 @@
     text-decoration: underline;
 }
 
-/* No records found message */
-#noRecordMsg {
-    display: none;
-    color: red;
-    font-weight: bold;
-    text-align: center;
-    padding: 10px;
-    border: 1px solid red;
-    border-radius: 5px;
-    margin-top: 20px;
-    background-color: #f8d7da;
-}
 
 /* Responsive adjustments */
 @media screen and (max-width: 768px) {
@@ -139,50 +127,6 @@
     }
 }
 
-/* Pagination Styles */
-.pagination {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    margin: 20px 0;
-}
-
-.pagination ul {
-    list-style: none;
-    padding: 0;
-    margin: 0;
-    display: flex;
-}
-
-.pagination li {
-    margin: 0 5px;
-}
-
-.pagination a {
-    text-decoration: none;
-    color: #007bff;
-    font-size: 16px;
-    padding: 8px 12px;
-    border-radius: 4px;
-    border: 1px solid #ccc;
-    transition: background-color 0.3s, color 0.3s;
-}
-
-.pagination a:hover {
-    background-color: #007bff;
-    color: white;
-}
-
-.pagination li.disabled {
-    color: #ccc;
-    pointer-events: none;
-}
-
-.pagination .active a {
-    background-color: #007bff;
-    color: white;
-    border-color: #007bff;
-}
 .sort-arrow {
     margin-left: 5px;
     font-size: 14px;
