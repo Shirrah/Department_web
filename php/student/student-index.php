@@ -158,12 +158,12 @@ if (isset($_SESSION['user_data'])) {
                     <span class="ms-1 d-none d-sm-inline">Qr code</span>
                 </a>
             </li>
-            <li>
+            <!-- <li>
             <a href="?content=student-index&student=notifications" class="nav-link text-white">
                     <i class="bi bi-bell"></i>
                     <span class="ms-1 d-none d-sm-inline">Notifications</span>
                 </a>
-            </li>
+            </li> -->
         </ul>
 </nav>
 
@@ -203,12 +203,12 @@ if (isset($_SESSION['user_data'])) {
                 </a>
             </li>
 
-            <li>
+            <!-- <li>
                 <a href="?content=student-index&student=notifications" class="nav-link text-white">
                     <i class="bi bi-bell"></i>
                     <span class="ms-1">Notifications</span>
                 </a>
-            </li>
+            </li> -->
         </ul>
     </div>
 </div>

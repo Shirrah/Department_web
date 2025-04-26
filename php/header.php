@@ -1,5 +1,5 @@
 <link rel="stylesheet" href=".//.//stylesheet/header.css">
-<title>SJC - College of Computer Studies</title>
+<title>CCS - Event and Fee Management System</title>
 
 <!-- Header Section -->
 <nav class="navbar navbar-expand-lg fixed-top shadow-sm" id="header">

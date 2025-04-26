@@ -161,7 +161,7 @@ if (isset($_SESSION['user_data'])) {
                 <div class="collapse" id="adminsMenu">
                     <ul class="nav flex-column ps-3">
                         <li>
-                            <a href="?content=admin-index&admin=admin-management" class="nav-link text-white action-btn"><i class="bi bi-chevron-right"></i>  <span class="d-none d-sm-inline">Manage Admins</span></a>
+                            <a href="?content=admin-index&admin=admin-management" class="nav-link text-white action-btn"><i class="bi bi-chevron-right"></i>  <span class="d-none d-sm-inline">Manage Admins & Roles</span></a>
                         </li>
                     </ul>
                 </div>

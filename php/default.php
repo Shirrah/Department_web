@@ -30,7 +30,7 @@ if (session_status() == PHP_SESSION_NONE) {
         color: white;
     }
 </style>
-
+<title>CCS - Event and Fee Management System</title>
 <div class="">
     <div class="container-fluid bg-dark py-5 text-white">
         <div class="row align-items-center" style="margin-top: 143px;">
