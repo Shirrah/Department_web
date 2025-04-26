@@ -383,65 +383,49 @@
         }
 
         // Extract student ID from scanned data
-        function extractStudentId(scanData) {
-            // Try to parse as JSON
-            try {
-                const jsonData = JSON.parse(scanData);
-                if (jsonData.id_student) {
-                    return jsonData.id_student;
-                }
-            } catch (e) {
-                // If not JSON, check if it matches student ID pattern (adjust regex as needed)
-                const studentIdPattern = /^[A-Za-z0-9\-_]{5,20}$/;
-                if (studentIdPattern.test(scanData.trim())) {
-                    return scanData.trim();
-                }
-            }
-            return null;
-        }
-
+        // Accept all scanned data without validation
+function extractStudentId(scanData) {
+    return scanData; // Return the raw scan data as-is
+}
         // Save scan to local database
-        async function saveScan(scanData) {
-            if (!db) await initDB();
-            
-            const idStudent = extractStudentId(scanData);
-            if (!idStudent) {
-                updateStatus("Invalid student ID format", "offline");
-                return Promise.reject("Invalid student ID");
+async function saveScan(scanData) {
+    if (!db) await initDB();
+    
+    // Accept the raw scan data without validation
+    const idStudent = scanData; // Use the raw scan data directly
+    
+    return new Promise((resolve, reject) => {
+        const transaction = db.transaction(STORE_NAME, "readwrite");
+        const store = transaction.objectStore(STORE_NAME);
+        
+        const scan = {
+            studentId: idStudent,
+            rawData: scanData,
+            attendanceId: attendanceId,
+            timestamp: Date.now(),
+            synced: false,
+            status: "pending"
+        };
+        
+        const request = store.add(scan);
+        
+        request.onsuccess = () => {
+            scanCount++;
+            updateScanCount();
+            addResultToUI(scan);
+            if (navigator.onLine) {
+                syncScans();
             }
-            
-            return new Promise((resolve, reject) => {
-                const transaction = db.transaction(STORE_NAME, "readwrite");
-                const store = transaction.objectStore(STORE_NAME);
-                
-                const scan = {
-                    studentId: idStudent,
-                    rawData: scanData,
-                    attendanceId: attendanceId,
-                    timestamp: Date.now(),
-                    synced: false,
-                    status: "pending"
-                };
-                
-                const request = store.add(scan);
-                
-                request.onsuccess = () => {
-                    scanCount++;
-                    updateScanCount();
-                    addResultToUI(scan);
-                    if (navigator.onLine) {
-                        syncScans();
-                    }
-                    resolve(scan);
-                };
-                
-                request.onerror = (event) => {
-                    console.error("Error saving scan:", event.target.error);
-                    updateStatus("Scan save failed", "offline");
-                    reject(event.target.error);
-                };
-            });
-        }
+            resolve(scan);
+        };
+        
+        request.onerror = (event) => {
+            console.error("Error saving scan:", event.target.error);
+            updateStatus("Scan save failed", "offline");
+            reject(event.target.error);
+        };
+    });
+}
 
         // Sync scans with server
         async function syncScans() {
