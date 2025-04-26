@@ -70,12 +70,14 @@ if (isset($_POST['get_attendance_details'])) {
             <div class="col-12 col-lg-10 col-xl-8">
                 <div class="card">
                     <div class="card-header d-flex justify-content-between align-items-center">
-                        <h2><i class="fas fa-calendar-alt me-2"></i>View Events & Attendance</h2>
-                        <span class="badge bg-light text-dark"><i class="fas fa-database me-1"></i> Live</span>
-                        <a href="?content=log-out" class="btn btn-outline-danger btn-sm">
-            <i class="fas fa-sign-out-alt me-1"></i> Logout
-        </a>
-                    </div>
+    <img src="./assets/images/sys-logo.png" alt="Logo" style="width: 50px; height: auto; margin-right: 10px;">
+    <h2><i class="fas fa-calendar-alt me-2"></i>View Events & Attendance</h2>
+    <span class="badge bg-light text-dark"><i class="fas fa-database me-1"></i> Live</span>
+    <a href="?content=log-out" class="btn btn-outline-danger btn-sm">
+        <i class="fas fa-sign-out-alt me-1"></i> Logout
+    </a>
+</div>
+
                     <div class="card-body">
                         <form id="attendanceForm">
                             <!-- Semester Select -->
