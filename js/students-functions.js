@@ -137,3 +137,124 @@ function togglePassword(button) {
         button.innerHTML = '<i class="fas fa-eye-slash"></i>';
     }
 }
+
+// Function to find and move cleared students
+function setupMoveClearedStudents() {
+    const moveButton = document.getElementById('moveClearedStudentsButton');
+    if (!moveButton) return;
+
+    moveButton.addEventListener('click', function() {
+        // Clear previous results
+        document.getElementById('moveStudentsResults').innerHTML = '';
+    });
+
+    const confirmButton = document.getElementById('confirmMoveStudents');
+    if (!confirmButton) return;
+
+    confirmButton.addEventListener('click', function() {
+        const currentSemester = document.getElementById('currentSemester').value;
+        const targetSemester = document.getElementById('targetSemester').value;
+        const resultsDiv = document.getElementById('moveStudentsResults');
+
+        if (!targetSemester) {
+            resultsDiv.innerHTML = '<div class="alert alert-danger">Please select a target semester.</div>';
+            return;
+        }
+
+        // Show loading state
+        confirmButton.disabled = true;
+        confirmButton.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Processing...';
+        resultsDiv.innerHTML = '<div class="text-center"><div class="spinner-border text-primary" role="status"></div> Finding cleared students...</div>';
+
+        // Make AJAX request
+        fetch('php/admin/find-cleared-students.php', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: `current_semester=${encodeURIComponent(currentSemester)}&target_semester=${encodeURIComponent(targetSemester)}`
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.error) {
+                resultsDiv.innerHTML = `<div class="alert alert-danger">${data.error}</div>`;
+            } else {
+                let html = `<div class="alert alert-success">
+                    Found ${data.students.length} students who meet the criteria and will be moved to ${targetSemester}.
+                </div>`;
+                
+                if (data.students.length > 0) {
+                    html += `<div class="mt-3">
+                        <button id="executeMove" class="btn btn-success">Confirm and Execute Move</button>
+                    </div>`;
+                }
+                
+                resultsDiv.innerHTML = html;
+
+                // Set up the execute move button if needed
+                if (data.students.length > 0) {
+                    document.getElementById('executeMove').addEventListener('click', function() {
+                        executeStudentMove(currentSemester, targetSemester, data.students);
+                    });
+                }
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            resultsDiv.innerHTML = `<div class="alert alert-danger">An error occurred: ${error.message}</div>`;
+        })
+        .finally(() => {
+            confirmButton.disabled = false;
+            confirmButton.innerHTML = 'Move Students';
+        });
+    });
+}
+
+function executeStudentMove(currentSemester, targetSemester, students) {
+    const resultsDiv = document.getElementById('moveStudentsResults');
+    const executeButton = document.getElementById('executeMove');
+    
+    if (executeButton) {
+        executeButton.disabled = true;
+        executeButton.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Moving...';
+    }
+
+    // Prepare student IDs
+    const studentIds = students.map(student => student.id_student);
+
+    fetch('php/admin/move-cleared-students.php', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: `current_semester=${encodeURIComponent(currentSemester)}&target_semester=${encodeURIComponent(targetSemester)}&student_ids=${encodeURIComponent(JSON.stringify(studentIds))}`
+    })
+    .then(response => response.json())
+    .then(data => {
+        console.log(data);  // Log the response data for debugging
+    
+        if (data.success) {
+            resultsDiv.innerHTML = `<div class="alert alert-success">
+                Successfully moved ${data.moved_count} students to ${targetSemester}.
+            </div>`;
+    
+            // Reload the student list if we're on the current semester
+            if (currentSemester === document.getElementById('currentSemester').value) {
+                loadStudents(currentSemester);
+            }
+        } else {
+            resultsDiv.innerHTML = `<div class="alert alert-danger">${data.message || 'Failed to move students.'}</div>`;
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        resultsDiv.innerHTML = `<div class="alert alert-danger">An error occurred during the move: ${error.message}</div>`;
+    });
+    
+}
+
+
+// Call this function when the page loads
+document.addEventListener('DOMContentLoaded', function() {
+    setupMoveClearedStudents();
+});

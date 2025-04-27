@@ -95,7 +95,9 @@ ob_end_flush();
             <span class="input-group-text" id="basic-addon2"><i class="fas fa-search"></i></span>
         </div>
     </div>
-
+    <button class="btn btn-outline-warning ms-3" id="moveClearedStudentsButton" data-bs-toggle="modal" data-bs-target="#moveClearedStudentsModal">
+  <i class="fas fa-arrow-right me-2"></i> Move Cleared Students to Next Term
+</button>
 
         <!-- Import Button -->
         <button class="btn btn-outline-success ms-3" id="enrollButton" data-bs-toggle="modal" data-bs-target="#enrollCsvModal">
@@ -283,7 +285,41 @@ ob_end_flush();
 
 <?php include_once "././php/toast-system.php"; ?>
 
-
+<!-- Move Cleared Students Modal -->
+<div class="modal fade" id="moveClearedStudentsModal" tabindex="-1" aria-labelledby="moveClearedStudentsModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="moveClearedStudentsModalLabel">Move Cleared Students</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label for="currentSemester" class="form-label">Current Semester:</label>
+                    <input type="text" class="form-control" id="currentSemester" value="<?php echo htmlspecialchars($selected_semester); ?>" readonly>
+                </div>
+                <div class="mb-3">
+                    <label for="targetSemester" class="form-label">Target Semester:</label>
+                    <select class="form-select" id="targetSemester" required>
+                        <option value="" selected disabled>Select target semester</option>
+                        <?php while ($semester = $allSemesters->fetch_assoc()): ?>
+                            <?php if ($semester['semester_ID'] != $selected_semester): ?>
+                                <option value="<?php echo htmlspecialchars($semester['semester_ID']); ?>">
+                                    <?php echo htmlspecialchars($semester['academic_year'] . ' - ' . $semester['semester_type']); ?>
+                                </option>
+                            <?php endif; ?>
+                        <?php endwhile; ?>
+                    </select>
+                </div>
+                <div id="moveStudentsResults" class="mt-3"></div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" id="confirmMoveStudents" class="btn btn-primary">Move Students</button>
+            </div>
+        </div>
+    </div>
+</div>
 <!-- Edit Student Modal -->
 <div class="modal fade" id="editStudentModal" tabindex="-1" aria-labelledby="editStudentModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg">
@@ -480,4 +516,5 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 });
+
 </script>

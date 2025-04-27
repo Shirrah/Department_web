@@ -55,23 +55,25 @@ $allSemesters = $db->query($sql);
         <input type="hidden" name="content" value="<?php echo htmlspecialchars($_GET['content'] ?? ''); ?>">
         <input type="hidden" name="admin" value="<?php echo htmlspecialchars($_GET['admin'] ?? ''); ?>">
         <select class="form-select" style="width: min-content;" name="semester" id="semester" onchange="handleSemesterChange(this)">
-            <?php
-            if ($allSemesters->num_rows > 0) {
-                while ($row = $allSemesters->fetch_assoc()) {
-                    $semester_id = $row['semester_ID'];
-                    $academic_year = $row['academic_year'];
-                    $semester_type = $row['semester_type'];
-                    $status = $row['status'];
-                    $selected = ($semester_id == $selected_semester) ? 'selected' : '';
-                    $statusAttr = "data-status='" . strtolower($status) . "'";
+    <option value="" <?php echo empty($selected_semester) ? 'selected' : ''; ?>>-- Select a semester --</option>
+    <?php
+    if ($allSemesters->num_rows > 0) {
+        while ($row = $allSemesters->fetch_assoc()) {
+            $semester_id = $row['semester_ID'];
+            $academic_year = $row['academic_year'];
+            $semester_type = $row['semester_type'];
+            $status = $row['status'];
+            $selected = ($semester_id == $selected_semester) ? 'selected' : '';
+            $statusAttr = "data-status='" . strtolower($status) . "'";
 
-                    echo "<option value='$semester_id' $selected $statusAttr>AY: $academic_year - $semester_type ($status)</option>";
-                }
-            } else {
-                echo "<option value=''>No semesters available</option>";
-            }
-            ?>
-        </select>
+            echo "<option value='$semester_id' $selected $statusAttr>AY: $academic_year - $semester_type ($status)</option>";
+        }
+    } else {
+        echo "<option value=''>No semesters available</option>";
+    }
+    ?>
+</select>
+
     </form>
 </div>
 
