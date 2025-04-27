@@ -222,72 +222,76 @@ if (!empty($selected_semester)) {
         </div>
     </div>
 
-    <!-- Collected Section -->
-    <div class="card">
-        <div class="card-header bg-light">
-            <h5 class="mb-0">Collected</h5>
-        </div>
-        <div class="card-body p-0">
-            <div class="row g-0">
-                <div class="col-md-6 p-3 border-end">
-                    <h6 class="text-muted mb-3">Fees Collected</h6>
-                    <ul class="list-unstyled">
-                        <?php
-                        $grand_total_collected = 0; // total collected amount for fees
+<!-- Collected Section -->
+<div class="card">
+    <div class="card-header bg-light">
+        <h5 class="mb-0">Collected</h5>
+    </div>
+    <div class="card-body p-0">
+        <div class="row g-0">
+            <div class="col-md-6 p-3 border-end">
+                <h6 class="text-muted mb-3">Fees Collected</h6>
+                <ul class="list-unstyled">
+                    <?php
+                    $grand_total_collected = 0; // total collected amount for fees
+                    $has_paid_fees = false; // flag to check if there are any paid fees
 
-                        if (!empty($fees)):
-                            foreach ($fees as $fee):
-                                // Prepare statement to count PAID students for this fee
-                                $stmt = $db->prepare("SELECT COUNT(*) AS paid_count FROM student_fees_record WHERE id_payment = ? AND semester_ID = ? AND status_payment = 1");
-                                $stmt->bind_param("ss", $fee['id_payment'], $selected_semester);
-                                $stmt->execute();
-                                $result = $stmt->get_result();
-                                $count_row = $result->fetch_assoc();
-                                $paid_count = (int)$count_row['paid_count'];
+                    if (!empty($fees)):
+                        foreach ($fees as $fee):
+                            // Prepare statement to count PAID students for this fee
+                            $stmt = $db->prepare("SELECT COUNT(*) AS paid_count FROM student_fees_record WHERE id_payment = ? AND semester_ID = ? AND status_payment = 1");
+                            $stmt->bind_param("ss", $fee['id_payment'], $selected_semester);
+                            $stmt->execute();
+                            $result = $stmt->get_result();
+                            $count_row = $result->fetch_assoc();
+                            $paid_count = (int)$count_row['paid_count'];
 
-                                // Calculate collected amount for this fee
-                                $total_collected = $paid_count * (float)$fee['payment_amount'];
+                            // Calculate collected amount for this fee
+                            $total_collected = $paid_count * (float)$fee['payment_amount'];
 
-                                // Add to grand collected total
-                                $grand_total_collected += $total_collected;
+                            // Add to grand collected total
+                            $grand_total_collected += $total_collected;
 
-                                if ($paid_count > 0):
-                        ?>
-                            <li class="d-flex justify-content-between py-2">
-                                <span><?= htmlspecialchars($fee['payment_name']) ?> (<?= $paid_count ?> students)</span>
-                                <span class="fw-bold text-success">₱ <?= number_format($total_collected, 2) ?></span>
-                            </li>
-                        <?php
-                                endif;
-                            endforeach;
-                        else:
-                        ?>
+                            if ($paid_count > 0):
+                                $has_paid_fees = true;
+                    ?>
+                                <li class="d-flex justify-content-between py-2">
+                                    <span><?= htmlspecialchars($fee['payment_name']) ?> (<?= $paid_count ?> students)</span>
+                                    <span class="fw-bold text-success">₱ <?= number_format($total_collected, 2) ?></span>
+                                </li>
+                            <?php endif; ?>
+                        <?php endforeach; ?>
+                        
+                        <?php if (!$has_paid_fees): ?>
                             <li class="text-muted py-2">No collected payments yet.</li>
                         <?php endif; ?>
-                    </ul>
+                    <?php else: ?>
+                        <li class="text-muted py-2">No collected payments yet.</li>
+                    <?php endif; ?>
+                </ul>
 
-                    <hr>
-                    <h6 class="text-end text-success">Total Fees Collected: ₱ <?= number_format($grand_total_collected, 2) ?></h6>
-                </div>
+                <hr>
+                <h6 class="text-end text-success">Total Fees Collected: ₱ <?= number_format($grand_total_collected, 2) ?></h6>
+            </div>
 
-                <div class="col-md-6 p-3">
-                    <h6 class="text-muted mb-3">Fines Collected</h6>
-                    <ul class="list-unstyled">
-                        <?php if (!empty($collected_fines)): ?>
-                            <?php foreach ($collected_fines as $fine): ?>
-                                <li class="d-flex justify-content-between py-2">
-                                    <span><?= htmlspecialchars($fine['name_event']) ?> (<?= $fine['type_attendance'] ?>) (<?= $fine['cleared_count'] ?> students)</span>
-                                    <span class="fw-bold text-success">₱ <?= number_format($fine['total_collected_fines'], 2) ?></span>
-                                </li>
-                            <?php endforeach; ?>
-                        <?php else: ?>
-                            <li class="text-muted py-2">No fines collected yet.</li>
-                        <?php endif; ?>
-                    </ul>
-                    <hr>
-                    <h6 class="text-end text-success">Total Fines Collected: ₱ <?= number_format($grand_total_collected_fines, 2) ?></h6>
-                </div>
+            <div class="col-md-6 p-3">
+                <h6 class="text-muted mb-3">Fines Collected</h6>
+                <ul class="list-unstyled">
+                    <?php if (!empty($collected_fines)): ?>
+                        <?php foreach ($collected_fines as $fine): ?>
+                            <li class="d-flex justify-content-between py-2">
+                                <span><?= htmlspecialchars($fine['name_event']) ?> (<?= $fine['type_attendance'] ?>) (<?= $fine['cleared_count'] ?> students)</span>
+                                <span class="fw-bold text-success">₱ <?= number_format($fine['total_collected_fines'], 2) ?></span>
+                            </li>
+                        <?php endforeach; ?>
+                    <?php else: ?>
+                        <li class="text-muted py-2">No fines collected yet.</li>
+                    <?php endif; ?>
+                </ul>
+                <hr>
+                <h6 class="text-end text-success">Total Fines Collected: ₱ <?= number_format($grand_total_collected_fines, 2) ?></h6>
             </div>
         </div>
     </div>
+</div>
 </div>
