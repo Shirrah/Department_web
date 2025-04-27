@@ -278,7 +278,7 @@ require_once "././php/admin/semester-selection.php";
             <li>
                 <a href="?content=admin-index&admin=financial-statement" class="nav-link text-white action-btn">
                 <i class="bi bi-files"></i>
-                    <span class="ms-1 d-none d-sm-inline">Financial Statement</span>
+                    <span class="">Financial Statement</span>
                 </a>
             </li>
             <li>
