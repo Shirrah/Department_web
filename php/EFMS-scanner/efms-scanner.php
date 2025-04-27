@@ -18,19 +18,27 @@ include "././php/auth-check.php";
 <div class="container py-4">
 <header class="bg-danger text-white p-3 rounded-top shadow-sm position-relative">
     <div class="d-flex justify-content-start align-items-center">
+        <!-- Back Button -->
+        <a href="?content=efms-scanner-index" class="btn btn-outline-light btn-sm me-3">
+            <i class="fas fa-arrow-left"></i> Back
+        </a>
+
         <!-- Logo with white circular background -->
         <div class="logo-container d-flex justify-content-center align-items-center" style="width: 60px; height: 60px; background-color: white; border-radius: 50%; margin-right: 15px;">
             <img src="./assets/images/sys-logo.png" alt="Logo" style="width: 50px; height: auto;">
         </div>
+
         <div class="d-flex flex-column">
             <div class="fs-3 fw-bold">EFMS-SCAN</div>
             <div class="fs-6">Attendance QR Code Scanner</div>
         </div>
     </div>
+
     <a href="?content=log-out" class="btn btn-outline-light btn-sm position-absolute top-0 end-0 m-3">
         <i class="fas fa-sign-out-alt me-1"></i> Logout
     </a>
 </header>
+
 
 
 
