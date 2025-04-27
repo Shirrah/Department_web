@@ -821,6 +821,7 @@ function openEditModal(id, name, date, start_time, end_time, description) {
 }
 </script>
 
+<!-- Add time modal -->
 <div class="modal fade" id="addTimeModal" tabindex="-1" aria-labelledby="addTimeModalLabel" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
@@ -867,17 +868,34 @@ function submitAddTime() {
 
         xhr.onload = function () {
             if (xhr.status === 200) {
-                alert('End time successfully updated!');
-                location.reload();  // Reload the page to reflect changes
+                try {
+                    const response = JSON.parse(xhr.responseText);
+                    if (response.success) {
+                        alert(response.message);
+                        location.reload();
+                    } else {
+                        alert('Error: ' + response.message);
+                    }
+                } catch (e) {
+                    console.error('Error parsing response:', e);
+                    alert('An error occurred while processing the response.');
+                }
             } else {
-                console.error('Error updating time.');
+                console.error('Error updating time. Status:', xhr.status);
+                alert('Error: Server returned status ' + xhr.status);
             }
         };
 
+        xhr.onerror = function() {
+            console.error('Request failed');
+            alert('Request failed. Please check your connection.');
+        };
+
         xhr.send(`attendanceId=${attendanceId}&additionalTime=${additionalTime}`);
+    } else {
+        alert('Please fill in all fields');
     }
 }
-
 </script>
 
 
