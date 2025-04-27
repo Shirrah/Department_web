@@ -139,10 +139,10 @@ ob_end_flush();
           <div class="alert alert-light border mb-4">
             <h6 class="fw-bold mb-3">Download Template</h6>
             <div class="d-flex justify-content-center gap-3">
-              <a href="templates/student-import-template.csv" download class="btn btn-outline-primary btn-sm">
+              <a href="./assets/sample_files/sample_masterlist.csv" download class="btn btn-outline-primary btn-sm">
                 <i class="fas fa-file-csv me-2"></i>CSV Template
               </a>
-              <a href="templates/student-import-template.xlsx" download class="btn btn-outline-success btn-sm">
+              <a href="./assets/sample_files/sample_masterlist.xlsx" download class="btn btn-outline-success btn-sm">
                 <i class="fas fa-file-excel me-2"></i>Excel Template
               </a>
             </div>

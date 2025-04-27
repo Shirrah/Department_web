@@ -24,7 +24,7 @@
 </li>
 
         <?php 
-          require_once "php/db-conn.php";
+          require_once "./php/db-conn.php";
           $db = Database::getInstance()->db;
           if (isset($_SESSION['logged_in']) && $_SESSION['logged_in'] == 'yes') {
               $user_data = $_SESSION['user_data'];

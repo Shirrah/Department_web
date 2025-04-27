@@ -200,6 +200,7 @@ if ($result && mysqli_num_rows($result) > 0) {
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title" id="fullScreenModalLabel">Payment Records</h5>
+                <button type="button" class="btn btn-primary ms-1" id="fetchRecordsBtn">Fetch Records</button>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
@@ -218,6 +219,73 @@ if ($result && mysqli_num_rows($result) > 0) {
         </div>
     </div>
 </div>
+
+
+<script>
+function loadPaymentRecords(paymentId) {
+    document.getElementById('modal-body-content').innerHTML = '<p>Loading...</p>';
+
+    fetch('././php/admin/fetch-payment-records.php?payment_id=' + paymentId)
+        .then(response => response.text())
+        .then(data => {
+            document.getElementById('modal-body-content').innerHTML = data;
+
+            // Now update the modal title
+            const paymentNameInput = document.getElementById('paymentNameHidden');
+            if (paymentNameInput) {
+                const paymentName = paymentNameInput.value;
+                document.getElementById('fullScreenModalLabel').innerText = paymentName + ' Records';
+            }
+        })
+        .catch(error => console.error('Error fetching data:', error));
+}
+
+$(document).on('click', '#fetchRecordsBtn', function() {
+    // Get the payment ID from the hidden input
+    const paymentIdInput = document.getElementById('paymentNameHidden');
+    if (!paymentIdInput) {
+        alert("No payment record selected");
+        return;
+    }
+    const paymentId = paymentIdInput.dataset.paymentId;
+    
+    if (confirm("Add all students who haven't been registered for this payment yet?")) {
+        $.ajax({
+            url: "./php/admin/fetch-students-not-in-payment.php",
+            type: "POST",
+            data: { id_payment: paymentId },
+            dataType: 'json',
+            success: function(response) {
+                // Display message in the table
+                const messageHTML = `
+                    <tr>
+                        <td colspan="4" class="text-center text-success">
+                            ${response.message}
+                        </td>
+                    </tr>
+                `;
+                
+                // Reload the payment records after showing message
+                loadPaymentRecords(paymentId);
+                
+                // Temporarily show message (will be replaced when records load)
+                $('#paymentRecordsTable tbody').html(messageHTML);
+            },
+            error: function(xhr) {
+                const errorHTML = `
+                    <tr>
+                        <td colspan="4" class="text-center text-danger">
+                            Error: ${xhr.responseJSON?.error || "Failed to process records"}
+                        </td>
+                    </tr>
+                `;
+                $('#paymentRecordsTable tbody').html(errorHTML);
+            }
+        });
+    }
+});
+</script>
+
 
 <script>
 // SEARCH FUNCTION
@@ -278,21 +346,6 @@ function sortTable(columnIndex) {
 </script>
 
 
-
-<script>
-function loadPaymentRecords(paymentId) {
-    // Display a loading message while fetching data
-    document.getElementById('modal-body-content').innerHTML = '<p>Loading...</p>';
-
-    // Fetch data via AJAX
-    fetch('././php/admin/fetch-payment-records.php?payment_id=' + paymentId)
-        .then(response => response.text())
-        .then(data => {
-            document.getElementById('modal-body-content').innerHTML = data;
-        })
-        .catch(error => console.error('Error fetching data:', error));
-}
-</script>
 
 
 

@@ -821,84 +821,6 @@ function openEditModal(id, name, date, start_time, end_time, description) {
 }
 </script>
 
-
-<!-- Full-Screen Modal -->
-<div class="modal fade" id="attendanceRecordsModal" tabindex="-1" aria-labelledby="attendanceRecordsModalLabel" aria-hidden="true">
-  <div class="modal-dialog modal-fullscreen"> 
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title" id="attendanceRecordsModalLabel">Attendance Records</h5>
-        
-      <button type="button" class="btn btn-success ms-1" onclick="exportToCSV()">Export to CSV</button>
-      <button type="button" class="btn btn-primary ms-1" id="fetchRecordsBtn">Fetch Records</button>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-      </div>
-      <div class="modal-body">
-        <!-- Search Input -->
-        <div class="mb-3">
-          <input type="text" id="searchInput" class="form-control" placeholder="Search by ID, name, year, or status...">
-        </div>
-
-        <!-- Table -->
-        <div class="table-responsive">
-          <table class="table table-sm table-striped">
-            <thead>
-              <tr>
-                <th>ID</th>
-                <th>Lastname</th>
-                <th>Firstname</th>
-                <th>Year Level</th>
-                <th>Date and Time</th>
-                <th>Status</th>
-                <th></th>
-              </tr>
-            </thead>
-            <tbody id="attendanceBody" class="accordion" id="accordionTable">
-            <tr><td colspan="6" class="text-center">Select an attendance record to display data.</td></tr>
-            </tbody>
-
-          </table>
-        </div>
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- JavaScript for Search Filter -->
-<script>
-document.getElementById('searchInput').addEventListener('keyup', function() {
-    let filter = this.value.toUpperCase();
-    let rows = document.querySelectorAll("#attendanceBody tr");
-    
-    // We need to process rows in pairs (main row and accordion row)
-    for (let i = 0; i < rows.length; i += 2) {
-        const mainRow = rows[i];
-        const accordionRow = rows[i+1];
-        
-        if (!mainRow || !accordionRow) continue;
-        
-        let text = mainRow.innerText.toUpperCase();
-        if (text.includes(filter)) {
-            mainRow.style.display = "";
-            // Only show accordion row if it's expanded
-            if (mainRow.querySelector('button').getAttribute('aria-expanded') === 'true') {
-                accordionRow.style.display = "";
-            } else {
-                accordionRow.style.display = "none";
-            }
-        } else {
-            mainRow.style.display = "none";
-            accordionRow.style.display = "none";
-        }
-    }
-});
-</script>
-
-
-
 <div class="modal fade" id="addTimeModal" tabindex="-1" aria-labelledby="addTimeModalLabel" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
@@ -958,9 +880,164 @@ function submitAddTime() {
 
 </script>
 
-<script>
 
-// Define globally
+<!-- Full-Screen Modal -->
+<div class="modal fade" id="attendanceRecordsModal" tabindex="-1" aria-labelledby="attendanceRecordsModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-fullscreen"> 
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="attendanceRecordsModalLabel">Attendance Records</h5>
+        
+      <button type="button" class="btn btn-success ms-1" onclick="exportToCSV()">Export to CSV</button>
+      <button type="button" class="btn btn-primary ms-1" id="fetchRecordsBtn">Fetch Records</button>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <!-- Search Input -->
+        <div class="mb-3">
+          <input type="text" id="searchInput" class="form-control" placeholder="Search by ID, name, year, or status...">
+        </div>
+
+        <!-- Table -->
+        <div class="table-responsive">
+          <table class="table table-sm table-striped">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Lastname</th>
+                <th>Firstname</th>
+                <th>Year Level</th>
+                <th>Date and Time</th>
+                <th>Status</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody id="attendanceBody" class="accordion" id="accordionTable">
+            <tr><td colspan="6" class="text-center">Select an attendance record to display data.</td></tr>
+            <nav>
+            <ul class="pagination justify-content-center mt-3" id="paginationControls"></ul>
+            </nav>
+            </tbody>
+
+<nav>
+  <ul class="pagination justify-content-center mt-3" id="paginationControls"></ul>
+</nav>
+
+          </table>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- JavaScript for Search Filter -->
+<script>
+const rowsPerPage = 25;
+let currentPage = 1;
+let allRows = []; // All original rows
+
+// Search input event
+document.getElementById('searchInput').addEventListener('keyup', function() {
+    const filter = this.value.toUpperCase();
+
+    const filteredRows = [];
+
+    for (let i = 0; i < allRows.length; i += 2) {
+        const mainRow = allRows[i];
+        const accordionRow = allRows[i + 1];
+
+        if (!mainRow || !accordionRow) continue;
+
+        const text = mainRow.innerText.toUpperCase();
+        if (text.includes(filter)) {
+            filteredRows.push(mainRow);
+            filteredRows.push(accordionRow);
+        }
+    }
+
+    renderTable(filteredRows);
+});
+
+// Load and store rows
+function paginateTable() {
+    const attendanceBody = document.getElementById('attendanceBody');
+    allRows = Array.from(attendanceBody.querySelectorAll('tr.accordion-item, tr.accordion-collapse'));
+    
+    renderTable(allRows);
+}
+
+// Display a specific set of rows
+function renderTable(rows) {
+    const attendanceBody = document.getElementById('attendanceBody');
+    attendanceBody.innerHTML = '';
+
+    const totalPages = Math.ceil(rows.length / (rowsPerPage * 2));
+    currentPage = Math.min(currentPage, totalPages) || 1; // Reset page if needed
+
+    const startIndex = (currentPage - 1) * rowsPerPage * 2;
+    const endIndex = startIndex + rowsPerPage * 2;
+
+    for (let i = startIndex; i < endIndex && i < rows.length; i++) {
+        attendanceBody.appendChild(rows[i]);
+    }
+
+    createPaginationControls(rows);
+}
+
+// Create pagination buttons
+function createPaginationControls(rows) {
+    const paginationControls = document.getElementById('paginationControls');
+    paginationControls.innerHTML = '';
+
+    const totalPages = Math.ceil(rows.length / (rowsPerPage * 2));
+    if (totalPages <= 1) return;
+
+    for (let i = 1; i <= totalPages; i++) {
+        const li = document.createElement('li');
+        li.className = 'page-item' + (i === currentPage ? ' active' : '');
+        
+        const a = document.createElement('a');
+        a.className = 'page-link';
+        a.href = "#";
+        a.textContent = i;
+        
+        a.addEventListener('click', function(e) {
+            e.preventDefault();
+            currentPage = i;
+            renderTable(document.getElementById('searchInput').value.trim() === '' ? allRows : getFilteredRows());
+        });
+
+        li.appendChild(a);
+        paginationControls.appendChild(li);
+    }
+}
+
+// Helper: get currently filtered rows
+function getFilteredRows() {
+    const filter = document.getElementById('searchInput').value.toUpperCase();
+    const filtered = [];
+
+    for (let i = 0; i < allRows.length; i += 2) {
+        const mainRow = allRows[i];
+        const accordionRow = allRows[i + 1];
+
+        if (!mainRow || !accordionRow) continue;
+
+        const text = mainRow.innerText.toUpperCase();
+        if (text.includes(filter)) {
+            filtered.push(mainRow);
+            filtered.push(accordionRow);
+        }
+    }
+    return filtered;
+}
+</script>
+
+<!-- JavaScript for Loading Attendance -->
+<script>
 let currentEventName = "";
 let currentAttendanceType = "";
 let currentAttendanceId = null;
@@ -974,11 +1051,9 @@ function showAttendanceRecords(id_attendance, event_name, type_attendance, start
     currentStartTime = start_time;
     currentEndTime = end_time;
 
-    // Format title
-    let formattedTitle = `${event_name} - ${type_attendance} (${start_time} - ${end_time})`;
+    const formattedTitle = `${event_name} - ${type_attendance} (${start_time} - ${end_time})`;
     document.getElementById("attendanceRecordsModalLabel").textContent = formattedTitle;
 
-    // Load attendance records
     loadAttendanceRecords();
 }
 
@@ -991,6 +1066,7 @@ function loadAttendanceRecords() {
         data: { id_attendance: currentAttendanceId },
         success: function(response) {
             $("#attendanceBody").html(response);
+            paginateTable();
             $("#attendanceRecordsModal").modal("show");
         },
         error: function() {
@@ -998,6 +1074,11 @@ function loadAttendanceRecords() {
         }
     });
 }
+</script>
+
+
+
+<script>
 
 $(document).on('click', '#fetchRecordsBtn', function() {
     if (!currentAttendanceId) {

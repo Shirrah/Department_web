@@ -5,14 +5,28 @@ $db = Database::getInstance()->db;
 if (isset($_GET['payment_id'])) {
     $payment_id = $_GET['payment_id'];
 
-    // Get selected semester from session (assuming it's stored in session)
     session_start();
     $selected_semester = $_SESSION['selected_semester'][$_SESSION['user_data']['id_admin'] ?? null] ?? null;
     if (!$selected_semester) {
         die("No semester selected in session");
     }
 
-    // Fetch student fee records associated with the selected payment and semester
+    // Fetch payment name
+    $stmtPayment = $db->prepare("SELECT payment_name FROM payments WHERE id_payment = ?");
+    $stmtPayment->bind_param("i", $payment_id);
+    $stmtPayment->execute();
+    $stmtPayment->bind_result($payment_name);
+    $stmtPayment->fetch();
+    $stmtPayment->close();
+
+    if (!$payment_name) {
+        die("Payment not found");
+    }
+
+    // Output the payment name as a hidden element for JavaScript to read
+    echo "<input type='hidden' id='paymentNameHidden' value='" . htmlspecialchars($payment_name, ENT_QUOTES) . "' data-payment-id='" . htmlspecialchars($payment_id, ENT_QUOTES) . "'>";
+
+    // Now fetch the student fee records
     $stmt = $db->prepare("
         SELECT s.id_student, s.lastname_student, s.firstname_student, s.year_student, 
                sfr.status_payment, sfr.date_payment, sfr.payment_amount 
@@ -26,7 +40,8 @@ if (isset($_GET['payment_id'])) {
     $stmt->bind_param("iss", $payment_id, $selected_semester, $selected_semester);
     $stmt->execute();
     $result = $stmt->get_result();
-    ?>
+?>
+
     
     <div class="alert alert-info mb-3">
         Showing payment records for semester: <?php echo htmlspecialchars($selected_semester); ?>
