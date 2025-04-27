@@ -1,24 +1,44 @@
-
 <?php
 if (session_status() == PHP_SESSION_NONE) {
     session_start();
 }  
 
-// Include the database connection
 require_once "././php/db-conn.php";
 $db = Database::getInstance()->db;
 
-// Capture visit data
-$page_url = $_SERVER['REQUEST_URI'];           // Current page URL
-$visitor_ip = $_SERVER['REMOTE_ADDR'];         // Visitor's IP address
+$page_url = $_SERVER['REQUEST_URI']; // Current page URL
 
-// Insert visit record into the database
-$sql = "INSERT INTO page_visits (page_url, visitor_ip) VALUES (?, ?)";
+// First, check if the page_url already exists
+$sql = "SELECT visit_count FROM page_counter WHERE page_url = ?";
 $stmt = $db->prepare($sql);
-$stmt->bind_param("ss", $page_url, $visitor_ip);
+$stmt->bind_param("s", $page_url);
 $stmt->execute();
+$result = $stmt->get_result();
 $stmt->close();
 
+if ($result->num_rows > 0) {
+    // Page exists, increment the counter
+    $sql = "UPDATE page_counter SET visit_count = visit_count + 1 WHERE page_url = ?";
+    $stmt = $db->prepare($sql);
+    $stmt->bind_param("s", $page_url);
+    $stmt->execute();
+    $stmt->close();
+} else {
+    // Page doesn't exist yet, insert new record
+    $sql = "INSERT INTO page_counter (page_url, visit_count) VALUES (?, 1)";
+    $stmt = $db->prepare($sql);
+    $stmt->bind_param("s", $page_url);
+    $stmt->execute();
+    $stmt->close();
+}
+
+// Now fetch the updated count
+$sql = "SELECT visit_count FROM page_counter WHERE page_url = ?";
+$stmt = $db->prepare($sql);
+$stmt->bind_param("s", $page_url);
+$stmt->execute();
+$result = $stmt->get_result();
+$row = $result->fetch_assoc();
 ob_start(); // Start output buffering
 ?>
 

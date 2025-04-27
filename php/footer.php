@@ -124,24 +124,25 @@
             <div class="col-md-4">
                 <h6>Statistics</h6>
                 <div class="page-visits mb-3">
-                    <i class="bi bi-eye"></i>
-                    <span style="user-select: none; cursor: default;">Page Visits: </span>
-                    <span class="badge" style="user-select: none; cursor: default;">
-                        <?php
-                        $db = Database::getInstance()->db;
-                        $total_visits = 0;
-                        $result = $db->query("SELECT COUNT(*) AS total_visits FROM page_visits");
-                        if ($result) {
-                            $row = $result->fetch_assoc();
-                            $total_visits = $row['total_visits'];
-                        } else {
-                            error_log("Failed to fetch page visits: " . $db->error);
-                            $total_visits = "N/A";
-                        }
-                        echo is_numeric($total_visits) ? number_format($total_visits) : $total_visits;
-                        ?>
-                    </span>
-                </div>
+    <i class="bi bi-eye"></i>
+    <span style="user-select: none; cursor: default;">Page Visits: </span>
+    <span class="badge" style="user-select: none; cursor: default;">
+        <?php
+        $db = Database::getInstance()->db;
+        $total_visits = 0;
+        $result = $db->query("SELECT SUM(visit_count) AS total_visits FROM page_counter");
+        if ($result) {
+            $row = $result->fetch_assoc();
+            $total_visits = $row['total_visits'];
+        } else {
+            error_log("Failed to fetch page visits: " . $db->error);
+            $total_visits = "N/A";
+        }
+        echo is_numeric($total_visits) ? number_format($total_visits) : $total_visits;
+        ?>
+    </span>
+</div>
+
                 <p class="mb-2"><i class="bi bi-telephone"></i>+63 992 280 1253</p>
                 <p class="mb-0"><i class="bi bi-geo-alt"></i>Rosales St., Tunga-Tunga, Maasin City, Southern Leyte 6600</p>
             </div>
