@@ -1,19 +1,11 @@
 <?php
 ob_start();
-if (session_status() == PHP_SESSION_NONE) {
-    session_start();
-}
+
+// Include the semester selection component
+require_once "././php/admin/semester-selection.php";
 
 require_once "././php/db-conn.php";
 $db = Database::getInstance()->db;
-
-
-// Get the user ID from the session (either admin or student)
-$user_id = $_SESSION['user_data']['id_admin'] ?? $_SESSION['user_data']['id_student'] ?? null;
-
-if (isset($_GET['semester']) && !empty($_GET['semester'])) {
-    $_SESSION['selected_semester'] = $_GET['semester'];
-}
 
 $selected_semester = $_SESSION['selected_semester'] ?? null;
 

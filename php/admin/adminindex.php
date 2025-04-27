@@ -95,6 +95,7 @@ if (isset($_SESSION['user_data'])) {
 </style>
 
 <div class="main-content-con">
+    <div class="bg-dark">
 <nav class="navbar bg-dark">
     <div class="container-fluid d-flex justify-content-between">
         <!-- Sidebar Toggle Button for Mobile -->
@@ -106,6 +107,9 @@ if (isset($_SESSION['user_data'])) {
             <img src="././assets/images/sys-logo.png" alt="Logo" width="30" height="30" class="d-inline-block align-text-top">
             EFMS
         </a>
+        <?php // Include the semester selection component
+require_once "././php/admin/semester-selection.php";
+?>
         <!-- Dropdown added to the right (flex end) -->
         <ul class="navbar-nav ms-auto">
             <li class="nav-item dropdown">
@@ -123,10 +127,13 @@ if (isset($_SESSION['user_data'])) {
     </div>
 </nav>
 
+    </div>
+
 <div class="main-content">
 
 <nav class="admin-sidebar-con bg-dark text-white vh-100 p-3 d-none d-lg-block" style="padding: 15px;">
 <ul class="nav nav-pills flex-column mb-auto">
+
             <li class="nav-item">
                 <a href="?content=admin-index&admin=dashboard" class="nav-link text-white action-btn">
                     <i class="bi bi-speedometer2"></i>
@@ -185,6 +192,13 @@ if (isset($_SESSION['user_data'])) {
                         </li>
                     </ul>
                 </div>
+            </li>
+
+            <li>
+                <a href="?content=admin-index&admin=financial-statement" class="nav-link text-white action-btn">
+                <i class="bi bi-files"></i>
+                    <span class="ms-1 d-none d-sm-inline">Financial Statement</span>
+                </a>
             </li>
 
             <li>
@@ -260,6 +274,12 @@ if (isset($_SESSION['user_data'])) {
                         </li>
                     </ul>
                 </div>
+            </li>
+            <li>
+                <a href="?content=admin-index&admin=financial-statement" class="nav-link text-white action-btn">
+                <i class="bi bi-files"></i>
+                    <span class="ms-1 d-none d-sm-inline">Financial Statement</span>
+                </a>
             </li>
             <li>
                 <a href="?content=admin-index&admin=ay-dashboard" class="nav-link text-white action-btn sidebar-link">
@@ -346,6 +366,9 @@ if (isset($_SESSION['user_data'])) {
                 break;
             case "fee-records":
                 include 'php/admin/show-fee-records.php';
+                break;
+            case "financial-statement":
+                include 'php/admin/Financial Statement/financial-statement.php';
                 break;
             default:
                 include 'php/admin/dashboard.php';

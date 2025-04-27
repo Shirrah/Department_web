@@ -1,1 +1,6 @@
-test
+Array
+(
+    [student_id] => 202310100
+    [payment_id] => 137
+    [status_payment] => 1
+)
