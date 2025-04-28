@@ -113,17 +113,19 @@ if ($selected_semester) {
             <input type="hidden" name="admin" value="dashboard">
             <!-- Semester Selection Dropdown -->
             <select class="form-select w-auto mb-3" name="semester" id="semester" onchange="this.form.submit()" <?php echo empty($semesters) ? 'disabled' : ''; ?>>
-                <?php if (!empty($semesters)): ?>
-                    <?php foreach ($semesters as $semester): ?>
-                        <option value="<?php echo htmlspecialchars($semester['semester_ID']); ?>" 
-                            <?php echo ($semester['semester_ID'] == $selected_semester) ? 'selected' : ''; ?>>
-                            <?php echo htmlspecialchars('AY: ' . $semester['academic_year'] . ' - ' . $semester['semester_type']); ?>
-                        </option>
-                    <?php endforeach; ?>
-                <?php else: ?>
-                    <option value="">No active semesters found</option>
-                <?php endif; ?>
-            </select>
+    <option value="" <?php echo empty($selected_semester) ? 'selected' : ''; ?>>Select a semester</option>
+    <?php if (!empty($semesters)): ?>
+        <?php foreach ($semesters as $semester): ?>
+            <option value="<?php echo htmlspecialchars($semester['semester_ID']); ?>"
+                <?php echo ($semester['semester_ID'] == $selected_semester) ? 'selected' : ''; ?>>
+                <?php echo htmlspecialchars('AY: ' . $semester['academic_year'] . ' - ' . $semester['semester_type']); ?>
+            </option>
+        <?php endforeach; ?>
+    <?php else: ?>
+        <option value="" disabled>No active semesters found</option>
+    <?php endif; ?>
+</select>
+
         </form>
 
         <!-- Dashboard Cards -->
