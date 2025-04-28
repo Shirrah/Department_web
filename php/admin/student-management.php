@@ -201,10 +201,10 @@ ob_end_flush();
         <!-- This will be populated by JavaScript -->
     </tbody>
 </table>
-
     </div>
 </div>
 
+<!-- Show report modal -->
 <div class="modal fade" id="reportModal" tabindex="-1" aria-labelledby="reportModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg modal-dialog-scrollable">
         <div class="modal-content">
@@ -320,6 +320,7 @@ ob_end_flush();
         </div>
     </div>
 </div>
+
 <!-- Edit Student Modal -->
 <div class="modal fade" id="editStudentModal" tabindex="-1" aria-labelledby="editStudentModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg">

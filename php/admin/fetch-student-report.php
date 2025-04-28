@@ -1,7 +1,7 @@
 <?php
-session_start(); // Start the session
+session_start();
+require_once "../../php/db-conn.php";
 
-require_once "../../php/db-conn.php"; // Adjust the path as needed
 $db = Database::getInstance()->db;
 $id_student = $_GET['id_student'] ?? '';
 
@@ -10,32 +10,26 @@ if (!$id_student) {
     exit();
 }
 
-// Get the user ID from the session (either admin or student)
-$user_id = $_SESSION['user_data']['id_admin'] ?? $_SESSION['user_data']['id_student'];
+// Get user ID (admin or student)
+$user_id = $_SESSION['user_data']['id_admin'] ?? $_SESSION['user_data']['id_student'] ?? null;
 
-// Handle the semester selection from GET request and store it in session for this user
+// Handle semester selection
 if (isset($_GET['semester']) && !empty($_GET['semester'])) {
-    // Store the selected semester for the user in session
     $_SESSION['selected_semester'][$user_id] = $_GET['semester'];
 }
 
-// Use the selected semester from the session or default to the latest semester
+// Determine selected semester
 if (isset($_SESSION['selected_semester'][$user_id]) && !empty($_SESSION['selected_semester'][$user_id])) {
     $selected_semester = $_SESSION['selected_semester'][$user_id];
 } else {
-    // Get the latest semester from the database
-    $query = "SELECT semester_ID, academic_year, semester_type FROM semester ORDER BY semester_ID DESC LIMIT 1";
+    $query = "SELECT semester_ID FROM semester ORDER BY semester_ID DESC LIMIT 1";
     $stmt = $db->prepare($query);
     $stmt->execute();
     $result = $stmt->get_result();
-    if ($result && $row = $result->fetch_assoc()) {
-        $selected_semester = $row['semester_ID'];
-    } else {
-        $selected_semester = null;
-    }
+    $selected_semester = ($row = $result->fetch_assoc()) ? $row['semester_ID'] : null;
 }
 
-// Fetch student details
+// Fetch student info
 $queryStudent = "SELECT firstname_student, lastname_student, year_student FROM student WHERE id_student = ?";
 $stmtStudent = $db->prepare($queryStudent);
 $stmtStudent->bind_param("s", $id_student);
@@ -48,23 +42,24 @@ if (!$student) {
     exit();
 }
 
-// Fetch payment records for the selected semester
+// Fetch payment records
 $queryPayment = "
     SELECT 
+        p.id_payment, -- <-- Added this to fix your 'undefined array key' issue
         p.payment_name, 
         p.payment_amount, 
-        p.date_payment, 
+        sfr.date_payment, 
         sfr.status_payment
     FROM student_fees_record sfr
     JOIN payments p ON sfr.id_payment = p.id_payment
     WHERE sfr.id_student = ? AND sfr.semester_ID = ?
-    ORDER BY p.date_payment DESC";
+    ORDER BY sfr.date_payment DESC";
 $stmtPayment = $db->prepare($queryPayment);
 $stmtPayment->bind_param("ss", $id_student, $selected_semester);
 $stmtPayment->execute();
 $resultPayment = $stmtPayment->get_result();
 
-// Fetch attendance records for the student in the selected semester, including penalty type
+// Fetch attendance records
 $queryAttendance = "
     SELECT 
         e.name_event, 
@@ -91,7 +86,8 @@ $resultAttendance = $stmtAttendance->get_result();
 </h5>
 
 <!-- Payment Records -->
-<div class="table-responsive">
+<div class="table-responsive mb-4">
+    <h6>Payment Records</h6>
     <table class="table table-bordered align-middle text-center">
         <thead class="table-light">
             <tr>
@@ -99,30 +95,40 @@ $resultAttendance = $stmtAttendance->get_result();
                 <th>Amount</th>
                 <th>Date Paid</th>
                 <th>Status</th>
+                <th>Actions</th>
             </tr>
         </thead>
         <tbody>
             <?php if ($resultPayment->num_rows > 0): ?>
                 <?php while ($row = $resultPayment->fetch_assoc()): ?>
                     <?php
-                    // Format the date into a simpler format (e.g., Y-m-d)
-                    $formatted_date_payment = (new DateTime($row['date_payment']))->format('M d, Y');
+                    $formatted_date_payment = $row['date_payment'] ? (new DateTime($row['date_payment']))->format('M d, Y') : 'N/A';
+                    $paymentId = $row['id_payment'];
                     ?>
-                    <tr>
+                    <tr id="payment-row-<?= $paymentId ?>">
                         <td><?= htmlspecialchars($row['payment_name']) ?></td>
                         <td><?= htmlspecialchars(number_format($row['payment_amount'], 2)) ?></td>
                         <td><?= htmlspecialchars($formatted_date_payment) ?></td>
-                        <td>
+                        <td id="payment-status-<?= $paymentId ?>">
                             <?php if ($row['status_payment'] == 1): ?>
                                 <span class="badge bg-success"><i class="bi bi-check-circle"></i> Paid</span>
                             <?php else: ?>
                                 <span class="badge bg-danger"><i class="bi bi-x-circle"></i> Not Paid</span>
                             <?php endif; ?>
                         </td>
+                        <td>
+                            <button class="btn btn-sm <?= $row['status_payment'] == 1 ? 'btn-warning' : 'btn-success' ?> update-payment-btn"
+                                    data-id="<?= $paymentId ?>"
+                                    data-student="<?= $id_student ?>"
+                                    data-semester="<?= $selected_semester ?>"
+                                    data-status="<?= $row['status_payment'] == 1 ? '0' : '1' ?>">
+                                <?= $row['status_payment'] == 1 ? 'Mark as Unpaid' : 'Mark as Paid' ?>
+                            </button>
+                        </td>
                     </tr>
                 <?php endwhile; ?>
             <?php else: ?>
-                <tr><td colspan="4" class="text-center">No payment records found.</td></tr>
+                <tr><td colspan="5" class="text-center">No payment records found.</td></tr>
             <?php endif; ?>
         </tbody>
     </table>
@@ -130,51 +136,72 @@ $resultAttendance = $stmtAttendance->get_result();
 
 <!-- Attendance Records -->
 <div class="table-responsive">
+    <h6>Attendance Records</h6>
     <table class="table table-bordered align-middle text-center">
         <thead class="table-light">
             <tr>
                 <th>Event Name</th>
-                <th>Attendance Type</th>
+                <th>Type</th>
                 <th>Date</th>
                 <th>Penalty Type</th>
                 <th>Penalty Requirements</th>
                 <th>Status</th>
-                
+                <th>Action</th>
             </tr>
         </thead>
         <tbody>
             <?php if ($resultAttendance->num_rows > 0): ?>
                 <?php while ($row = $resultAttendance->fetch_assoc()): ?>
                     <?php
-                    // Format the attendance date into a simpler format (e.g., Y-m-d)
                     $formatted_date_attendance = (new DateTime($row['date_attendance']))->format('M d, Y');
+                    // Get the attendance ID for each record
+                    $queryId = "SELECT id_attendance FROM attendances WHERE id_event = (SELECT id_event FROM events WHERE name_event = ?) AND type_attendance = ?";
+                    $stmtId = $db->prepare($queryId);
+                    $stmtId->bind_param("ss", $row['name_event'], $row['type_attendance']);
+                    $stmtId->execute();
+                    $resultId = $stmtId->get_result();
+                    $attendanceId = $resultId->fetch_assoc()['id_attendance'];
                     ?>
-                    <tr>
+                    <tr id="attendance-row-<?= $attendanceId ?>">
                         <td><?= htmlspecialchars($row['name_event']) ?></td>
                         <td><?= htmlspecialchars($row['type_attendance']) ?></td>
                         <td><?= htmlspecialchars($formatted_date_attendance) ?></td>
                         <td><?= htmlspecialchars($row['penalty_type']) ?></td>
-                        <td>
+                        <td id="penalty-requirements-<?= $attendanceId ?>">
                             <?php if ($row['Penalty_requirements'] == 0): ?>
-                                <span class="text-success"><i class="bi bi-check-circle-fill"></i></span>
+                                <span class="text-success"><i class="bi bi-check-circle-fill"></i> Cleared</span>
                             <?php else: ?>
                                 <?= htmlspecialchars($row['Penalty_requirements']) ?>
                             <?php endif; ?>
                         </td>
-                        <td>
-                            <?php if ($row['status_attendance'] === 'Present'): ?>
-                                <span class="badge bg-success"><i class="bi bi-check-circle"></i> Present</span>
-                            <?php elseif ($row['status_attendance'] === 'Cleared'): ?>
-                                <span class="badge bg-success"><i class="bi bi-check-circle"></i> Cleared</span>
+                        <td id="attendance-status-<?= $attendanceId ?>">
+                            <?php if ($row['status_attendance'] === 'Present' || $row['status_attendance'] === 'Cleared'): ?>
+                                <span class="badge bg-success"><i class="bi bi-check-circle"></i> <?= htmlspecialchars($row['status_attendance']) ?></span>
                             <?php else: ?>
                                 <span class="badge bg-danger"><i class="bi bi-x-circle"></i> Absent</span>
                             <?php endif; ?>
                         </td>
-
+                        <td>
+                            <?php if ($row['status_attendance'] !== 'Cleared'): ?>
+                                <button class="btn btn-sm btn-success clear-attendance-btn"
+                                        data-id="<?= $attendanceId ?>"
+                                        data-student="<?= $id_student ?>"
+                                        data-semester="<?= $selected_semester ?>">
+                                    Mark as Cleared
+                                </button>
+                            <?php else: ?>
+                                <button class="btn btn-sm btn-warning revert-attendance-btn"
+                                        data-id="<?= $attendanceId ?>"
+                                        data-student="<?= $id_student ?>"
+                                        data-semester="<?= $selected_semester ?>">
+                                    Revert to Absent
+                                </button>
+                            <?php endif; ?>
+                        </td>
                     </tr>
                 <?php endwhile; ?>
             <?php else: ?>
-                <tr><td colspan="6" class="text-center">No attendance records found.</td></tr>
+                <tr><td colspan="7" class="text-center">No attendance records found.</td></tr>
             <?php endif; ?>
         </tbody>
     </table>

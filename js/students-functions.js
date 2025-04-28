@@ -101,6 +101,8 @@ function attachEventListeners() {
                 .then(response => response.text())
                 .then(data => {
                     document.getElementById('reportContent').innerHTML = data;
+                    // Attach listeners to any dynamically loaded elements
+                    attachDynamicEventListeners();
                 })
                 .catch(error => {
                     document.getElementById('reportContent').innerHTML = "<p class='text-danger text-center'>Error loading report.</p>";
@@ -119,7 +121,182 @@ function attachEventListeners() {
             document.getElementById('edit_year_student').value = this.getAttribute('data-year');
         });
     });
+
+    // Attach listeners to any existing dynamic elements
+    attachDynamicEventListeners();
 }
+
+// Function to handle dynamic elements (payments and attendance)
+function attachDynamicEventListeners() {
+    // Payment status update handlers
+    document.querySelectorAll('.update-payment-btn').forEach(button => {
+        button.addEventListener('click', handlePaymentUpdate);
+    });
+
+    // Attendance status update handlers
+    document.querySelectorAll('.clear-attendance-btn').forEach(button => {
+        button.addEventListener('click', handleClearAttendance);
+    });
+
+    document.querySelectorAll('.revert-attendance-btn').forEach(button => {
+        button.addEventListener('click', handleRevertAttendance);
+    });
+}
+
+// Payment update handler
+function handlePaymentUpdate(e) {
+    const button = e.target;
+    const paymentId = button.getAttribute('data-id');
+    const studentId = button.getAttribute('data-student');
+    const semesterId = button.getAttribute('data-semester');
+    const newStatus = button.getAttribute('data-status');
+    
+    // Show loading state
+    button.disabled = true;
+    button.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Processing...';
+    
+    fetch('php/admin/update-payment-status-in-db.php', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: `id_payment=${paymentId}&id_student=${studentId}&semester_id=${semesterId}&status=${newStatus}`
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Update the UI
+            const statusBadge = document.getElementById(`payment-status-${paymentId}`);
+            const row = document.getElementById(`payment-row-${paymentId}`);
+            
+            if (newStatus === '1') {
+                // Change to Paid
+                statusBadge.innerHTML = '<span class="badge bg-success"><i class="bi bi-check-circle"></i> Paid</span>';
+                button.className = 'btn btn-sm btn-warning update-payment-btn';
+                button.setAttribute('data-status', '0');
+                button.textContent = 'Mark as Unpaid';
+            } else {
+                // Change to Unpaid
+                statusBadge.innerHTML = '<span class="badge bg-danger"><i class="bi bi-x-circle"></i> Not Paid</span>';
+                button.className = 'btn btn-sm btn-success update-payment-btn';
+                button.setAttribute('data-status', '1');
+                button.textContent = 'Mark as Paid';
+            }
+        } else {
+            alert('Error updating payment status: ' + (data.message || 'Unknown error'));
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Error updating payment status');
+    })
+    .finally(() => {
+        button.disabled = false;
+    });
+}
+
+// Clear attendance handler
+function handleClearAttendance(e) {
+    const button = e.target;
+    const attendanceId = button.getAttribute('data-id');
+    const studentId = button.getAttribute('data-student');
+    const semesterId = button.getAttribute('data-semester');
+    
+    if (confirm("Are you sure you want to mark this attendance as Cleared?")) {
+        // Show loading state
+        button.disabled = true;
+        button.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Processing...';
+        
+        fetch("php/admin/update-attendance.php", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/x-www-form-urlencoded",
+            },
+            body: `id_attendance=${attendanceId}&id_student=${studentId}&semester_ID=${semesterId}&action=clear`
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Update the UI
+                const statusCell = document.getElementById(`attendance-status-${attendanceId}`);
+                const penaltyCell = document.getElementById(`penalty-requirements-${attendanceId}`);
+                
+                statusCell.innerHTML = `<span class="badge bg-success"><i class="bi bi-check-circle"></i> Cleared</span>`;
+                penaltyCell.innerHTML = `<span class="text-success"><i class="bi bi-check-circle-fill"></i> Cleared</span>`;
+                
+                // Change button to revert
+                button.className = 'btn btn-sm btn-warning revert-attendance-btn';
+                button.innerHTML = 'Revert to Absent';
+                button.removeEventListener('click', handleClearAttendance);
+                button.addEventListener('click', handleRevertAttendance);
+            } else {
+                alert("Error: " + (data.message || "Failed to update attendance"));
+            }
+        })
+        .catch(error => {
+            console.error("Error:", error);
+            alert("An error occurred while updating attendance.");
+        })
+        .finally(() => {
+            button.disabled = false;
+        });
+    }
+}
+
+// Revert attendance handler
+function handleRevertAttendance(e) {
+    const button = e.target;
+    const attendanceId = button.getAttribute('data-id');
+    const studentId = button.getAttribute('data-student');
+    const semesterId = button.getAttribute('data-semester');
+    
+    if (confirm("Are you sure you want to revert this attendance to Absent?")) {
+        // Show loading state
+        button.disabled = true;
+        button.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Processing...';
+        
+        fetch("php/admin/update-attendance.php", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/x-www-form-urlencoded",
+            },
+            body: `id_attendance=${attendanceId}&id_student=${studentId}&semester_ID=${semesterId}&action=revert`
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Update the UI
+                const statusCell = document.getElementById(`attendance-status-${attendanceId}`);
+                const penaltyCell = document.getElementById(`penalty-requirements-${attendanceId}`);
+                
+                statusCell.innerHTML = `<span class="badge bg-danger"><i class="bi bi-x-circle"></i> Absent</span>`;
+                penaltyCell.textContent = data.penalty_requirements || "0";
+                
+                // Change button to clear
+                button.className = 'btn btn-sm btn-success clear-attendance-btn';
+                button.innerHTML = 'Mark as Cleared';
+                button.removeEventListener('click', handleRevertAttendance);
+                button.addEventListener('click', handleClearAttendance);
+            } else {
+                alert("Error: " + (data.message || "Failed to update attendance"));
+            }
+        })
+        .catch(error => {
+            console.error("Error:", error);
+            alert("An error occurred while updating attendance.");
+        })
+        .finally(() => {
+            button.disabled = false;
+        });
+    }
+}
+
+// Initialize all event listeners when the page loads
+document.addEventListener('DOMContentLoaded', function() {
+    attachEventListeners();
+});
+
+
 
 // Global function for password toggling
 function togglePassword(button) {
