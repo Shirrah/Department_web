@@ -11,7 +11,7 @@ class Database {
             $pass = "";
             $dbname = "u958767601_dcs";
         } else { 
-            $host = "p:5.181.217.145"; 
+            $host = "p:212.85.26.121"; 
             $user = "hpo-admin";
             $pass = "Shirrah+admin1234#";
             $dbname = "dcs";

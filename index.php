@@ -124,7 +124,7 @@ $site_version = $versionData['version'];
             exit;
             break;
         default:
-            include 'php/default.php';
+            include 'php/404.php';
             break;
     }
     ?>
