@@ -15,6 +15,7 @@
             align-items: center;
             min-height: 100vh;
             text-align: center;
+            
         }
         .maintenance-container {
             background-color: white;
