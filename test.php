@@ -15,7 +15,6 @@
             align-items: center;
             min-height: 100vh;
             text-align: center;
-            sdkjsdksdjs
         }
         .maintenance-container {
             background-color: white;
