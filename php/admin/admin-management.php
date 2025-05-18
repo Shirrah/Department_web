@@ -231,9 +231,6 @@ ob_end_flush();
                             <option value="">Select Role</option>
                             <option value="Governor">Governor</option>
                             <option value="Dean">Dean</option>
-                            <option value="Secretary">Secretary</option>
-                            <option value="Treasurer">Treasurer</option>
-                            <option value="Guest Admin">Guest Admin</option>
                             <option value="Class Mayor">Class Mayor</option>
                             <option value="Developer">Developer</option>
                         </select>
@@ -296,9 +293,6 @@ ob_end_flush();
                             <option value="">Select Role</option>
                             <option value="Governor">Governor</option>
                             <option value="Dean">Dean</option>
-                            <option value="Secretary">Secretary</option>
-                            <option value="Treasurer">Treasurer</option>
-                            <option value="Guest Admin">Guest Admin</option>
                             <option value="Class Mayor">Class Mayor</option>
                             <option value="Developer">Developer</option>
                         </select>

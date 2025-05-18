@@ -1,6 +1,6 @@
 Array
 (
-    [student_id] => 20231163
+    [student_id] => 20231162
     [payment_id] => 142
-    [status_payment] => 1
+    [status_payment] => 0
 )
