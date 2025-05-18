@@ -173,21 +173,6 @@ $(document).ready(function(){
         NProgress.done();
     });
 
-    // Handle navigation clicks
-    $(document).on('click', 'a', function(e) {
-        if (!$(this).attr('target') && !$(this).hasClass('no-progress')) {
-            e.preventDefault();
-            NProgress.start();
-            
-            const href = $(this).attr('href');
-            if (href) {
-                setTimeout(function() {
-                    window.location.href = href;
-                }, 100);
-            }
-        }
-    });
-
     // Handle form submissions
     $(document).on('submit', 'form', function() {
         NProgress.start();
