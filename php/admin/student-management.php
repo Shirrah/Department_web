@@ -106,7 +106,7 @@ ob_end_flush();
 
         <!-- Enroll Button to Trigger Modal -->
         <button class="btn btn-outline-primary ms-3" id="enrollButton" data-bs-toggle="modal" data-bs-target="#enrollFormModal">
-          <i class="bi bi-box-arrow-in-up"></i> Enroll Student
+          <i class="bi bi-box-arrow-in-up"></i> Add Student
         </button>
       </div>
     </div>

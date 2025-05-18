@@ -1,5 +1,12 @@
 <?php
-session_set_cookie_params(0);
+// Set session cookie parameters to expire when browser closes
+session_set_cookie_params([
+    'lifetime' => 0,  // Session cookie will be destroyed when browser closes
+    'path' => '/',    // Cookie is available for entire domain
+    'secure' => true, // Cookie will only be sent over HTTPS
+    'httponly' => true, // Cookie cannot be accessed by JavaScript
+    'samesite' => 'Lax' // Protect against CSRF
+]);
 session_start();
 
 header('Content-Type: application/json');

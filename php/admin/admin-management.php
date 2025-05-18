@@ -232,7 +232,7 @@ ob_end_flush();
                             <option value="Governor">Governor</option>
                             <option value="Dean">Dean</option>
                             <option value="Class Mayor">Class Mayor</option>
-                            <option value="Developer">Developer</option>
+                            <option value="Secretary">Secretary</option>
                         </select>
                     </div>
                     <div class="form-group">
@@ -294,7 +294,7 @@ ob_end_flush();
                             <option value="Governor">Governor</option>
                             <option value="Dean">Dean</option>
                             <option value="Class Mayor">Class Mayor</option>
-                            <option value="Developer">Developer</option>
+                            <option value="Secretary">Secretary</option>
                         </select>
                     </div>
                     <div class="form-group">
