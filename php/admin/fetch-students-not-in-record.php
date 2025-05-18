@@ -72,6 +72,7 @@ if (!empty($missingStudents)) {
     
     $insertStmt = $db->prepare($insertQuery);
     $insertedCount = 0;
+    $insertedStudents = [];
     
     foreach ($missingStudents as $student) {
         $insertStmt->bind_param(
@@ -80,41 +81,50 @@ if (!empty($missingStudents)) {
             $student['id_student'],
             $selected_semester,
             $current_date,
-            $status_attendance, // Now using variable instead of literal
+            $status_attendance,
             $penalty_requirements
         );
         
         if ($insertStmt->execute()) {
             $insertedCount++;
+            $insertedStudents[] = $student;
         }
     }
     
     if ($insertedCount > 0) {
-        echo "<tr><td colspan='6' class='text-center text-success'>";
-        echo "Successfully added $insertedCount students to attendance as Absent.";
-        echo "</td></tr>";
+        $year_levels = [1 => "1st Year", 2 => "2nd Year", 3 => "3rd Year", 4 => "4th Year"];
+        $html = "<tr><td colspan='6' class='text-center text-success'>";
+        $html .= "Successfully added $insertedCount students to attendance as Absent.";
+        $html .= "</td></tr>";
         
         // Display the added students
-        $year_levels = [1 => "1st Year", 2 => "2nd Year", 3 => "3rd Year", 4 => "4th Year"];
-        
-        foreach ($missingStudents as $student) {
-            echo "<tr>";
-            echo "<td>".htmlspecialchars($student['id_student'])."</td>";
-            echo "<td>".htmlspecialchars($student['lastname_student'])."</td>";
-            echo "<td>".htmlspecialchars($student['firstname_student'])."</td>";
-            echo "<td>".($year_levels[$student['year_student']] ?? "Unknown")."</td>";
-            echo "<td>".htmlspecialchars($current_date)."</td>";
-            echo "<td><span class='badge bg-danger'>$status_attendance</span></td>";
-            echo "</tr>";
+        foreach ($insertedStudents as $student) {
+            $html .= "<tr>";
+            $html .= "<td>".htmlspecialchars($student['id_student'])."</td>";
+            $html .= "<td>".htmlspecialchars($student['lastname_student'])."</td>";
+            $html .= "<td>".htmlspecialchars($student['firstname_student'])."</td>";
+            $html .= "<td>".($year_levels[$student['year_student']] ?? "Unknown")."</td>";
+            $html .= "<td>".htmlspecialchars($current_date)."</td>";
+            $html .= "<td><span class='badge bg-danger'>$status_attendance</span></td>";
+            $html .= "</tr>";
         }
+        
+        echo json_encode([
+            'success' => true,
+            'message' => "Successfully added $insertedCount students",
+            'html' => $html
+        ]);
     } else {
-        echo "<tr><td colspan='6' class='text-center text-danger'>";
-        echo "Failed to add students to attendance: ".$insertStmt->error;
-        echo "</td></tr>";
+        echo json_encode([
+            'success' => false,
+            'message' => "Failed to add students to attendance: " . $insertStmt->error
+        ]);
     }
 } else {
-    echo "<tr><td colspan='6' class='text-center'>";
-    echo "All students in this semester are already in the attendance record.";
-    echo "</td></tr>";
+    echo json_encode([
+        'success' => true,
+        'message' => "All students in this semester are already in the attendance record.",
+        'html' => "<tr><td colspan='6' class='text-center'>All students in this semester are already in the attendance record.</td></tr>"
+    ]);
 }
 ?>

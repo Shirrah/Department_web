@@ -39,38 +39,38 @@ try {
         <!-- QR Code CDN -->
         <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 
-        <div class="container my-5 ">
-            <div class="card shadow">
-                <div class="card-header text-white" style="background-color: tomato;">
-                    <h3 class="card-title text-center mb-0">QR Code</h3>
+        <div class="container my-5">
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-white border-bottom py-3">
+                    <h3 class="card-title text-center mb-0 text-dark">QR Code</h3>
                 </div>
                 
-                <div class="card-body">
+                <div class="card-body p-4">
                     <div class="row g-4">
                         <!-- QR Code Column -->
                         <div class="col-md-5">
-                            <div class="bg-light p-4 rounded-3 text-center">
+                            <div class="bg-white p-4 rounded-3 text-center border shadow-sm">
                                 <div id="qrcode" class="mb-3 mx-auto" style="display: flex; align-items: center; justify-content:center;"></div>
                                 <p class="text-muted mb-0">
-                                    Scan this QR code for your Attendance.
+                                    Scan this QR code for your Attendance
                                 </p>
                             </div>
                         </div>
                         
                         <!-- Student Info Column -->
                         <div class="col-md-7">
-                            <div class="list-group list-group-flush">
-                                <div class="list-group-item d-flex justify-content-between align-items-center py-3">
-                                    <span class="fw-bold">Student ID:</span>
-                                    <span class="text-end"><?php echo htmlspecialchars($student_data['id_student']); ?></span>
+                            <div class="list-group list-group-flush bg-white rounded-3 border shadow-sm">
+                                <div class="list-group-item d-flex justify-content-between align-items-center py-3 border-0">
+                                    <span class="fw-bold text-dark">Student ID:</span>
+                                    <span class="text-end text-dark"><?php echo htmlspecialchars($student_data['id_student']); ?></span>
                                 </div>
-                                <div class="list-group-item d-flex justify-content-between align-items-center py-3">
-                                    <span class="fw-bold">Full Name:</span>
-                                    <span class="text-end"><?php echo htmlspecialchars($student_data['firstname_student'] . ' ' . $student_data['lastname_student']); ?></span>
+                                <div class="list-group-item d-flex justify-content-between align-items-center py-3 border-0">
+                                    <span class="fw-bold text-dark">Full Name:</span>
+                                    <span class="text-end text-dark"><?php echo htmlspecialchars($student_data['firstname_student'] . ' ' . $student_data['lastname_student']); ?></span>
                                 </div>
-                                <div class="list-group-item d-flex justify-content-between align-items-center py-3">
-                                    <span class="fw-bold">Year Level:</span>
-                                    <span class="text-end"><?php echo htmlspecialchars($student_data['year_student']); ?></span>
+                                <div class="list-group-item d-flex justify-content-between align-items-center py-3 border-0">
+                                    <span class="fw-bold text-dark">Year Level:</span>
+                                    <span class="text-end text-dark"><?php echo htmlspecialchars($student_data['year_student']); ?></span>
                                 </div>
                             </div>
                         </div>

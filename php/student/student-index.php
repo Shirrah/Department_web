@@ -5,6 +5,7 @@ require_once "././php/db-conn.php";
 $db = Database::getInstance()->db;
 
 include "././php/auth-check.php";
+include_once __DIR__ . "/../toast-system.php"; // Update the path to use absolute path
 
 // Fetch the user details from the session 
 if (isset($_SESSION['user_data'])) {
@@ -158,6 +159,12 @@ if (isset($_SESSION['user_data'])) {
                     <span class="ms-1 d-none d-sm-inline">Qr code</span>
                 </a>
             </li>
+            <li>
+            <a href="?content=student-index&student=student-feedback" class="nav-link text-white">
+                    <i class="bi bi-bug"></i>
+                    <span class="ms-1 d-none d-sm-inline">Feedback</span>
+                </a>
+            </li>
             <!-- <li>
             <a href="?content=student-index&student=notifications" class="nav-link text-white">
                     <i class="bi bi-bell"></i>
@@ -200,6 +207,13 @@ if (isset($_SESSION['user_data'])) {
                 <a href="?content=student-index&student=student-qrcode" class="nav-link text-white">
                     <i class="fa-solid fa-qrcode"></i>
                     <span class="ms-1">Qr code</span>
+                </a>
+            </li>
+
+            <li>
+                <a href="?content=student-index&student=student-feedback" class="nav-link text-white">
+                    <i class="bi bi-bug"></i>
+                    <span class="ms-1">Feedback</span>
                 </a>
             </li>
 
@@ -263,6 +277,18 @@ if (isset($_SESSION['user_data'])) {
     </div>
     <?php
         $student_pg = $_GET['student'] ?? "default";
+        
+        // Handle success/error messages from URL parameters
+        if (isset($_GET['status']) && isset($_GET['message'])) {
+            $status = htmlspecialchars($_GET['status']);
+            $message = htmlspecialchars($_GET['message']);
+            echo "<script>
+                document.addEventListener('DOMContentLoaded', function() {
+                    createToast('$status', '$message');
+                });
+            </script>";
+        }
+        
         switch ($student_pg) {
             case "default":
                 include 'php/student/student-dashboard.php';
@@ -278,6 +304,9 @@ if (isset($_SESSION['user_data'])) {
                 break;
             case "student-qrcode":
                 include 'php/student/student-qrcode.php';
+                break;
+            case "student-feedback":
+                include 'php/student/student-feedback.php';
                 break;
             case "notifications":
                 include 'php/student/notifications.php';

@@ -56,7 +56,18 @@ ob_start(); // Start output buffering
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.1/css/all.min.css">
     <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
     <!-- Add jQuery (CDN version) -->
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <!-- Add NProgress -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/nprogress/0.2.0/nprogress.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/nprogress/0.2.0/nprogress.min.js"></script>
+    <style>
+        #nprogress .bar {
+            background: tomato !important;
+        }
+        #nprogress .peg {
+            box-shadow: 0 0 10px tomato, 0 0 5px tomato !important;
+        }
+    </style>
 <?php
 $versionFile = file_get_contents(__DIR__ . '/version.json');
 $versionData = json_decode($versionFile, true);
@@ -131,47 +142,71 @@ $site_version = $versionData['version'];
 
 <script>
 $(document).ready(function(){
+    // Configure NProgress
+    NProgress.configure({ 
+        showSpinner: false,
+        minimum: 0.1,
+        easing: 'ease',
+        speed: 500
+    });
+
+    // Start progress bar on page load
+    NProgress.start();
+
+    // Complete progress bar when page is fully loaded
+    $(window).on('load', function() {
+        NProgress.done();
+    });
+
+    // Handle AJAX requests
+    $(document).ajaxStart(function() {
+        NProgress.start();
+    });
+
+    $(document).ajaxStop(function() {
+        NProgress.done();
+    });
+
     $('').click(function(e){
-  e.preventDefault();
+        e.preventDefault();
+        NProgress.start();
 
-   // Show spinner, hide text
-   $('#login-text').addClass('d-none');
-    $('#login-spinner').removeClass('d-none');
+        // Show spinner, hide text
+        $('#login-text').addClass('d-none');
+        $('#login-spinner').removeClass('d-none');
 
+        // Add 2-second delay before loading login content
+        setTimeout(function() {
+            $('#main-content').load('> *', function() {
+                // After content is loaded
+                NProgress.done();
+                $('#login-spinner').addClass('d-none');
+                $('#login-text').removeClass('d-none');
+                // Hide header and footer
+                $('#header, #footer').hide();
+            });
 
-
-   // Add 2-second delay before loading login content
-   setTimeout(function() {
-      $('#main-content').load('> *', function() {
-        // After content is loaded
-    
-        $('#login-spinner').addClass('d-none');
-        $('#login-text').removeClass('d-none');
-        // Hide header and footer
-        $('#header, #footer').hide(); // to hide
-      });
-
-      // Update browser URL
-      history.pushState(null, '', '?content=log-in');
-    }, 2000); // 2000 milliseconds = 2 seconds
-});
-
+            // Update browser URL
+            history.pushState(null, '', '?content=log-in');
+        }, 2000);
+    });
 });
 
 window.onpopstate = function () {
-  const urlParams = new URLSearchParams(window.location.search);
-  const page = urlParams.get('content') || 'default';
+    NProgress.start();
+    const urlParams = new URLSearchParams(window.location.search);
+    const page = urlParams.get('content') || 'default';
 
-  $('#main-content').load(`index.php?content=${page} .content > *`, function () {
-    // Show/hide header and footer based on content
-    if (page === 'log-in') {
-        $('#header, #footer').hide(); // to hide
-    } else {
-        $('#header, #footer').show(); // to show
-    }
-  });
+    $('#main-content').load(`index.php?content=${page} .content > *`, function () {
+        NProgress.done();
+        // Show/hide header and footer based on content
+        if (page === 'log-in') {
+            $('#header, #footer').hide();
+        } else {
+            $('#header, #footer').show();
+        }
+    });
 };
-
 </script>
 
 

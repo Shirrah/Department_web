@@ -71,7 +71,7 @@
                         echo '</div>';
                     }
                 } else {
-                    echo '<div class="alert alert-info">No fees found for semester: ' . htmlspecialchars($selected_semester) . '</div>';
+                    echo '<p style="color: white; text-align: center; font-size: 16px;">No fees found</p>';
                 }
                 ?>
             </div>

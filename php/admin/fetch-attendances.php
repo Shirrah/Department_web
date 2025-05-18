@@ -83,9 +83,9 @@ if (isset($_GET['event_id'])) {
 <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#EditAttendanceModal"
     onclick="openEditAttendanceModal(
         <?php echo $attendance['id_attendance']; ?>,
-        '<?php echo $attendance['type_attendance']; ?>',
-        '<?php echo $attendance['penalty_type']; ?>',
-        '<?php echo addslashes($attendance['penalty_requirements']); ?>',
+        '<?php echo htmlspecialchars($attendance['type_attendance']); ?>',
+        '<?php echo htmlspecialchars($attendance['penalty_type']); ?>',
+        '<?php echo htmlspecialchars($attendance['penalty_requirements']); ?>',
         '<?php echo $attendance['start_time']; ?>',
         '<?php echo $attendance['end_time']; ?>')">
     <i class="fas fa-edit"></i> Edit

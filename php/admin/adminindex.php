@@ -207,6 +207,13 @@ require_once "././php/admin/semester-selection.php";
                     <span class="ms-1 d-none d-sm-inline">Academic Year</span>
                 </a>
             </li>
+
+            <li>
+                <a href="?content=admin-index&admin=admin-feedback" class="nav-link text-white action-btn">
+                    <i class="bi bi-chat-dots"></i>
+                    <span class="ms-1 d-none d-sm-inline">Feedback Management</span>
+                </a>
+            </li>
         </ul>
 </nav>
 
@@ -285,6 +292,12 @@ require_once "././php/admin/semester-selection.php";
                 <a href="?content=admin-index&admin=ay-dashboard" class="nav-link text-white action-btn sidebar-link">
                     <i class="bi bi-calendar"></i>
                     <span class="">Academic Year</span>
+                </a>
+            </li>
+            <li>
+                <a href="?content=admin-index&admin=admin-feedback" class="nav-link text-white action-btn sidebar-link">
+                    <i class="bi bi-chat-dots"></i>
+                    <span class="">Feedback Management</span>
                 </a>
             </li>
         </ul>
@@ -369,6 +382,9 @@ require_once "././php/admin/semester-selection.php";
                 break;
             case "financial-statement":
                 include 'php/admin/Financial Statement/financial-statement.php';
+                break;
+            case "admin-feedback":
+                include 'php/admin/admin-feedback.php';
                 break;
             default:
                 include 'php/admin/dashboard.php';

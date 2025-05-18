@@ -11,19 +11,33 @@ function escapeHtml(unsafe) {
         .replace(/'/g, "&#039;");
 }
 
+// Global variables for pagination
+let currentPage = 1;
+const perPage = 10;
+let currentSemester = null;
+let currentSearchTerm = ''; // Add this to track current search term
+
 // Global function to load students
-function loadStudents(semester = null) {
+function loadStudents(semester = null, page = 1, searchTerm = '') {
     const tbody = document.getElementById('studentTableBody');
     const table = document.getElementById('studentTable');
+    
+    // Store current state
+    currentSemester = semester;
+    currentPage = page;
+    currentSearchTerm = searchTerm;
     
     // Add loading class to table
     table.classList.add('table-loading');
     tbody.innerHTML = '<tr><td colspan="6" class="text-center"><div class="spinner-border text-primary" role="status"></div> Loading students...</td></tr>';
     
-    // Build the URL with semester parameter
-    let url = 'php/admin/fetch-student-records.php';
+    // Build the URL with semester, pagination, and search parameters
+    let url = `php/admin/fetch-student-records.php?page=${page}&per_page=${perPage}`;
     if (semester) {
-        url += `?semester=${semester}`;
+        url += `&semester=${semester}`;
+    }
+    if (searchTerm) {
+        url += `&search=${encodeURIComponent(searchTerm)}`;
     }
 
     fetch(url)
@@ -31,18 +45,18 @@ function loadStudents(semester = null) {
             if (!response.ok) throw new Error('Network response was not ok');
             return response.json();
         })
-        .then(data => {
+        .then(response => {
             table.classList.remove('table-loading');
             
-            if (data.length === 0) {
+            if (response.data.length === 0) {
                 tbody.innerHTML = '<tr><td colspan="6" class="text-center">No students found</td></tr>';
                 return;
             }
             
             tbody.innerHTML = '';
-            data.forEach(student => {
+            response.data.forEach(student => {
                 const row = document.createElement('tr');
-                row.id = `student-row-${escapeHtml(student.id_student)}`; // Add unique row id
+                row.id = `student-row-${escapeHtml(student.id_student)}`;
                 row.innerHTML = `
                     <td>${escapeHtml(student.id_student)}</td>
                     <td>
@@ -78,6 +92,9 @@ function loadStudents(semester = null) {
                 `;
                 tbody.appendChild(row);
             });
+
+            // Add pagination controls
+            updatePagination(response.pagination);
 
             // Reattach event listeners for the new elements
             attachEventListeners();
@@ -296,8 +313,6 @@ document.addEventListener('DOMContentLoaded', function() {
     attachEventListeners();
 });
 
-
-
 // Global function for password toggling
 function togglePassword(button) {
     const row = button.closest('tr');
@@ -430,8 +445,135 @@ function executeStudentMove(currentSemester, targetSemester, students) {
     
 }
 
-
 // Call this function when the page loads
 document.addEventListener('DOMContentLoaded', function() {
     setupMoveClearedStudents();
 });
+
+// Function to update pagination controls
+function updatePagination(pagination) {
+    const paginationContainer = document.getElementById('paginationContainer');
+    if (!paginationContainer) return;
+
+    const { total, per_page, current_page, last_page } = pagination;
+    
+    let paginationHTML = `
+        <div class="d-flex justify-content-between align-items-center mt-3">
+            <div class="text-muted">
+                Showing ${(current_page - 1) * per_page + 1} to ${Math.min(current_page * per_page, total)} of ${total} entries
+            </div>
+            <nav aria-label="Page navigation">
+                <ul class="pagination mb-0">
+                    <li class="page-item ${current_page === 1 ? 'disabled' : ''}">
+                        <a class="page-link" href="javascript:void(0)" onclick="changePage(1)" aria-label="First">
+                            <span aria-hidden="true">&laquo;&laquo;</span>
+                        </a>
+                    </li>
+                    <li class="page-item ${current_page === 1 ? 'disabled' : ''}">
+                        <a class="page-link" href="javascript:void(0)" onclick="changePage(${current_page - 1})" aria-label="Previous">
+                            <span aria-hidden="true">&laquo;</span>
+                        </a>
+                    </li>
+    `;
+
+    // Function to add page number
+    const addPageNumber = (pageNum) => {
+        paginationHTML += `
+            <li class="page-item ${pageNum === current_page ? 'active' : ''}">
+                <a class="page-link" href="javascript:void(0)" onclick="changePage(${pageNum})">${pageNum}</a>
+            </li>
+        `;
+    };
+
+    // Function to add ellipsis
+    const addEllipsis = () => {
+        paginationHTML += `
+            <li class="page-item disabled">
+                <span class="page-link">...</span>
+            </li>
+        `;
+    };
+
+    // Logic for displaying page numbers
+    if (last_page <= 7) {
+        // If 7 or fewer pages, show all
+        for (let i = 1; i <= last_page; i++) {
+            addPageNumber(i);
+        }
+    } else {
+        // Always show first page
+        addPageNumber(1);
+
+        // Calculate range around current page
+        let startPage = Math.max(2, current_page - 1);
+        let endPage = Math.min(last_page - 1, current_page + 1);
+
+        // Adjust range if at the start or end
+        if (current_page <= 3) {
+            endPage = 4;
+        } else if (current_page >= last_page - 2) {
+            startPage = last_page - 3;
+        }
+
+        // Add ellipsis after first page if needed
+        if (startPage > 2) {
+            addEllipsis();
+        }
+
+        // Add middle pages
+        for (let i = startPage; i <= endPage; i++) {
+            addPageNumber(i);
+        }
+
+        // Add ellipsis before last page if needed
+        if (endPage < last_page - 1) {
+            addEllipsis();
+        }
+
+        // Always show last page
+        addPageNumber(last_page);
+    }
+
+    paginationHTML += `
+                    <li class="page-item ${current_page === last_page ? 'disabled' : ''}">
+                        <a class="page-link" href="javascript:void(0)" onclick="changePage(${current_page + 1})" aria-label="Next">
+                            <span aria-hidden="true">&raquo;</span>
+                        </a>
+                    </li>
+                    <li class="page-item ${current_page === last_page ? 'disabled' : ''}">
+                        <a class="page-link" href="javascript:void(0)" onclick="changePage(${last_page})" aria-label="Last">
+                            <span aria-hidden="true">&raquo;&raquo;</span>
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+        </div>
+    `;
+
+    paginationContainer.innerHTML = paginationHTML;
+}
+
+// Function to handle search
+function handleSearch(searchTerm) {
+    // Reset to first page when searching
+    currentPage = 1;
+    
+    // Get the current semester
+    const semesterDropdown = document.getElementById('semesterDropdown');
+    const semester = semesterDropdown ? semesterDropdown.value : currentSemester;
+    
+    // Load students with search term
+    loadStudents(semester, 1, searchTerm);
+}
+
+// Function to handle page changes
+function changePage(page) {
+    if (page < 1) return;
+    
+    // Get the current semester from the dropdown or use the stored one
+    const semesterDropdown = document.getElementById('semesterDropdown');
+    const semester = semesterDropdown ? semesterDropdown.value : currentSemester;
+    
+    // Load students with the new page number and current search term
+    loadStudents(semester, page, currentSearchTerm);
+}

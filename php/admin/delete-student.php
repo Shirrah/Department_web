@@ -20,26 +20,21 @@ try {
         throw new Exception("No semester selected.");
     }
 
-    // Check if there are students in this semester
-    $checkQuery = "SELECT id_student FROM student WHERE semester_ID = ?";
-    $checkStmt = $db->prepare($checkQuery);
-    $checkStmt->bind_param("s", $selected_semester);
-    $checkStmt->execute();
-    $result = $checkStmt->get_result();
-
-    if (!$result->num_rows) {
-        throw new Exception("No students found for the selected semester.");
+    // Get the student ID from the request
+    $student_id = $_GET['id'] ?? '';
+    if (empty($student_id)) {
+        throw new Exception("No student ID provided.");
     }
 
-    // Delete students belonging to the selected semester
-    $deleteQuery = "DELETE FROM student WHERE semester_ID = ?";
+    // Delete the specific student record for the selected semester
+    $deleteQuery = "DELETE FROM student WHERE id_student = ? AND semester_ID = ?";
     $deleteStmt = $db->prepare($deleteQuery);
-    $deleteStmt->bind_param("s", $selected_semester);
+    $deleteStmt->bind_param("ss", $student_id, $selected_semester);
 
     if ($deleteStmt->execute()) {
-        echo json_encode(['success' => true, 'message' => 'All students from selected semester deleted successfully.']);
+        echo json_encode(['success' => true, 'message' => 'Student deleted successfully.']);
     } else {
-        throw new Exception("Failed to delete students: " . $deleteStmt->error);
+        throw new Exception("Failed to delete student: " . $deleteStmt->error);
     }
 } catch (Exception $e) {
     http_response_code(500);

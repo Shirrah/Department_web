@@ -201,6 +201,8 @@ ob_end_flush();
         <!-- This will be populated by JavaScript -->
     </tbody>
 </table>
+    <!-- Pagination Container -->
+    <div id="paginationContainer" class="mt-3"></div>
     </div>
 </div>
 
@@ -411,39 +413,17 @@ document.addEventListener('DOMContentLoaded', function() {
     // Search functionality
     const searchInput = document.getElementById('searchStudentInput');
     if (searchInput) {
+        let searchTimeout;
         searchInput.addEventListener('input', function() {
             const searchTerm = this.value.toLowerCase().trim();
-            const rows = document.querySelectorAll('#studentTableBody tr');
-            let hasMatches = false;
             
-            rows.forEach(row => {
-                if (row.id === 'noResultsRow') return; // Skip the no results row
-                
-                const cells = row.getElementsByTagName('td');
-                let rowMatches = false;
-                
-                // Check each cell except the last one (actions)
-                for (let j = 0; j < cells.length - 1; j++) {
-                    const cellText = cells[j].textContent.toLowerCase();
-                    if (cellText.includes(searchTerm)) {
-                        rowMatches = true;
-                        hasMatches = true;
-                        break;
-                    }
-                }
-                
-                row.style.display = rowMatches ? '' : 'none';
-            });
+            // Clear previous timeout
+            clearTimeout(searchTimeout);
             
-            // Handle no results message
-            const noResultsRow = document.getElementById('noResultsRow');
-            if (noResultsRow) {
-                if (searchTerm && !hasMatches) {
-                    noResultsRow.style.display = '';
-                } else {
-                    noResultsRow.style.display = 'none';
-                }
-            }
+            // Set new timeout to debounce search
+            searchTimeout = setTimeout(() => {
+                handleSearch(searchTerm);
+            }, 300); // Wait 300ms after user stops typing
         });
     }
     

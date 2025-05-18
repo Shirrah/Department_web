@@ -33,6 +33,7 @@
               $id = $user_data['id_admin'] ?? $user_data['id_student'] ?? 'Unknown ID';
           } else {
               echo '<li class="nav-item"><a class="nav-link active" href="?content=default">Home</a></li>';
+              echo '<li class="nav-item"><a class="nav-link" href="#developer-team">Developer Team</a></li>';
               echo '<li class="nav-item"><a class="nav-link" id="login-link" href="?content=log-in">
     <span id="login-text"><i class="bi bi-box-arrow-in-right me-1"></i>Login</span>
     <span id="login-spinner" class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true"></span>
@@ -103,5 +104,29 @@ window.addEventListener('appinstalled', () => {
 // Run check on page load
 window.onload = checkIfInstalled;
 
+// Add smooth scrolling for developer team link
+document.addEventListener('DOMContentLoaded', function() {
+    const developerLink = document.querySelector('a[href="#developer-team"]');
+    if (developerLink) {
+        developerLink.addEventListener('click', function(e) {
+            e.preventDefault();
+            
+            // First check if we're on the default page
+            const urlParams = new URLSearchParams(window.location.search);
+            const currentPage = urlParams.get('content') || 'default';
+            
+            if (currentPage !== 'default') {
+                // If not on default page, redirect to default page with hash
+                window.location.href = 'index.php?content=default#developer-team';
+            } else {
+                // If already on default page, just scroll
+                const developerSection = document.getElementById('developer-team');
+                if (developerSection) {
+                    developerSection.scrollIntoView({ behavior: 'smooth' });
+                }
+            }
+        });
+    }
+});
 </script>
 

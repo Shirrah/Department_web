@@ -1,46 +1,103 @@
 /* Custom student fee styles */
 .fee-management-con {
-    font-family: "Open-sans", sans-serif;
-    width: auto;
-    height: auto;
-    padding: 1.8rem;
-    margin: 1.8rem;
+    padding: 20px;
+    background-color: #f8f9fa;
+    min-height: 100vh;
+}
+
+.fee-management-header {
     display: flex;
-    flex-direction: column;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    padding: 10px 0;
+}
+
+.fee-management-header span {
+    font-size: 24px;
+    font-weight: 600;
+    color: #333;
+}
+
+.location {
+    font-size: 14px;
+    color: #666;
+}
+
+.location a {
+    color: #666;
+    text-decoration: none;
+}
+
+.location a:hover {
+    color: #333;
+    text-decoration: underline;
+}
+
+.list-fees-con {
+    background-color: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    padding: 20px;
+}
+
+.accordion-item {
+    border: 1px solid #dee2e6;
+    margin-bottom: 10px;
+    border-radius: 4px;
+}
+
+.accordion-button {
+    padding: 15px;
+    font-size: 16px;
+    color: #333;
+}
+
+.accordion-button:not(.collapsed) {
+    background-color: #f8f9fa;
+    color: #333;
+}
+
+.accordion-button:focus {
+    box-shadow: none;
+    border-color: #dee2e6;
+}
+
+.accordion-body {
+    padding: 15px;
     background-color: white;
 }
 
-.fee-management-header{
-    width: 100%;
-    padding: 5px;
-    border-bottom: solid 1px #e8ecf1;
-    display: flex;
-    flex-direction: row;
+.accordion-body p {
+    margin-bottom: 10px;
+    color: #555;
 }
 
-.fee-management-header span{
-    font-weight: 600;
-    width: 50%;
-}
-.list-fees-con {
-    margin-top: 20px;
+.accordion-body strong {
+    color: #333;
+    margin-right: 5px;
 }
 
-.fee {
-    display: flex;
-    flex-direction: row;
-    width: 100%;
-    justify-content: space-between;
-    align-items: center;
-    border-bottom: 1px solid rgb(194, 194, 194);
-    padding: 10px 0; /* Add some padding for better spacing */
+.badge {
+    padding: 6px 12px;
+    font-weight: 500;
 }
 
-.fee:hover{
-    background-color: #e8ecf1;
+.bg-success {
+    background-color: #28a745 !important;
 }
 
+.bg-danger {
+    background-color: #dc3545 !important;
+}
 
-.name-date h4, .name-date p, .date-created p{
-    font-size: 14px;
+.alert {
+    margin-bottom: 20px;
+    border-radius: 4px;
+}
+
+.alert-info {
+    background-color: #cce5ff;
+    border-color: #b8daff;
+    color: #004085;
 }

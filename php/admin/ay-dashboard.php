@@ -78,30 +78,136 @@ ob_end_flush(); // End output buffering
 
 <link rel="stylesheet" href=".//.//stylesheet/admin/ay-dashboard.css">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-
+<?php include_once "././php/toast-system.php"; ?>
 
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script>
 $(document).ready(function () {
-    $('.status-toggle').on('change', function () {
-        const semesterId = $(this).data('id');
-        const status = $(this).is(':checked') ? 'active' : 'inactive';
+    // Function to reload the table data
+    function reloadTableData() {
+        fetch('././php/admin/fetch-semesters.php')
+            .then(response => response.text())
+            .then(html => {
+                $('.semester-table tbody').html(html);
+                // Reattach event listeners to the new elements
+                attachEventListeners();
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                createToast('error', 'Failed to reload data');
+            });
+    }
 
-        $.ajax({
-            url: '././php/admin/update-semester-status.php',
-            method: 'POST',
-            data: { semester_ID: semesterId, status: status },
-            success: function (response) {
-                console.log('Status updated:', response);
-            },
-            error: function () {
-                alert('Error updating status.');
-            }
+    // Function to attach event listeners to table elements
+    function attachEventListeners() {
+        // Reattach status toggle listeners
+        $('.status-toggle').on('change', function () {
+            const semesterId = $(this).data('id');
+            const status = $(this).is(':checked') ? 'active' : 'inactive';
+            const $toggle = $(this);
+
+            fetch('././php/admin/update-semester-status.php', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: `semester_ID=${semesterId}&status=${status}`
+            })
+            .then(response => response.text())
+            .then(result => {
+                if (result.trim() === 'success') {
+                    createToast('success', 'Status updated successfully!');
+                    reloadTableData(); // Reload the table after successful update
+                } else {
+                    createToast('error', 'Failed to update status');
+                    $toggle.prop('checked', !$toggle.prop('checked')); // Revert the toggle
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                createToast('error', 'Something went wrong.');
+                $toggle.prop('checked', !$toggle.prop('checked')); // Revert the toggle
+            });
         });
+
+        // Reattach edit button listeners
+        $('.edit-btn').on('click', function () {
+            const id = $(this).data('id');
+            const year = $(this).data('year');
+            const type = $(this).data('type');
+
+            $('#edit_semester_ID').val(id);
+            $('#edit_academic_year').val(year);
+            $('#edit_semester_type').val(type);
+        });
+    }
+
+    // Initial attachment of event listeners
+    attachEventListeners();
+
+    // Handle form submission
+    $('#addTermForm').on('submit', function(e) {
+        e.preventDefault();
+        const formData = new FormData(this);
+        
+        fetch('././php/admin/handle-term.php', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.text())
+        .then(result => {
+            if (result.trim() === 'success') {
+                this.reset();
+                const modal = bootstrap.Modal.getInstance(document.getElementById('enrollFormModal'));
+                modal.hide();
+                createToast('success', 'Term added successfully!');
+                reloadTableData(); // Reload the table after successful addition
+            } else {
+                createToast('error', result);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            createToast('error', 'Something went wrong.');
+        });
+    });
+
+    // Handle edit form submission
+    $('#editTermForm').on('submit', function(e) {
+        e.preventDefault();
+        const formData = new FormData(this);
+        
+        fetch('././php/admin/handle-term.php', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.text())
+        .then(result => {
+            if (result.trim() === 'success') {
+                const modal = bootstrap.Modal.getInstance(document.getElementById('editTermModal'));
+                modal.hide();
+                createToast('success', 'Term updated successfully!');
+                reloadTableData(); // Reload the table after successful update
+            } else {
+                createToast('error', result);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            createToast('error', 'Something went wrong.');
+        });
+    });
+
+    // Handle deletion confirmation
+    const deleteModal = document.getElementById('deleteConfirmationModal');
+    deleteModal.addEventListener('show.bs.modal', function (event) {
+        const button = event.relatedTarget;
+        const semesterID = button.getAttribute('data-id');
+        const confirmBtn = deleteModal.querySelector('#deleteConfirmBtn');
+        confirmBtn.setAttribute('href', '?content=admin-index&admin=ay-dashboard&delete_id=' + semesterID);
     });
 });
 </script>
-
 
 <div class="ay-dashboard-body">
     <div class="ay-dashboard-con">
@@ -117,7 +223,6 @@ $(document).ready(function () {
         <table class="semester-table">
             <thead>
                 <tr>
-                
                     <th>Semester ID</th>
                     <th>Academic Year</th>
                     <th>Semester Type</th>
@@ -134,68 +239,60 @@ $(document).ready(function () {
                         echo "<td>" . htmlspecialchars($row['academic_year']) . "</td>";
                         echo "<td>" . htmlspecialchars($row['semester_type']) . "</td>";
                         echo "<td>
-    <div class='form-check form-switch'>
-        <input class='form-check-input status-toggle' type='checkbox'
-            data-id='" . $row["semester_ID"] . "'
-            " . ($row['status'] === 'active' ? 'checked' : '') . ">
-        <label class='form-check-label'>" . ucfirst($row['status']) . "</label>
-    </div>
-</td>";
-
+                            <div class='form-check form-switch'>
+                                <input class='form-check-input status-toggle' type='checkbox'
+                                    data-id='" . $row["semester_ID"] . "'
+                                    " . ($row['status'] === 'active' ? 'checked' : '') . ">
+                                <label class='form-check-label'>" . ucfirst($row['status']) . "</label>
+                            </div>
+                        </td>";
                         echo "<td>";
                         echo "<button class='btn btn-warning btn-sm me-1 edit-btn'
-        data-id='" . $row["semester_ID"] . "'
-        data-year='" . $row["academic_year"] . "'
-        data-type='" . $row["semester_type"] . "'
-        data-bs-toggle='modal'
-        data-bs-target='#editTermModal'>
-        <i class='fas fa-edit'></i> Edit
-      </button>";
-
-      echo "<!-- Delete Button (No onclick function) -->
-      <button class='btn btn-danger btn-sm delete-btn' data-bs-toggle='modal' data-bs-target='#deleteConfirmationModal' data-id='" . htmlspecialchars($row["semester_ID"]) . "'>
-          <i class='fas fa-trash'></i> Delete
-      </button>
-      ";
-      
-                
+                            data-id='" . $row["semester_ID"] . "'
+                            data-year='" . $row["academic_year"] . "'
+                            data-type='" . $row["semester_type"] . "'
+                            data-bs-toggle='modal'
+                            data-bs-target='#editTermModal'>
+                            <i class='fas fa-edit'></i> Edit
+                        </button>";
+                        echo "<button class='btn btn-danger btn-sm delete-btn' 
+                            data-bs-toggle='modal' 
+                            data-bs-target='#deleteConfirmationModal' 
+                            data-id='" . htmlspecialchars($row["semester_ID"]) . "'>
+                            <i class='fas fa-trash'></i> Delete
+                        </button>";
                         echo "</td>";
                         echo "</tr>";
                     }
                 } else {
-                    echo "<tr><td colspan='4'>No semester found</td></tr>";
+                    echo "<tr><td colspan='5' class='text-center'>No semester found</td></tr>";
                 }
                 ?>
             </tbody>
         </table>
-       <!-- Change your button to use Bootstrap and trigger the modal -->
-<button id="create-term-btn" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#enrollFormModal">Start a New Term</button>
-
-
+        <button id="create-term-btn" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#enrollFormModal">
+            <i class="fas fa-plus"></i> Start a New Term
+        </button>
     </div>
 </div>
 
-<!-- Replace your existing modal with this Bootstrap modal -->
+<!-- Add New Term Modal -->
 <div class="modal fade" id="enrollFormModal" tabindex="-1" aria-labelledby="enrollFormModalLabel" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="enrollFormModalLabel"><?= isset($editData) ? "Edit Term" : "Add New Term" ?></h5>
+                <h5 class="modal-title" id="enrollFormModalLabel">Add New Term</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-            <form class="enrollForm" id="addTermForm" method="POST" action="././php/admin/handle-term.php">
-
-                    <input type="hidden" id="semester_ID" name="semester_ID" value="<?= isset($editData) ? $editData['semester_ID'] : '' ?>">
-
+                <form class="enrollForm" id="addTermForm">
                     <div class="mb-3">
                         <label for="academic_year" class="form-label">Academic Year</label>
                         <select class="form-select" id="academic_year" name="academic_year" required>
                             <option value="" disabled selected>Select Academic Year</option>
                             <?php
                             foreach ($years as $year) {
-                                $selected = isset($editData) && $editData['academic_year'] == $year ? "selected" : "";
-                                echo "<option value=\"$year\" $selected>$year</option>";
+                                echo "<option value=\"$year\">$year</option>";
                             }
                             ?>
                         </select>
@@ -205,15 +302,15 @@ $(document).ready(function () {
                         <label for="semester_type" class="form-label">Term:</label>
                         <select class="form-select" id="semester_type" name="semester_type" required>
                             <option value="" disabled selected>Select Term</option>
-                            <option value="1st Semester" <?= isset($editData) && $editData['semester_type'] == '1st Semester' ? 'selected' : '' ?>>1st Semester</option>
-                            <option value="2nd Semester" <?= isset($editData) && $editData['semester_type'] == '2nd Semester' ? 'selected' : '' ?>>2nd Semester</option>
-                            <option value="Summer" <?= isset($editData) && $editData['semester_type'] == 'Summer' ? 'selected' : '' ?>>Summer</option>
+                            <option value="1st Semester">1st Semester</option>
+                            <option value="2nd Semester">2nd Semester</option>
+                            <option value="Summer">Summer</option>
                         </select>
                     </div>
                     
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                        <button type="submit" class="btn btn-primary"><?= isset($editData) ? 'Update Term' : 'Add New Term' ?></button>
+                        <button type="submit" class="btn btn-primary">Add New Term</button>
                     </div>
                 </form>
             </div>
@@ -221,90 +318,63 @@ $(document).ready(function () {
     </div>
 </div>
 
+<!-- Edit Term Modal -->
 <div class="modal fade" id="editTermModal" tabindex="-1" aria-labelledby="editTermModalLabel" aria-hidden="true">
-  <div class="modal-dialog">
-    <form class="modal-content" method="POST" action="././php/admin/handle-term.php">
-      <div class="modal-header">
-        <h5 class="modal-title" id="editTermModalLabel">Edit Term</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-      </div>
-      <div class="modal-body">
-        <input type="hidden" name="semester_ID" id="edit_semester_ID">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="editTermModalLabel">Edit Term</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="editTermForm">
+                    <input type="hidden" name="semester_ID" id="edit_semester_ID">
+                    
+                    <div class="mb-3">
+                        <label for="edit_academic_year" class="form-label">Academic Year</label>
+                        <select class="form-select" name="academic_year" id="edit_academic_year" required>
+                            <option value="" disabled>Select Academic Year</option>
+                            <?php foreach ($years as $year): ?>
+                                <option value="<?= $year ?>"><?= $year ?></option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
 
-        <div class="mb-3">
-          <label for="edit_academic_year" class="form-label">Academic Year</label>
-          <select class="form-select" name="academic_year" id="edit_academic_year" required>
-            <option value="" disabled>Select Academic Year</option>
-            <?php foreach ($years as $year): ?>
-              <option value="<?= $year ?>"><?= $year ?></option>
-            <?php endforeach; ?>
-          </select>
+                    <div class="mb-3">
+                        <label for="edit_semester_type" class="form-label">Term</label>
+                        <select class="form-select" name="semester_type" id="edit_semester_type" required>
+                            <option value="" disabled>Select Term</option>
+                            <option value="1st Semester">1st Semester</option>
+                            <option value="2nd Semester">2nd Semester</option>
+                            <option value="Summer">Summer</option>
+                        </select>
+                    </div>
+                    
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary">Update Term</button>
+                    </div>
+                </form>
+            </div>
         </div>
-
-        <div class="mb-3">
-          <label for="edit_semester_type" class="form-label">Term</label>
-          <select class="form-select" name="semester_type" id="edit_semester_type" required>
-            <option value="" disabled>Select Term</option>
-            <option value="1st Semester">1st Semester</option>
-            <option value="2nd Semester">2nd Semester</option>
-            <option value="Summer">Summer</option>
-          </select>
-        </div>
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-        <button type="submit" class="btn btn-primary">Update Term</button>
-      </div>
-    </form>
-  </div>
+    </div>
 </div>
 
-<script>
-document.addEventListener('DOMContentLoaded', function () {
-    const editButtons = document.querySelectorAll('.edit-btn');
-
-    editButtons.forEach(button => {
-        button.addEventListener('click', function () {
-            const id = this.dataset.id;
-            const year = this.dataset.year;
-            const type = this.dataset.type;
-
-            document.getElementById('edit_semester_ID').value = id;
-            document.getElementById('edit_academic_year').value = year;
-            document.getElementById('edit_semester_type').value = type;
-        });
-    });
-});
-</script>
 <!-- Delete Confirmation Modal -->
 <div class="modal fade" id="deleteConfirmationModal" tabindex="-1" aria-labelledby="deleteConfirmationModalLabel" aria-hidden="true">
-  <div class="modal-dialog">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title" id="deleteConfirmationModalLabel">Confirm Deletion</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-      </div>
-      <div class="modal-body">
-        Are you sure you want to delete this semester and its associated students? This action cannot be undone.
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-        <a href="" id="deleteConfirmBtn" class="btn btn-danger">Delete</a>
-      </div>
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="deleteConfirmationModalLabel">Confirm Deletion</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                Are you sure you want to delete this semester and its associated students? This action cannot be undone.
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <a href="" id="deleteConfirmBtn" class="btn btn-danger">Delete</a>
+            </div>
+        </div>
     </div>
-  </div>
 </div>
-
-<script>
-// Handle deletion confirmation using data-id from the button
-const deleteModal = document.getElementById('deleteConfirmationModal');
-deleteModal.addEventListener('show.bs.modal', function (event) {
-    const button = event.relatedTarget; // Button that triggered the modal
-    const semesterID = button.getAttribute('data-id'); // Extract the semester ID
-    const confirmBtn = deleteModal.querySelector('#deleteConfirmBtn');
-    
-    // Set the URL for the delete button
-    confirmBtn.setAttribute('href', '?content=admin-index&admin=ay-dashboard&delete_id=' + semesterID);
-});
-
-</script>

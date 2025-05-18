@@ -1,67 +1,67 @@
-<?php
-require_once "././php/db-conn.php";
-session_start();
-
-// Get user ID from session
-$user_id = $_SESSION['user_id'];
-
-// Retrieve the selected semester from session
-$current_semester = $_SESSION['selected_semester'][$user_id] ?? '';
-
-// Get target semester from POST
-$target_semester = $_POST['target_semester'] ?? '';
-
-// Validate semesters
-if (empty($current_semester)) {
-    echo 'No semester selected in session';
-    exit;
-}
-
-if (empty($target_semester)) {
-    echo 'Target semester must be specified';
-    exit;
-}
-
-try {
-    $db = Database::getInstance()->db;
-
-    // Find students who meet criteria in the current semester
-    $query = "SELECT DISTINCT s.id_student, s.lastname_student, s.firstname_student 
-              FROM student s
-              INNER JOIN student_attendance sa ON 
-                  s.id_student = sa.id_student AND 
-                  s.semester_ID = sa.semester_ID AND
-                  sa.status_attendance IN ('Cleared', 'Present') AND
-                  sa.Penalty_requirements = 0
-              INNER JOIN student_fees_record sfr ON
-                  s.id_student = sfr.id_student AND
-                  s.semester_ID = sfr.semester_ID AND
-                  sfr.status_payment = 1
-              WHERE s.semester_ID = ?";
-
-    $stmt = $db->prepare($query);
-    $stmt->bind_param("s", $current_semester);
-    
-    if (!$stmt->execute()) {
-        throw new Exception("Database query failed");
-    }
-
-    $result = $stmt->get_result();
-    $students = $result->fetch_all(MYSQLI_ASSOC);
-
-    // Display the students
-    echo "<h3>Students in Current Semester</h3>";
-    if (count($students) > 0) {
-        echo "<ul>";
-        foreach ($students as $student) {
-            echo "<li>" . $student['firstname_student'] . " " . $student['lastname_student'] . "</li>";
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        .logo-carousel {
+            width: 100%;
+            max-width: 600px;
+            margin: 0 auto;
+            position: relative;
+            overflow: hidden;
         }
-        echo "</ul>";
-    } else {
-        echo "No students found for the current semester.";
-    }
+        
+        .logos-container {
+            display: flex;
+            transition: transform 0.5s ease;
+        }
+        
+        .logo-slide {
+            min-width: 100%;
+            text-align: center;
+            padding: 20px 0;
+        }
+        
+        .logo-slide img {
+            max-height: 80px;
+            max-width: 80%;
+            filter: grayscale(100%);
+            transition: filter 0.3s;
+        }
+        
+        .logo-slide img:hover {
+            filter: grayscale(0%);
+        }
+    </style>
+</head>
+<body>
+    <div class="logo-carousel">
+        <div class="logos-container">
+            <div class="logo-slide">
+                <img src="logo1.png" alt="Company 1">
+            </div>
+            <div class="logo-slide">
+                <img src="logo2.png" alt="Company 2">
+            </div>
+            <div class="logo-slide">
+                <img src="logo3.png" alt="Company 3">
+            </div>
+        </div>
+    </div>
 
-} catch (Exception $e) {
-    echo 'Database error: ' . $e->getMessage();
-}
-?>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const container = document.querySelector('.logos-container');
+            const slides = document.querySelectorAll('.logo-slide');
+            let currentIndex = 0;
+            
+            function nextSlide() {
+                currentIndex = (currentIndex + 1) % slides.length;
+                container.style.transform = `translateX(-${currentIndex * 100}%)`;
+            }
+            
+            // Change slide every 3 seconds
+            setInterval(nextSlide, 3000);
+        });
+    </script>
+</body>
+</html>
