@@ -63,9 +63,13 @@ ob_start(); // Start output buffering
     <style>
         #nprogress .bar {
             background: tomato !important;
+            height: 3px !important;
         }
         #nprogress .peg {
             box-shadow: 0 0 10px tomato, 0 0 5px tomato !important;
+        }
+        #nprogress .spinner {
+            display: none !important;
         }
     </style>
 <?php
@@ -147,7 +151,9 @@ $(document).ready(function(){
         showSpinner: false,
         minimum: 0.1,
         easing: 'ease',
-        speed: 500
+        speed: 500,
+        trickle: true,
+        trickleSpeed: 200
     });
 
     // Start progress bar on page load
@@ -167,31 +173,28 @@ $(document).ready(function(){
         NProgress.done();
     });
 
-    $('').click(function(e){
-        e.preventDefault();
+    // Handle navigation clicks
+    $(document).on('click', 'a', function(e) {
+        if (!$(this).attr('target') && !$(this).hasClass('no-progress')) {
+            e.preventDefault();
+            NProgress.start();
+            
+            const href = $(this).attr('href');
+            if (href) {
+                setTimeout(function() {
+                    window.location.href = href;
+                }, 100);
+            }
+        }
+    });
+
+    // Handle form submissions
+    $(document).on('submit', 'form', function() {
         NProgress.start();
-
-        // Show spinner, hide text
-        $('#login-text').addClass('d-none');
-        $('#login-spinner').removeClass('d-none');
-
-        // Add 2-second delay before loading login content
-        setTimeout(function() {
-            $('#main-content').load('> *', function() {
-                // After content is loaded
-                NProgress.done();
-                $('#login-spinner').addClass('d-none');
-                $('#login-text').removeClass('d-none');
-                // Hide header and footer
-                $('#header, #footer').hide();
-            });
-
-            // Update browser URL
-            history.pushState(null, '', '?content=log-in');
-        }, 2000);
     });
 });
 
+// Handle browser back/forward buttons
 window.onpopstate = function () {
     NProgress.start();
     const urlParams = new URLSearchParams(window.location.search);
