@@ -64,6 +64,11 @@ ob_start(); // Start output buffering
         #nprogress .bar {
             background: tomato !important;
             height: 3px !important;
+            position: fixed !important;
+            z-index: 1031 !important;
+            top: 0 !important;
+            left: 0 !important;
+            width: 100% !important;
         }
         #nprogress .peg {
             box-shadow: 0 0 10px tomato, 0 0 5px tomato !important;
@@ -149,50 +154,63 @@ $(document).ready(function(){
     // Configure NProgress
     NProgress.configure({ 
         showSpinner: false,
-        minimum: 0.1,
-        easing: 'ease',
-        speed: 500,
-        trickle: true,
+        minimum: 0.08,
+        easing: 'linear',
+        speed: 200,
+        trickle: false,
         trickleSpeed: 200
     });
 
     // Start progress bar on page load
     NProgress.start();
+    NProgress.set(0.4); // Set initial progress
 
     // Complete progress bar when page is fully loaded
     $(window).on('load', function() {
-        NProgress.done();
+        NProgress.set(0.8);
+        setTimeout(function() {
+            NProgress.done();
+        }, 100);
     });
 
     // Handle AJAX requests
     $(document).ajaxStart(function() {
         NProgress.start();
+        NProgress.set(0.4);
     });
 
     $(document).ajaxStop(function() {
-        NProgress.done();
+        NProgress.set(0.8);
+        setTimeout(function() {
+            NProgress.done();
+        }, 100);
     });
 
     // Handle form submissions
     $(document).on('submit', 'form', function() {
         NProgress.start();
+        NProgress.set(0.4);
     });
 });
 
 // Handle browser back/forward buttons
 window.onpopstate = function () {
     NProgress.start();
+    NProgress.set(0.4);
     const urlParams = new URLSearchParams(window.location.search);
     const page = urlParams.get('content') || 'default';
 
     $('#main-content').load(`index.php?content=${page} .content > *`, function () {
-        NProgress.done();
-        // Show/hide header and footer based on content
-        if (page === 'log-in') {
-            $('#header, #footer').hide();
-        } else {
-            $('#header, #footer').show();
-        }
+        NProgress.set(0.8);
+        setTimeout(function() {
+            NProgress.done();
+            // Show/hide header and footer based on content
+            if (page === 'log-in') {
+                $('#header, #footer').hide();
+            } else {
+                $('#header, #footer').show();
+            }
+        }, 100);
     });
 };
 </script>
