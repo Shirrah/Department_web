@@ -161,16 +161,24 @@ $(document).ready(function(){
         trickleSpeed: 200
     });
 
+    // Safety function to ensure NProgress completes
+    function ensureNProgressComplete() {
+        setTimeout(function() {
+            if (NProgress.isStarted()) {
+                NProgress.done();
+            }
+        }, 1000); // Force complete after 1 second
+    }
+
     // Start progress bar on page load
     NProgress.start();
     NProgress.set(0.4);
+    ensureNProgressComplete();
 
     // Complete progress bar when page is fully loaded
     $(window).on('load', function() {
         NProgress.set(0.8);
-        setTimeout(function() {
-            NProgress.done();
-        }, 100);
+        NProgress.done();
     });
 
     // Handle AJAX requests
@@ -181,9 +189,8 @@ $(document).ready(function(){
 
     $(document).ajaxStop(function() {
         NProgress.set(0.8);
-        setTimeout(function() {
-            NProgress.done();
-        }, 100);
+        NProgress.done();
+        ensureNProgressComplete();
     });
 
     // Handle form submissions
@@ -197,29 +204,31 @@ $(document).ready(function(){
         NProgress.start();
         NProgress.set(0.4);
         
+        // Force complete after 1 second as a safety measure
+        ensureNProgressComplete();
+
         $.ajax({
             url: `index.php?content=${page}`,
             method: 'GET',
+            cache: false, // Prevent caching issues
             success: function(response) {
-                const tempDiv = $('<div>').html(response);
-                const newContent = tempDiv.find('.content > *');
-                $('#main-content').html(newContent);
-                
-                NProgress.set(0.8);
-                setTimeout(function() {
+                try {
+                    const tempDiv = $('<div>').html(response);
+                    const newContent = tempDiv.find('.content > *');
+                    $('#main-content').html(newContent);
+                    
+                    NProgress.set(0.8);
                     NProgress.done();
-                }, 100);
-
-                // Show/hide header and footer based on content
-                if (page === 'log-in') {
-                    $('#header, #footer').hide();
-                } else {
-                    $('#header, #footer').show();
+                } catch (e) {
+                    console.error('Navigation error:', e);
+                    NProgress.done();
                 }
             },
             error: function() {
-                // Ensure NProgress completes even if there's an error
                 NProgress.done();
+            },
+            complete: function() {
+                ensureNProgressComplete();
             }
         });
     }
@@ -241,6 +250,23 @@ $(document).ready(function(){
             handleNavigation(page);
             // Update URL without reload
             history.pushState({}, '', href);
+        }
+    });
+
+    // Handle visibility change (for mobile apps)
+    document.addEventListener('visibilitychange', function() {
+        if (document.visibilityState === 'visible') {
+            // If NProgress is stuck when app becomes visible, force complete
+            if (NProgress.isStarted()) {
+                NProgress.done();
+            }
+        }
+    });
+
+    // Handle page unload
+    window.addEventListener('beforeunload', function() {
+        if (NProgress.isStarted()) {
+            NProgress.done();
         }
     });
 });
