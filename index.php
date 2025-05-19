@@ -163,7 +163,7 @@ $(document).ready(function(){
 
     // Start progress bar on page load
     NProgress.start();
-    NProgress.set(0.4); // Set initial progress
+    NProgress.set(0.4);
 
     // Complete progress bar when page is fully loaded
     $(window).on('load', function() {
@@ -193,8 +193,13 @@ $(document).ready(function(){
     });
 });
 
-// Handle browser back/forward buttons
+// Handle browser back/forward buttons and page reloads
 window.onpopstate = function () {
+    handlePageLoad();
+};
+
+// Function to handle page loading
+function handlePageLoad() {
     NProgress.start();
     NProgress.set(0.4);
     const urlParams = new URLSearchParams(window.location.search);
@@ -219,15 +224,22 @@ window.onpopstate = function () {
             $('#header, #footer').show();
         }
     }).fail(function() {
-        // Ensure NProgress is completed even if the load fails
         NProgress.done();
     });
+}
+
+// Handle page reloads
+window.onbeforeunload = function() {
+    NProgress.start();
 };
 
 // Add error handling for AJAX requests
 $(document).ajaxError(function() {
     NProgress.done();
 });
+
+// Handle initial page load
+handlePageLoad();
 </script>
 
 
