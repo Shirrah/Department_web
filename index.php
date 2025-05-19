@@ -200,19 +200,34 @@ window.onpopstate = function () {
     const urlParams = new URLSearchParams(window.location.search);
     const page = urlParams.get('content') || 'default';
 
-    $('#main-content').load(`index.php?content=${page} .content > *`, function () {
+    $('#main-content').load(`index.php?content=${page} .content > *`, function (response, status, xhr) {
+        if (status === "error") {
+            console.error("Error loading page:", xhr.status, xhr.statusText);
+            NProgress.done();
+            return;
+        }
+        
         NProgress.set(0.8);
         setTimeout(function() {
             NProgress.done();
         }, 100);
+        
         // Show/hide header and footer based on content
         if (page === 'log-in') {
             $('#header, #footer').hide();
         } else {
             $('#header, #footer').show();
         }
+    }).fail(function() {
+        // Ensure NProgress is completed even if the load fails
+        NProgress.done();
     });
 };
+
+// Add error handling for AJAX requests
+$(document).ajaxError(function() {
+    NProgress.done();
+});
 </script>
 
 
