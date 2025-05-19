@@ -172,148 +172,214 @@ if (!empty($selected_semester)) {
     <div class="text-center mb-5">
         <h2 class="fw-bold">Financial Statement</h2>
         <p class="text-muted">Overview of collections and balances</p>
+        <button onclick="window.print()" class="btn btn-primary print-button">
+            <i class="fas fa-print"></i> Print Statement
+        </button>
     </div>
 
-    <!-- Summary Cards -->
-    <div class="row g-3 mb-4">
-        <div class="col-md-4">
-            <div class="card border-start border-info border-4">
-                <div class="card-body">
-                    <h6 class="text-muted">Total Collectibles</h6>
-                    <h3 class="text-info">₱ <?= number_format($grand_total + $grand_total_fines, 2) ?></h3>
-                    <small class="text-muted">Total fees and fines to collect</small>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-4">
-            <div class="card border-start border-success border-4">
-                <div class="card-body">
-                    <h6 class="text-muted">Total Collected</h6>
-                    <h3 class="text-success">₱ <?= number_format($grand_total_collected + $grand_total_collected_fines, 2) ?></h3>
-                    <small class="text-muted">Amount already collected</small>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-4">
-            <div class="card border-start border-warning border-4">
-                <div class="card-body">
-                    <h6 class="text-muted">Remaining Balance</h6>
-                    <h3 class="text-warning">₱ <?= number_format(($grand_total + $grand_total_fines) - ($grand_total_collected + $grand_total_collected_fines), 2) ?></h3>
-                    <small class="text-muted">Amount yet to collect</small>
-                </div>
-            </div>
-        </div>
-    </div>
+    <!-- Add print-specific styles -->
+    <style>
+        @media print {
+            body * {
+                visibility: hidden;
+            }
+            .print-button {
+                display: none !important;
+            }
+            .financial-statement-content, .financial-statement-content * {
+                visibility: visible;
+            }
+            .financial-statement-content {
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 100%;
+            }
+            .card {
+                border: 1px solid #ddd !important;
+                break-inside: avoid;
+            }
+            .container {
+                width: 100% !important;
+                max-width: 100% !important;
+                padding: 0 !important;
+                margin: 0 !important;
+            }
+            .col-md-4, .col-md-6 {
+                width: 100% !important;
+                padding: 10px !important;
+            }
+            .row {
+                display: block !important;
+            }
+            .border-end {
+                border-right: none !important;
+            }
+            .card-header {
+                background-color: #f8f9fa !important;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+            .text-success {
+                color: #198754 !important;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+            .text-warning {
+                color: #ffc107 !important;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+            .text-info {
+                color: #0dcaf0 !important;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+        }
+    </style>
 
-    <!-- Collectibles Section -->
-    <div class="card mb-4">
-        <div class="card-header bg-light">
-            <h5 class="mb-0">Collectibles</h5>
-        </div>
-        <div class="card-body p-0">
-            <div class="row g-0">
-                <div class="col-md-6 p-3 border-end">
-                    <h6 class="text-muted mb-3">Fees to Collect</h6>
-                    <ul class="list-unstyled">
-                        <?php if (!empty($fees)): ?>
-                            <?php foreach ($fees as $fee): ?>
-                                <li class="d-flex justify-content-between py-2">
-                                    <span><?= htmlspecialchars($fee['payment_name']) ?> (<?= $fee['unpaid_count'] ?>/<?= $fee['total_count'] ?> students)</span>
-                                    <span class="fw-bold">₱ <?= number_format($fee['total_collectible'], 2) ?></span>
-                                </li>
-                            <?php endforeach; ?>
-                        <?php else: ?>
-                            <li class="text-muted py-2">No fees available.</li>
-                        <?php endif; ?>
-                    </ul>
-                    <hr>
-                    <h6 class="text-end text-success">Total Fees: ₱ <?= number_format($grand_total, 2) ?></h6>
+    <div class="financial-statement-content">
+        <!-- Summary Cards -->
+        <div class="row g-3 mb-4">
+            <div class="col-md-4">
+                <div class="card border-start border-info border-4">
+                    <div class="card-body">
+                        <h6 class="text-muted">Total Collectibles</h6>
+                        <h3 class="text-info">₱ <?= number_format($grand_total + $grand_total_fines, 2) ?></h3>
+                        <small class="text-muted">Total fees and fines to collect</small>
+                    </div>
                 </div>
-
-                <div class="col-md-6 p-3">
-                    <h6 class="text-muted mb-3">Fines</h6>
-                    <ul class="list-unstyled">
-                        <?php if (!empty($fines)): ?>
-                            <?php foreach ($fines as $fine): 
-                                // Get number of students who have cleared this fine
-                                $stmt = $db->prepare("
-                                    SELECT COUNT(*) AS cleared_count 
-                                    FROM student_attendance sa
-                                    JOIN attendances a ON sa.id_attendance = a.id_attendance
-                                    WHERE sa.id_attendance = ? 
-                                    AND sa.status_attendance = 'Cleared' 
-                                    AND sa.Penalty_requirements = 0 
-                                    AND a.Penalty_type = 'Fee'
-                                    AND sa.semester_ID = ?
-                                ");
-                                $stmt->bind_param("ss", $fine['id_attendance'], $selected_semester);
-                                $stmt->execute();
-                                $result = $stmt->get_result();
-                                $row = $result->fetch_assoc();
-                                $cleared_count = (int)$row['cleared_count'];
-                                
-                                // Unpaid fines count = total absent - cleared count
-                                $unpaid_fines = $fine['absent_count'] - $cleared_count;
-                            ?>
-                                <li class="d-flex justify-content-between py-2">
-                                    <span><?= htmlspecialchars($fine['name_event']) ?> (<?= $fine['type_attendance'] ?>) (<?= $unpaid_fines ?>/<?= $fine['absent_count'] ?> students)</span>
-                                    <span class="fw-bold">₱ <?= number_format($fine['total_fines'], 2) ?></span>
-                                </li>
-                            <?php endforeach; ?>
-                        <?php else: ?>
-                            <li class="text-muted py-2">No fines data yet.</li>
-                        <?php endif; ?>
-                    </ul>
-                    <hr>
-                    <h6 class="text-end text-success">Total Fines: ₱ <?= number_format($grand_total_fines, 2) ?></h6>
+            </div>
+            <div class="col-md-4">
+                <div class="card border-start border-success border-4">
+                    <div class="card-body">
+                        <h6 class="text-muted">Total Collected</h6>
+                        <h3 class="text-success">₱ <?= number_format($grand_total_collected + $grand_total_collected_fines, 2) ?></h3>
+                        <small class="text-muted">Amount already collected</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card border-start border-warning border-4">
+                    <div class="card-body">
+                        <h6 class="text-muted">Remaining Balance</h6>
+                        <h3 class="text-warning">₱ <?= number_format(($grand_total + $grand_total_fines) - ($grand_total_collected + $grand_total_collected_fines), 2) ?></h3>
+                        <small class="text-muted">Amount yet to collect</small>
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
 
-    <!-- Collected Section -->
-    <div class="card">
-        <div class="card-header bg-light">
-            <h5 class="mb-0">Collected</h5>
-        </div>
-        <div class="card-body p-0">
-            <div class="row g-0">
-                <div class="col-md-6 p-3 border-end">
-                    <h6 class="text-muted mb-3">Fees Collected</h6>
-                    <ul class="list-unstyled">
-                        <?php if (!empty($fees)): ?>
-                            <?php foreach ($fees as $fee): ?>
-                                <?php if ($fee['paid_count'] > 0): ?>
+        <!-- Collectibles Section -->
+        <div class="card mb-4">
+            <div class="card-header bg-light">
+                <h5 class="mb-0">Collectibles</h5>
+            </div>
+            <div class="card-body p-0">
+                <div class="row g-0">
+                    <div class="col-md-6 p-3 border-end">
+                        <h6 class="text-muted mb-3">Fees to Collect</h6>
+                        <ul class="list-unstyled">
+                            <?php if (!empty($fees)): ?>
+                                <?php foreach ($fees as $fee): ?>
                                     <li class="d-flex justify-content-between py-2">
-                                        <span><?= htmlspecialchars($fee['payment_name']) ?> (<?= $fee['paid_count'] ?>/<?= $fee['total_count'] ?> students)</span>
-                                        <span class="fw-bold text-success">₱ <?= number_format($fee['total_collected'], 2) ?></span>
+                                        <span><?= htmlspecialchars($fee['payment_name']) ?> (<?= $fee['unpaid_count'] ?>/<?= $fee['total_count'] ?> students)</span>
+                                        <span class="fw-bold">₱ <?= number_format($fee['total_collectible'], 2) ?></span>
                                     </li>
-                                <?php endif; ?>
-                            <?php endforeach; ?>
-                        <?php else: ?>
-                            <li class="text-muted py-2">No collected payments yet.</li>
-                        <?php endif; ?>
-                    </ul>
-                    <hr>
-                    <h6 class="text-end text-success">Total Fees Collected: ₱ <?= number_format($grand_total_collected, 2) ?></h6>
-                </div>
+                                <?php endforeach; ?>
+                            <?php else: ?>
+                                <li class="text-muted py-2">No fees available.</li>
+                            <?php endif; ?>
+                        </ul>
+                        <hr>
+                        <h6 class="text-end text-success">Total Fees: ₱ <?= number_format($grand_total, 2) ?></h6>
+                    </div>
 
-                <div class="col-md-6 p-3">
-                    <h6 class="text-muted mb-3">Fines Collected</h6>
-                    <ul class="list-unstyled">
-                        <?php if (!empty($collected_fines)): ?>
-                            <?php foreach ($collected_fines as $fine): ?>
-                                <li class="d-flex justify-content-between py-2">
-                                    <span><?= htmlspecialchars($fine['name_event']) ?> (<?= $fine['type_attendance'] ?>) (<?= $fine['cleared_count'] ?>/<?= $fine['absent_count'] ?> students)</span>
-                                    <span class="fw-bold text-success">₱ <?= number_format($fine['total_collected_fines'], 2) ?></span>
-                                </li>
-                            <?php endforeach; ?>
-                        <?php else: ?>
-                            <li class="text-muted py-2">No fines collected yet.</li>
-                        <?php endif; ?>
-                    </ul>
-                    <hr>
-                    <h6 class="text-end text-success">Total Fines Collected: ₱ <?= number_format($grand_total_collected_fines, 2) ?></h6>
+                    <div class="col-md-6 p-3">
+                        <h6 class="text-muted mb-3">Fines</h6>
+                        <ul class="list-unstyled">
+                            <?php if (!empty($fines)): ?>
+                                <?php foreach ($fines as $fine): 
+                                    // Get number of students who have cleared this fine
+                                    $stmt = $db->prepare("
+                                        SELECT COUNT(*) AS cleared_count 
+                                        FROM student_attendance sa
+                                        JOIN attendances a ON sa.id_attendance = a.id_attendance
+                                        WHERE sa.id_attendance = ? 
+                                        AND sa.status_attendance = 'Cleared' 
+                                        AND sa.Penalty_requirements = 0 
+                                        AND a.Penalty_type = 'Fee'
+                                        AND sa.semester_ID = ?
+                                    ");
+                                    $stmt->bind_param("ss", $fine['id_attendance'], $selected_semester);
+                                    $stmt->execute();
+                                    $result = $stmt->get_result();
+                                    $row = $result->fetch_assoc();
+                                    $cleared_count = (int)$row['cleared_count'];
+                                    
+                                    // Unpaid fines count = total absent - cleared count
+                                    $unpaid_fines = $fine['absent_count'] - $cleared_count;
+                                ?>
+                                    <li class="d-flex justify-content-between py-2">
+                                        <span><?= htmlspecialchars($fine['name_event']) ?> (<?= $fine['type_attendance'] ?>) (<?= $unpaid_fines ?>/<?= $fine['absent_count'] ?> students)</span>
+                                        <span class="fw-bold">₱ <?= number_format($fine['total_fines'], 2) ?></span>
+                                    </li>
+                                <?php endforeach; ?>
+                            <?php else: ?>
+                                <li class="text-muted py-2">No fines data yet.</li>
+                            <?php endif; ?>
+                        </ul>
+                        <hr>
+                        <h6 class="text-end text-success">Total Fines: ₱ <?= number_format($grand_total_fines, 2) ?></h6>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Collected Section -->
+        <div class="card">
+            <div class="card-header bg-light">
+                <h5 class="mb-0">Collected</h5>
+            </div>
+            <div class="card-body p-0">
+                <div class="row g-0">
+                    <div class="col-md-6 p-3 border-end">
+                        <h6 class="text-muted mb-3">Fees Collected</h6>
+                        <ul class="list-unstyled">
+                            <?php if (!empty($fees)): ?>
+                                <?php foreach ($fees as $fee): ?>
+                                    <?php if ($fee['paid_count'] > 0): ?>
+                                        <li class="d-flex justify-content-between py-2">
+                                            <span><?= htmlspecialchars($fee['payment_name']) ?> (<?= $fee['paid_count'] ?>/<?= $fee['total_count'] ?> students)</span>
+                                            <span class="fw-bold text-success">₱ <?= number_format($fee['total_collected'], 2) ?></span>
+                                        </li>
+                                    <?php endif; ?>
+                                <?php endforeach; ?>
+                            <?php else: ?>
+                                <li class="text-muted py-2">No collected payments yet.</li>
+                            <?php endif; ?>
+                        </ul>
+                        <hr>
+                        <h6 class="text-end text-success">Total Fees Collected: ₱ <?= number_format($grand_total_collected, 2) ?></h6>
+                    </div>
+
+                    <div class="col-md-6 p-3">
+                        <h6 class="text-muted mb-3">Fines Collected</h6>
+                        <ul class="list-unstyled">
+                            <?php if (!empty($collected_fines)): ?>
+                                <?php foreach ($collected_fines as $fine): ?>
+                                    <li class="d-flex justify-content-between py-2">
+                                        <span><?= htmlspecialchars($fine['name_event']) ?> (<?= $fine['type_attendance'] ?>) (<?= $fine['cleared_count'] ?>/<?= $fine['absent_count'] ?> students)</span>
+                                        <span class="fw-bold text-success">₱ <?= number_format($fine['total_collected_fines'], 2) ?></span>
+                                    </li>
+                                <?php endforeach; ?>
+                            <?php else: ?>
+                                <li class="text-muted py-2">No fines collected yet.</li>
+                            <?php endif; ?>
+                        </ul>
+                        <hr>
+                        <h6 class="text-end text-success">Total Fines Collected: ₱ <?= number_format($grand_total_collected_fines, 2) ?></h6>
+                    </div>
                 </div>
             </div>
         </div>
