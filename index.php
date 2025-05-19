@@ -150,67 +150,79 @@ $site_version = $versionData['version'];
 </body>
 
 <script>
+// Function to check if device is desktop
+function isDesktopDevice() {
+    return !(/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent));
+}
+
 $(document).ready(function(){
-    // Configure NProgress
-    NProgress.configure({ 
-        showSpinner: false,
-        minimum: 0.08,
-        easing: 'linear',
-        speed: 200,
-        trickle: false,
-        trickleSpeed: 200
-    });
+    // Only initialize NProgress on desktop devices
+    if (isDesktopDevice()) {
+        // Configure NProgress
+        NProgress.configure({ 
+            showSpinner: false,
+            minimum: 0.08,
+            easing: 'linear',
+            speed: 200,
+            trickle: false,
+            trickleSpeed: 200
+        });
 
-    // Start progress bar on page load
-    NProgress.start();
-    NProgress.set(0.4); // Set initial progress
-
-    // Complete progress bar when page is fully loaded
-    $(window).on('load', function() {
-        NProgress.set(0.8);
-        setTimeout(function() {
-            NProgress.done();
-        }, 100);
-    });
-
-    // Handle AJAX requests
-    $(document).ajaxStart(function() {
+        // Start progress bar on page load
         NProgress.start();
-        NProgress.set(0.4);
-    });
+        NProgress.set(0.4); // Set initial progress
 
-    $(document).ajaxStop(function() {
-        NProgress.set(0.8);
-        setTimeout(function() {
-            NProgress.done();
-        }, 100);
-    });
+        // Complete progress bar when page is fully loaded
+        $(window).on('load', function() {
+            NProgress.set(0.8);
+            setTimeout(function() {
+                NProgress.done();
+            }, 100);
+        });
 
-    // Handle form submissions
-    $(document).on('submit', 'form', function() {
-        NProgress.start();
-        NProgress.set(0.4);
-    });
+        // Handle AJAX requests
+        $(document).ajaxStart(function() {
+            NProgress.start();
+            NProgress.set(0.4);
+        });
+
+        $(document).ajaxStop(function() {
+            NProgress.set(0.8);
+            setTimeout(function() {
+                NProgress.done();
+            }, 100);
+        });
+
+        // Handle form submissions
+        $(document).on('submit', 'form', function() {
+            NProgress.start();
+            NProgress.set(0.4);
+        });
+    }
 });
 
 // Handle browser back/forward buttons
 window.onpopstate = function () {
-    NProgress.start();
-    NProgress.set(0.4);
+    if (isDesktopDevice()) {
+        NProgress.start();
+        NProgress.set(0.4);
+    }
     const urlParams = new URLSearchParams(window.location.search);
     const page = urlParams.get('content') || 'default';
 
     $('#main-content').load(`index.php?content=${page} .content > *`, function () {
-        NProgress.set(0.8);
-        setTimeout(function() {
-            NProgress.done();
-            // Show/hide header and footer based on content
-            if (page === 'log-in') {
-                $('#header, #footer').hide();
-            } else {
-                $('#header, #footer').show();
-            }
-        }, 100);
+        if (isDesktopDevice()) {
+            NProgress.set(0.8);
+            setTimeout(function() {
+                NProgress.done();
+            }, 100);
+        }
+        // Show/hide header and footer based on content
+        if (page === 'log-in') {
+            $('#header, #footer').hide();
+        } else {
+            $('#header, #footer').show();
+        }
     });
 };
 </script>
