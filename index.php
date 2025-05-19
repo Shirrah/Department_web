@@ -163,11 +163,14 @@ $(document).ready(function(){
 
     // Start progress bar on page load
     NProgress.start();
-    NProgress.set(0.4);
+    NProgress.set(0.4); // Set initial progress
 
     // Complete progress bar when page is fully loaded
     $(window).on('load', function() {
-        completeProgress();
+        NProgress.set(0.8);
+        setTimeout(function() {
+            NProgress.done();
+        }, 100);
     });
 
     // Handle AJAX requests
@@ -177,7 +180,10 @@ $(document).ready(function(){
     });
 
     $(document).ajaxStop(function() {
-        completeProgress();
+        NProgress.set(0.8);
+        setTimeout(function() {
+            NProgress.done();
+        }, 100);
     });
 
     // Handle form submissions
@@ -187,74 +193,26 @@ $(document).ready(function(){
     });
 });
 
-// Function to safely complete progress
-function completeProgress() {
-    NProgress.set(0.8);
-    // Use a shorter timeout for mobile devices
-    setTimeout(function() {
-        NProgress.done();
-    }, 50);
-}
-
-// Handle browser back/forward buttons and page reloads
+// Handle browser back/forward buttons
 window.onpopstate = function () {
-    handlePageLoad();
-};
-
-// Function to handle page loading
-function handlePageLoad() {
     NProgress.start();
     NProgress.set(0.4);
     const urlParams = new URLSearchParams(window.location.search);
     const page = urlParams.get('content') || 'default';
 
-    $('#main-content').load(`index.php?content=${page} .content > *`, function (response, status, xhr) {
-        if (status === "error") {
-            console.error("Error loading page:", xhr.status, xhr.statusText);
+    $('#main-content').load(`index.php?content=${page} .content > *`, function () {
+        NProgress.set(0.8);
+        setTimeout(function() {
             NProgress.done();
-            return;
-        }
-        
-        completeProgress();
-        
+        }, 100);
         // Show/hide header and footer based on content
         if (page === 'log-in') {
             $('#header, #footer').hide();
         } else {
             $('#header, #footer').show();
         }
-    }).fail(function() {
-        NProgress.done();
     });
-}
-
-// Handle page reloads
-window.onbeforeunload = function() {
-    NProgress.start();
 };
-
-// Handle visibility change (for mobile browsers)
-document.addEventListener('visibilitychange', function() {
-    if (document.visibilityState === 'visible') {
-        // Page is becoming visible again
-        completeProgress();
-    }
-});
-
-// Add error handling for AJAX requests
-$(document).ajaxError(function() {
-    NProgress.done();
-});
-
-// Handle initial page load
-handlePageLoad();
-
-// Safety timeout to ensure NProgress completes
-setTimeout(function() {
-    if (NProgress.isStarted()) {
-        NProgress.done();
-    }
-}, 2000);
 </script>
 
 
