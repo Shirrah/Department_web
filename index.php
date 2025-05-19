@@ -163,7 +163,7 @@ $(document).ready(function(){
 
     // Start progress bar on page load
     NProgress.start();
-    NProgress.set(0.4); // Set initial progress
+    NProgress.set(0.4);
 
     // Complete progress bar when page is fully loaded
     $(window).on('load', function() {
@@ -191,28 +191,59 @@ $(document).ready(function(){
         NProgress.start();
         NProgress.set(0.4);
     });
-});
 
-// Handle browser back/forward buttons
-window.onpopstate = function () {
-    NProgress.start();
-    NProgress.set(0.4);
-    const urlParams = new URLSearchParams(window.location.search);
-    const page = urlParams.get('content') || 'default';
+    // Handle navigation
+    function handleNavigation(page) {
+        NProgress.start();
+        NProgress.set(0.4);
+        
+        $.ajax({
+            url: `index.php?content=${page}`,
+            method: 'GET',
+            success: function(response) {
+                const tempDiv = $('<div>').html(response);
+                const newContent = tempDiv.find('.content > *');
+                $('#main-content').html(newContent);
+                
+                NProgress.set(0.8);
+                setTimeout(function() {
+                    NProgress.done();
+                }, 100);
 
-    $('#main-content').load(`index.php?content=${page} .content > *`, function () {
-        NProgress.set(0.8);
-        setTimeout(function() {
-            NProgress.done();
-        }, 100);
-        // Show/hide header and footer based on content
-        if (page === 'log-in') {
-            $('#header, #footer').hide();
-        } else {
-            $('#header, #footer').show();
+                // Show/hide header and footer based on content
+                if (page === 'log-in') {
+                    $('#header, #footer').hide();
+                } else {
+                    $('#header, #footer').show();
+                }
+            },
+            error: function() {
+                // Ensure NProgress completes even if there's an error
+                NProgress.done();
+            }
+        });
+    }
+
+    // Handle browser back/forward buttons
+    window.onpopstate = function(event) {
+        const urlParams = new URLSearchParams(window.location.search);
+        const page = urlParams.get('content') || 'default';
+        handleNavigation(page);
+    };
+
+    // Add click handler for navigation links
+    $(document).on('click', 'a[href*="content="]', function(e) {
+        const href = $(this).attr('href');
+        const match = href.match(/content=([^&]+)/);
+        if (match) {
+            e.preventDefault();
+            const page = match[1];
+            handleNavigation(page);
+            // Update URL without reload
+            history.pushState({}, '', href);
         }
     });
-};
+});
 </script>
 
 
