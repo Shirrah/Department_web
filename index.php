@@ -167,10 +167,7 @@ $(document).ready(function(){
 
     // Complete progress bar when page is fully loaded
     $(window).on('load', function() {
-        NProgress.set(0.8);
-        setTimeout(function() {
-            NProgress.done();
-        }, 100);
+        completeProgress();
     });
 
     // Handle AJAX requests
@@ -180,10 +177,7 @@ $(document).ready(function(){
     });
 
     $(document).ajaxStop(function() {
-        NProgress.set(0.8);
-        setTimeout(function() {
-            NProgress.done();
-        }, 100);
+        completeProgress();
     });
 
     // Handle form submissions
@@ -192,6 +186,15 @@ $(document).ready(function(){
         NProgress.set(0.4);
     });
 });
+
+// Function to safely complete progress
+function completeProgress() {
+    NProgress.set(0.8);
+    // Use a shorter timeout for mobile devices
+    setTimeout(function() {
+        NProgress.done();
+    }, 50);
+}
 
 // Handle browser back/forward buttons and page reloads
 window.onpopstate = function () {
@@ -212,10 +215,7 @@ function handlePageLoad() {
             return;
         }
         
-        NProgress.set(0.8);
-        setTimeout(function() {
-            NProgress.done();
-        }, 100);
+        completeProgress();
         
         // Show/hide header and footer based on content
         if (page === 'log-in') {
@@ -233,6 +233,14 @@ window.onbeforeunload = function() {
     NProgress.start();
 };
 
+// Handle visibility change (for mobile browsers)
+document.addEventListener('visibilitychange', function() {
+    if (document.visibilityState === 'visible') {
+        // Page is becoming visible again
+        completeProgress();
+    }
+});
+
 // Add error handling for AJAX requests
 $(document).ajaxError(function() {
     NProgress.done();
@@ -240,6 +248,13 @@ $(document).ajaxError(function() {
 
 // Handle initial page load
 handlePageLoad();
+
+// Safety timeout to ensure NProgress completes
+setTimeout(function() {
+    if (NProgress.isStarted()) {
+        NProgress.done();
+    }
+}, 2000);
 </script>
 
 
