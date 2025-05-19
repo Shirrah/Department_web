@@ -53,7 +53,7 @@ ob_start(); // Start output buffering
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.1/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
     <!-- Add jQuery (CDN version) -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
@@ -150,73 +150,61 @@ $site_version = $versionData['version'];
 </body>
 
 <script>
-// Function to check if device is desktop
-function isDesktopDevice() {
-    return !(/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent));
-}
-
 $(document).ready(function(){
-    // Only initialize NProgress on desktop devices
-    if (isDesktopDevice()) {
-        // Configure NProgress
-        NProgress.configure({ 
-            showSpinner: false,
-            minimum: 0.08,
-            easing: 'linear',
-            speed: 200,
-            trickle: false,
-            trickleSpeed: 200
-        });
+    // Configure NProgress
+    NProgress.configure({ 
+        showSpinner: false,
+        minimum: 0.08,
+        easing: 'linear',
+        speed: 200,
+        trickle: false,
+        trickleSpeed: 200
+    });
 
-        // Start progress bar on page load
+    // Start progress bar on page load
+    NProgress.start();
+    NProgress.set(0.4); // Set initial progress
+
+    // Complete progress bar when page is fully loaded
+    $(window).on('load', function() {
+        NProgress.set(0.8);
+        setTimeout(function() {
+            NProgress.done();
+        }, 100);
+    });
+
+    // Handle AJAX requests
+    $(document).ajaxStart(function() {
         NProgress.start();
-        NProgress.set(0.4); // Set initial progress
+        NProgress.set(0.4);
+    });
 
-        // Complete progress bar when page is fully loaded
-        $(window).on('load', function() {
-            NProgress.set(0.8);
-            setTimeout(function() {
-                NProgress.done();
-            }, 100);
-        });
+    $(document).ajaxStop(function() {
+        NProgress.set(0.8);
+        setTimeout(function() {
+            NProgress.done();
+        }, 100);
+    });
 
-        // Handle AJAX requests
-        $(document).ajaxStart(function() {
-            NProgress.start();
-            NProgress.set(0.4);
-        });
-
-        $(document).ajaxStop(function() {
-            NProgress.set(0.8);
-            setTimeout(function() {
-                NProgress.done();
-            }, 100);
-        });
-
-        // Handle form submissions
-        $(document).on('submit', 'form', function() {
-            NProgress.start();
-            NProgress.set(0.4);
-        });
-    }
+    // Handle form submissions
+    $(document).on('submit', 'form', function() {
+        NProgress.start();
+        NProgress.set(0.4);
+    });
 });
 
 // Handle browser back/forward buttons
 window.onpopstate = function () {
-    if (isDesktopDevice()) {
-        NProgress.start();
-        NProgress.set(0.4);
-    }
+    NProgress.start();
+    NProgress.set(0.4);
     const urlParams = new URLSearchParams(window.location.search);
     const page = urlParams.get('content') || 'default';
 
     $('#main-content').load(`index.php?content=${page} .content > *`, function () {
-        if (isDesktopDevice()) {
-            NProgress.set(0.8);
-            setTimeout(function() {
-                NProgress.done();
-            }, 100);
-        }
+        NProgress.set(0.8);
+        setTimeout(function() {
+            NProgress.done();
+        }, 100);
         // Show/hide header and footer based on content
         if (page === 'log-in') {
             $('#header, #footer').hide();
