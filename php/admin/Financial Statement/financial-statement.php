@@ -22,6 +22,17 @@ $collected_fines = []; // To store collected fines data
 $grand_total_collected_fines = 0; // Initialize collected fines total
 
 if (!empty($selected_semester)) {
+    // Fetch semester details
+    $semester_stmt = $db->prepare("
+        SELECT semester_type, academic_year 
+        FROM semester 
+        WHERE semester_ID = ?
+    ");
+    $semester_stmt->bind_param("s", $selected_semester);
+    $semester_stmt->execute();
+    $semester_result = $semester_stmt->get_result();
+    $semester_details = $semester_result->fetch_assoc();
+
     // Fetching events and attendances for the selected semester
     $stmt = $db->prepare("
         SELECT e.name_event, a.type_attendance, a.Penalty_type, a.Penalty_requirements, a.id_attendance
@@ -168,77 +179,82 @@ if (!empty($selected_semester)) {
 ?>
 
 <div class="container py-4" style="margin-bottom: 150px;">
-    <!-- Header -->
-    <div class="text-center mb-5">
-        <h2 class="fw-bold">Financial Statement</h2>
-        <p class="text-muted">Overview of collections and balances</p>
-        <button onclick="window.print()" class="btn btn-primary print-button">
-            <i class="fas fa-print"></i> Print Statement
-        </button>
-    </div>
-
-    <!-- Add print-specific styles -->
-    <style>
-        @media print {
-            body * {
-                visibility: hidden;
-            }
-            .print-button {
-                display: none !important;
-            }
-            .financial-statement-content, .financial-statement-content * {
-                visibility: visible;
-            }
-            .financial-statement-content {
-                position: absolute;
-                left: 0;
-                top: 0;
-                width: 100%;
-            }
-            .card {
-                border: 1px solid #ddd !important;
-                break-inside: avoid;
-            }
-            .container {
-                width: 100% !important;
-                max-width: 100% !important;
-                padding: 0 !important;
-                margin: 0 !important;
-            }
-            .col-md-4, .col-md-6 {
-                width: 100% !important;
-                padding: 10px !important;
-            }
-            .row {
-                display: block !important;
-            }
-            .border-end {
-                border-right: none !important;
-            }
-            .card-header {
-                background-color: #f8f9fa !important;
-                -webkit-print-color-adjust: exact;
-                print-color-adjust: exact;
-            }
-            .text-success {
-                color: #198754 !important;
-                -webkit-print-color-adjust: exact;
-                print-color-adjust: exact;
-            }
-            .text-warning {
-                color: #ffc107 !important;
-                -webkit-print-color-adjust: exact;
-                print-color-adjust: exact;
-            }
-            .text-info {
-                color: #0dcaf0 !important;
-                -webkit-print-color-adjust: exact;
-                print-color-adjust: exact;
-            }
-        }
-    </style>
-
     <div class="financial-statement-content">
+        <!-- Header -->
+        <div class="text-center mb-5">
+            <h2 class="fw-bold">Financial Statement</h2>
+            <?php if (!empty($semester_details)): ?>
+                <h4 class="text-muted mb-3"><?= htmlspecialchars($semester_details['semester_type']) ?> - <?= htmlspecialchars($semester_details['academic_year']) ?></h4>
+            <?php endif; ?>
+            <p class="text-muted">Overview of collections and balances</p>
+            <div class="mt-3">
+                <button onclick="window.print()" class="btn btn-primary print-button">
+                    <i class="fas fa-print"></i> Print Statement
+                </button>
+            </div>
+        </div>
+
+        <!-- Add print-specific styles -->
+        <style>
+            @media print {
+                body * {
+                    visibility: hidden;
+                }
+                .print-button {
+                    display: none !important;
+                }
+                .financial-statement-content, .financial-statement-content * {
+                    visibility: visible;
+                }
+                .financial-statement-content {
+                    position: absolute;
+                    left: 0;
+                    top: 0;
+                    width: 100%;
+                }
+                .card {
+                    border: 1px solid #ddd !important;
+                    break-inside: avoid;
+                }
+                .container {
+                    width: 100% !important;
+                    max-width: 100% !important;
+                    padding: 0 !important;
+                    margin: 0 !important;
+                }
+                .col-md-4, .col-md-6 {
+                    width: 100% !important;
+                    padding: 10px !important;
+                }
+                .row {
+                    display: block !important;
+                }
+                .border-end {
+                    border-right: none !important;
+                }
+                .card-header {
+                    background-color: #f8f9fa !important;
+                    -webkit-print-color-adjust: exact;
+                    print-color-adjust: exact;
+                }
+                .text-success {
+                    color: #198754 !important;
+                    -webkit-print-color-adjust: exact;
+                    print-color-adjust: exact;
+                }
+                .text-warning {
+                    color: #ffc107 !important;
+                    -webkit-print-color-adjust: exact;
+                    print-color-adjust: exact;
+                }
+                .text-info {
+                    color: #0dcaf0 !important;
+                    -webkit-print-color-adjust: exact;
+                    print-color-adjust: exact;
+                }
+            }
+        </style>
+
         <!-- Summary Cards -->
         <div class="row g-3 mb-4">
             <div class="col-md-4">
@@ -275,7 +291,7 @@ if (!empty($selected_semester)) {
             <div class="card-header bg-light">
                 <h5 class="mb-0">Collectibles</h5>
             </div>
-            <div class="card-body p-0">
+            <div class="card-body p-4">
                 <div class="row g-0">
                     <div class="col-md-6 p-3 border-end">
                         <h6 class="text-muted mb-3">Fees to Collect</h6>
@@ -341,7 +357,7 @@ if (!empty($selected_semester)) {
             <div class="card-header bg-light">
                 <h5 class="mb-0">Collected</h5>
             </div>
-            <div class="card-body p-0">
+            <div class="card-body p-4">
                 <div class="row g-0">
                     <div class="col-md-6 p-3 border-end">
                         <h6 class="text-muted mb-3">Fees Collected</h6>

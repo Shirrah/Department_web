@@ -153,7 +153,7 @@ if ($selected_semester) {
         <!-- Show Report Button -->
         <div class="mt-3">
             <button type="button" class="btn btn-info" data-bs-toggle="modal" data-bs-target="#reportModal" <?php echo !$selected_semester ? 'disabled' : ''; ?>>
-                Show Report
+                Show My Report
             </button>
         </div>
     </div>
@@ -211,6 +211,7 @@ if ($selected_semester) {
                         </thead>
                         <tbody>
                             <?php
+                            $total_amount = 0;
                             $queryPayment = "
                                 SELECT 
                                     p.payment_name, 
@@ -226,26 +227,35 @@ if ($selected_semester) {
                             $stmtPayment->execute();
                             $resultPayment = $stmtPayment->get_result();
 
-                            if ($resultPayment->num_rows > 0): 
-                                while ($row = $resultPayment->fetch_assoc()): 
-                                    $formatted_date_payment = (new DateTime($row['date_payment']))->format('M d, Y');
+                            if ($resultPayment->num_rows > 0) {
+                                while ($row = $resultPayment->fetch_assoc()) {
+                                    $total_amount += $row['payment_amount'];
+                                    $formatted_date = $row['date_payment'] ? date('M d, Y', strtotime($row['date_payment'])) : 'N/A';
                                     ?>
                                     <tr>
                                         <td><?php echo htmlspecialchars($row['payment_name']); ?></td>
-                                        <td>₱<?php echo number_format($row['payment_amount'], 2); ?></td>
-                                        <td><?php echo htmlspecialchars($formatted_date_payment); ?></td>
+                                        <td>₱ <?php echo number_format($row['payment_amount'], 2); ?></td>
+                                        <td><?php echo htmlspecialchars($formatted_date); ?></td>
                                         <td>
                                             <?php if ($row['status_payment'] == 1): ?>
-                                                <span class="badge bg-success"><i class="bi bi-check-circle"></i> Paid</span>
+                                                <span class="badge bg-success">Paid</span>
                                             <?php else: ?>
-                                                <span class="badge bg-danger"><i class="bi bi-x-circle"></i> Not Paid</span>
+                                                <span class="badge bg-danger">Not Paid</span>
                                             <?php endif; ?>
                                         </td>
                                     </tr>
-                                <?php endwhile; ?>
-                            <?php else: ?>
-                                <tr><td colspan="4" class="text-center">No payment records found.</td></tr>
-                            <?php endif; ?>
+                                    <?php
+                                }
+                                ?>
+                                <tr class="table-light">
+                                    <td colspan="1" class="text-end"><strong>Total Amount:</strong></td>
+                                    <td colspan="3"><strong>₱ <?php echo number_format($total_amount, 2); ?></strong></td>
+                                </tr>
+                                <?php
+                            } else {
+                                echo '<tr><td colspan="4" class="text-center">No payment records found.</td></tr>';
+                            }
+                            ?>
                         </tbody>
                     </table>
                 </div>

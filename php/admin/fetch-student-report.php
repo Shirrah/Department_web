@@ -99,12 +99,18 @@ $resultAttendance = $stmtAttendance->get_result();
             </tr>
         </thead>
         <tbody>
-            <?php if ($resultPayment->num_rows > 0): ?>
-                <?php while ($row = $resultPayment->fetch_assoc()): ?>
-                    <?php
+            <?php 
+            $total_amount = 0;
+            $total_paid = 0;
+            if ($resultPayment->num_rows > 0): 
+                while ($row = $resultPayment->fetch_assoc()): 
                     $formatted_date_payment = $row['date_payment'] ? (new DateTime($row['date_payment']))->format('M d, Y') : 'N/A';
                     $paymentId = $row['id_payment'];
-                    ?>
+                    $total_amount += $row['payment_amount'];
+                    if ($row['status_payment'] == 1) {
+                        $total_paid += $row['payment_amount'];
+                    }
+            ?>
                     <tr id="payment-row-<?= $paymentId ?>">
                         <td><?= htmlspecialchars($row['payment_name']) ?></td>
                         <td><?= htmlspecialchars(number_format($row['payment_amount'], 2)) ?></td>
@@ -127,6 +133,10 @@ $resultAttendance = $stmtAttendance->get_result();
                         </td>
                     </tr>
                 <?php endwhile; ?>
+                <tr class="table-light">
+                    <td colspan="1" class="text-end"><strong>Total Amount:</strong></td>
+                    <td colspan="4"><strong>₱ <?= number_format($total_amount, 2) ?></strong></td>
+                </tr>
             <?php else: ?>
                 <tr><td colspan="5" class="text-center">No payment records found.</td></tr>
             <?php endif; ?>
