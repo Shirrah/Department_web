@@ -155,7 +155,7 @@ if (isset($_SESSION['user_data'])) {
             </li>
             <li>
             <a href="?content=student-index&student=student-qrcode" class="nav-link text-white">
-            <i class="fa-solid fa-qrcode"></i>
+            <i class="bi bi-qr-code"></i>
                     <span class="ms-1 d-none d-sm-inline">Qr code</span>
                 </a>
             </li>
