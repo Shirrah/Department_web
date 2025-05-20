@@ -150,126 +150,81 @@ $site_version = $versionData['version'];
 </body>
 
 <script>
+// Function to check if device is desktop
+function isDesktopDevice() {
+    return !(/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent));
+}
+
 $(document).ready(function(){
-    // Configure NProgress
-    NProgress.configure({ 
-        showSpinner: false,
-        minimum: 0.08,
-        easing: 'linear',
-        speed: 200,
-        trickle: false,
-        trickleSpeed: 200
-    });
+    // Only initialize NProgress on desktop devices
+    if (isDesktopDevice()) {
+        // Configure NProgress
+        NProgress.configure({ 
+            showSpinner: false,
+            minimum: 0.08,
+            easing: 'linear',
+            speed: 200,
+            trickle: false,
+            trickleSpeed: 200
+        });
 
-    // Safety function to ensure NProgress completes
-    function ensureNProgressComplete() {
-        setTimeout(function() {
-            if (NProgress.isStarted()) {
+        // Start progress bar on page load
+        NProgress.start();
+        NProgress.set(0.4); // Set initial progress
+
+        // Complete progress bar when page is fully loaded
+        $(window).on('load', function() {
+            NProgress.set(0.8);
+            setTimeout(function() {
                 NProgress.done();
-            }
-        }, 1000); // Force complete after 1 second
-    }
+            }, 100);
+        });
 
-    // Start progress bar on page load
-    NProgress.start();
-    NProgress.set(0.4);
-    ensureNProgressComplete();
+        // Handle AJAX requests
+        $(document).ajaxStart(function() {
+            NProgress.start();
+            NProgress.set(0.4);
+        });
 
-    // Complete progress bar when page is fully loaded
-    $(window).on('load', function() {
-        NProgress.set(0.8);
-        NProgress.done();
-    });
-
-    // Handle AJAX requests
-    $(document).ajaxStart(function() {
-        NProgress.start();
-        NProgress.set(0.4);
-    });
-
-    $(document).ajaxStop(function() {
-        NProgress.set(0.8);
-        NProgress.done();
-        ensureNProgressComplete();
-    });
-
-    // Handle form submissions
-    $(document).on('submit', 'form', function() {
-        NProgress.start();
-        NProgress.set(0.4);
-    });
-
-    // Handle navigation
-    function handleNavigation(page) {
-        NProgress.start();
-        NProgress.set(0.4);
-        
-        // Force complete after 1 second as a safety measure
-        ensureNProgressComplete();
-
-        $.ajax({
-            url: `index.php?content=${page}`,
-            method: 'GET',
-            cache: false, // Prevent caching issues
-            success: function(response) {
-                try {
-                    const tempDiv = $('<div>').html(response);
-                    const newContent = tempDiv.find('.content > *');
-                    $('#main-content').html(newContent);
-                    
-                    NProgress.set(0.8);
-                    NProgress.done();
-                } catch (e) {
-                    console.error('Navigation error:', e);
-                    NProgress.done();
-                }
-            },
-            error: function() {
+        $(document).ajaxStop(function() {
+            NProgress.set(0.8);
+            setTimeout(function() {
                 NProgress.done();
-            },
-            complete: function() {
-                ensureNProgressComplete();
-            }
+            }, 100);
+        });
+
+        // Handle form submissions
+        $(document).on('submit', 'form', function() {
+            NProgress.start();
+            NProgress.set(0.4);
         });
     }
-
-    // Handle browser back/forward buttons
-    window.onpopstate = function(event) {
-        const urlParams = new URLSearchParams(window.location.search);
-        const page = urlParams.get('content') || 'default';
-        handleNavigation(page);
-    };
-
-    // Add click handler for navigation links
-    $(document).on('click', 'a[href*="content="]', function(e) {
-        const href = $(this).attr('href');
-        const match = href.match(/content=([^&]+)/);
-        if (match) {
-            e.preventDefault();
-            const page = match[1];
-            handleNavigation(page);
-            // Update URL without reload
-            history.pushState({}, '', href);
-        }
-    });
-
-    // Handle visibility change (for mobile apps)
-    document.addEventListener('visibilitychange', function() {
-        if (document.visibilityState === 'visible') {
-            // If NProgress is stuck when app becomes visible, force complete
-            if (NProgress.isStarted()) {
-                NProgress.done();
-            }
-        }
-    });
-
-    // Handle page unload
-    window.addEventListener('beforeunload', function() {
-        if (NProgress.isStarted()) {
-            NProgress.done();
-        }
-    });
 });
+
+// Handle browser back/forward buttons
+window.onpopstate = function () {
+    if (isDesktopDevice()) {
+        NProgress.start();
+        NProgress.set(0.4);
+    }
+    const urlParams = new URLSearchParams(window.location.search);
+    const page = urlParams.get('content') || 'default';
+
+    $('#main-content').load(`index.php?content=${page} .content > *`, function () {
+        if (isDesktopDevice()) {
+            NProgress.set(0.8);
+            setTimeout(function() {
+                NProgress.done();
+            }, 100);
+        }
+        // Show/hide header and footer based on content
+        if (page === 'log-in') {
+            $('#header, #footer').hide();
+        } else {
+            $('#header, #footer').show();
+        }
+    });
+};
 </script>
 
 
