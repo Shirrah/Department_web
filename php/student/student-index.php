@@ -56,7 +56,7 @@ if (isset($_SESSION['user_data'])) {
 
     .sidebar {
         width: 250px;
-        background-color: #343a40;
+        background-color: rgba(var(--bs-dark-rgb), var(--bs-bg-opacity)) !important;
         padding: 15px;
         height: 100%; /* Sidebar takes the full height */
         overflow-y: auto; /* Allow scrolling inside sidebar if necessary */
@@ -92,13 +92,16 @@ if (isset($_SESSION['user_data'])) {
     }
 
     .navbar .dropdown-menu {
-    position: absolute;
-    top: 100%;
-    right: 0;
-    max-width: 250px;  /* Limit the width of the dropdown */
-    overflow-x: auto;  /* Enable horizontal scrolling if content overflows */
-}
+        position: absolute;
+        top: 100%;
+        right: 0;
+        max-width: 250px;  /* Limit the width of the dropdown */
+        overflow-x: auto;  /* Enable horizontal scrolling if content overflows */
+    }
 
+    .navbar, .admin-sidebar-con, .offcanvas {
+        background-color: rgba(var(--bs-dark-rgb), var(--bs-bg-opacity)) !important;
+    }
 </style>
 
 <div class="main-content-con">
