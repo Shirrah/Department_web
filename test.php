@@ -3,49 +3,132 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Under Maintenance</title>
+    <title>Modern Action Buttons in Table</title>
     <style>
         body {
-            font-family: Arial, sans-serif;
-            background-color: #f5f5f5;
-            margin: 0;
-            padding: 0;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            text-align: center;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            padding: 20px;
+            background-color: #f5f7fa;
         }
-        .maintenance-container {
-            background-color: white;
-            padding: 40px;
-            border-radius: 10px;
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
             box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-            max-width: 600px;
-            margin: 20px;
+            background-color: white;
+            border-radius: 8px;
+            overflow: hidden;
         }
-        h1 {
-            color: #333;
-            margin-bottom: 20px;
+        
+        th, td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid #e0e0e0;
         }
-        p {
-            color: #666;
-            line-height: 1.6;
-            margin-bottom: 20px;
+        
+        th {
+            background-color: #f8f9fa;
+            font-weight: 600;
+            color: #495057;
         }
-        .icon {
-            font-size: 64px;
-            margin-bottom: 20px;
-            color: #ff9800;
+        
+        tr:hover {
+            background-color: #f8f9fa;
+        }
+        
+        .action-buttons {
+            display: flex;
+            gap: 8px;
+        }
+        
+        .btn {
+            padding: 6px 12px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+        }
+        
+        .btn i {
+            margin-right: 5px;
+            font-size: 14px;
+        }
+        
+        .btn-view {
+            background-color: #e3f2fd;
+            color: #1976d2;
+        }
+        
+        .btn-edit {
+            background-color: #e8f5e9;
+            color: #388e3c;
+        }
+        
+        .btn-delete {
+            background-color: #ffebee;
+            color: #d32f2f;
+        }
+        
+        .btn:hover {
+            opacity: 0.9;
+            transform: translateY(-1px);
         }
     </style>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
 <body>
-    <div class="maintenance-container">
-        <div class="icon">🔧</div>
-        <h1>We'll Be Back Soon!</h1>
-        <p>Our website is currently undergoing scheduled maintenance to improve your experience. We apologize for any inconvenience and should be back online shortly.</p>
-        <p>Please check back later. Thank you for your patience.</p>
-    </div>
+    <table>
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Role</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>John Doe</td>
+                <td>john@example.com</td>
+                <td>Admin</td>
+                <td>
+                    <div class="action-buttons">
+                        <button class="btn btn-view"><i class="fas fa-eye"></i> View</button>
+                        <button class="btn btn-edit"><i class="fas fa-edit"></i> Edit</button>
+                        <button class="btn btn-delete"><i class="fas fa-trash"></i> Delete</button>
+                    </div>
+                </td>
+            </tr>
+            <tr>
+                <td>Jane Smith</td>
+                <td>jane@example.com</td>
+                <td>User</td>
+                <td>
+                    <div class="action-buttons">
+                        <button class="btn btn-view"><i class="fas fa-eye"></i> View</button>
+                        <button class="btn btn-edit"><i class="fas fa-edit"></i> Edit</button>
+                        <button class="btn btn-delete"><i class="fas fa-trash"></i> Delete</button>
+                    </div>
+                </td>
+            </tr>
+            <tr>
+                <td>Robert Johnson</td>
+                <td>robert@example.com</td>
+                <td>Editor</td>
+                <td>
+                    <div class="action-buttons">
+                        <button class="btn btn-view"><i class="fas fa-eye"></i> View</button>
+                        <button class="btn btn-edit"><i class="fas fa-edit"></i> Edit</button>
+                        <button class="btn btn-delete"><i class="fas fa-trash"></i> Delete</button>
+                    </div>
+                </td>
+            </tr>
+        </tbody>
+    </table>
 </body>
 </html>

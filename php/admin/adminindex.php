@@ -157,14 +157,14 @@ require_once "././php/admin/semester-selection.php";
                 <a href="#adminsMenu" class="nav-link text-white d-flex justify-content-between align-items-center collapsed" data-bs-toggle="collapse" role="button" aria-expanded="false">
                     <span>
                         <i class="bi bi-person"></i>
-                        <span class="ms-1 d-none d-sm-inline">Admins</span>
+                        <span class="ms-1 d-none d-sm-inline">Admins & Roles</span>
                     </span>
                     <i class="bi bi-chevron-down"></i>
                 </a>
                 <div class="collapse" id="adminsMenu">
                     <ul class="nav flex-column ps-3">
                         <li>
-                            <a href="?content=admin-index&admin=admin-management" class="nav-link text-white action-btn"><i class="bi bi-chevron-right"></i>  <span class="d-none d-sm-inline">Manage Admins & Roles</span></a>
+                            <a href="?content=admin-index&admin=admin-management" class="nav-link text-white action-btn"><i class="bi bi-chevron-right"></i>  <span class="d-none d-sm-inline">Manage Admins</span></a>
                         </li>
                     </ul>
                 </div>
@@ -247,7 +247,7 @@ require_once "././php/admin/semester-selection.php";
                 <a href="#adminsMenu" class="nav-link text-white d-flex justify-content-between align-items-center collapsed" data-bs-toggle="collapse" role="button" aria-expanded="false">
                     <span>
                         <i class="bi bi-person"></i>
-                        <span class="">Admins</span>
+                        <span class="">Admins & Roles</span>
                     </span>
                     <i class="bi bi-chevron-down"></i>
                 </a>

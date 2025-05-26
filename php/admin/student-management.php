@@ -340,7 +340,12 @@ ob_end_flush();
                     
                     <div class="mb-3">
                         <label for="edit_pass_student" class="form-label">Password:</label>
-                        <input type="password" class="form-control" id="edit_pass_student" name="pass_student" required>
+                        <div class="input-group">
+                            <input type="password" class="form-control" id="edit_pass_student" name="pass_student" required>
+                            <button class="btn btn-outline-secondary" type="button" id="togglePassword">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                        </div>
                     </div>
                     
                     <div class="mb-3">
@@ -496,6 +501,22 @@ document.addEventListener('DOMContentLoaded', function() {
         submitBtn.disabled = false;
     });
 });
+
+    // Add password toggle functionality
+    const togglePassword = document.getElementById('togglePassword');
+    const passwordInput = document.getElementById('edit_pass_student');
+    
+    if (togglePassword && passwordInput) {
+        togglePassword.addEventListener('click', function() {
+            const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+            passwordInput.setAttribute('type', type);
+            
+            // Toggle eye icon
+            const icon = this.querySelector('i');
+            icon.classList.toggle('fa-eye');
+            icon.classList.toggle('fa-eye-slash');
+        });
+    }
 });
 
 </script>
