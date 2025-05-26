@@ -323,7 +323,10 @@ require_once "././php/admin/semester-selection.php";
     
     // Set active link based on query parameter
     document.querySelectorAll('.nav-link').forEach(link => {
-        if (currentURL.includes(link.getAttribute('href'))) {
+        const href = link.getAttribute('href');
+        if (currentURL.includes(href) || 
+            (href === '?content=admin-index&admin=dashboard' && 
+             (currentURL.includes('?content=admin-index') || currentURL.includes('?content=admin-index&admin=dashboard')))) {
             link.classList.add('active'); // Add active class
             const parentMenu = link.closest('.collapse');
             if (parentMenu) {
