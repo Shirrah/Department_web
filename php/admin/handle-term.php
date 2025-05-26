@@ -43,13 +43,16 @@ try {
             $semester_type_formatted = strtolower(str_replace(' ', '', $semester_type));
             $semester_ID = "AY{$start_year}-{$end_year}-{$semester_type_formatted}";
 
-            $insertQuery = "INSERT INTO semester (semester_ID, academic_year, semester_type, status) VALUES (?, ?, ?, 'inactive')";
+            // Get current date and time
+            $date_created = date('Y-m-d H:i:s');
+
+            $insertQuery = "INSERT INTO semester (semester_ID, academic_year, semester_type, status, date_created) VALUES (?, ?, ?, 'inactive', ?)";
             $stmt = $db->prepare($insertQuery);
             if (!$stmt) {
                 throw new Exception("Prepare failed: " . $db->error);
             }
             
-            $stmt->bind_param("sss", $semester_ID, $academic_year, $semester_type);
+            $stmt->bind_param("ssss", $semester_ID, $academic_year, $semester_type, $date_created);
 
             if ($stmt->execute()) {
                 echo "success";
