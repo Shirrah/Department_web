@@ -200,11 +200,24 @@
     ?>
 
     <div class="admin-fees-action">
-        <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#createFeeModal">
+        <button type="button" class="btn btn-tomato" data-bs-toggle="modal" data-bs-target="#createFeeModal">
             Create Fee
         </button>
     </div>
 </div>
+
+<style>
+.btn-tomato {
+    background-color: tomato;
+    color: white;
+    border: none;
+}
+
+.btn-tomato:hover {
+    background-color: #ff6347;
+    color: white;
+}
+</style>
 
 <!-- Full-Screen Modal -->
 <div class="modal fade" id="fullScreenModal" tabindex="-1" aria-labelledby="fullScreenModalLabel" aria-hidden="true">

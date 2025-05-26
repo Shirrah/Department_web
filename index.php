@@ -167,13 +167,14 @@ function isDesktopDevice() {
 
 $(document).ready(function(){
     // Show loading overlay when page starts loading
-    $(window).on('beforeunload', function() {
-        $('#loading-overlay').css('display', 'flex');
-    });
-
-    // Hide loading overlay when page is fully loaded
+    $('#loading-overlay').css('display', 'flex');
+    
+    // Hide loading overlay only when all resources are loaded
     $(window).on('load', function() {
-        $('#loading-overlay').css('display', 'none');
+        // Add a small delay to ensure everything is truly loaded
+        setTimeout(function() {
+            $('#loading-overlay').fadeOut(500);
+        }, 500);
     });
 
     // Handle browser back/forward buttons
@@ -189,7 +190,10 @@ $(document).ready(function(){
             } else {
                 $('#header, #footer').show();
             }
-            $('#loading-overlay').css('display', 'none');
+            // Add a small delay before hiding the loading overlay
+            setTimeout(function() {
+                $('#loading-overlay').fadeOut(500);
+            }, 500);
         });
     };
 });
