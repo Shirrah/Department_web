@@ -82,14 +82,30 @@ $site_version = $versionData['version'];
         .bouncing-logo {
             width: 100px;
             height: 100px;
-            animation: bounce 1s infinite;
+            position: relative;
+            overflow: hidden;
         }
-        @keyframes bounce {
-            0%, 100% {
-                transform: translateY(0);
+        .bouncing-logo::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 50%;
+            height: 100%;
+            background: linear-gradient(
+                to right,
+                transparent,
+                rgba(255, 255, 255, 0.8),
+                transparent
+            );
+            animation: sweep 1.5s infinite;
+        }
+        @keyframes sweep {
+            0% {
+                left: -100%;
             }
-            50% {
-                transform: translateY(-50px);
+            100% {
+                left: 200%;
             }
         }
     </style>
