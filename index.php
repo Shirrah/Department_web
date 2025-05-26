@@ -96,7 +96,7 @@ $site_version = $versionData['version'];
 </head>
 <body>
     <div id="loading-overlay">
-        <img src="assets/sys-logo.png" alt="Loading..." class="bouncing-logo">
+        <img src="./assets/images/sys-logo.png" alt="Loading..." class="bouncing-logo">
     </div>
     <div class="main-container">
         <?php
