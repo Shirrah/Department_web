@@ -5,16 +5,14 @@ if (session_status() == PHP_SESSION_NONE) {
 
 require_once "../../php/db-conn.php";
 
-// Add error handling for database connection
-if (!isset($db) || $db->connect_error) {
-    error_log("Database connection failed: " . ($db->connect_error ?? "Unknown error"));
-    http_response_code(500);
-    echo "Database connection error";
-    exit();
-}
+try {
+    $db = Database::getInstance()->db;
+    
+    if ($db->connect_error) {
+        throw new Exception("Database connection failed: " . $db->connect_error);
+    }
 
-if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    try {
+    if ($_SERVER["REQUEST_METHOD"] == "POST") {
         // Check if this is an edit operation
         if (isset($_POST['semester_ID']) && !empty($_POST['semester_ID'])) {
             // Edit existing term
@@ -59,13 +57,13 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 throw new Exception("Error adding term: " . $stmt->error);
             }
         }
-    } catch (Exception $e) {
-        error_log("Error in handle-term.php: " . $e->getMessage());
-        http_response_code(500);
-        echo "An error occurred: " . $e->getMessage();
+    } else {
+        http_response_code(405);
+        echo "Invalid request method";
     }
-} else {
-    http_response_code(405);
-    echo "Invalid request method";
+} catch (Exception $e) {
+    error_log("Error in handle-term.php: " . $e->getMessage());
+    http_response_code(500);
+    echo "An error occurred: " . $e->getMessage();
 }
 ?>
