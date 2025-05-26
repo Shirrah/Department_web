@@ -263,10 +263,20 @@ if (isset($_GET['semester']) && !empty($_GET['semester'])) {
 // Initialize the selected semester variable
 $selected_semester = $_SESSION['selected_semester'][$user_id] ?? '';
 
-// Fetch all events for the selected semester (No pagination)
-$query = "SELECT id_event, name_event, date_event, event_start_time, event_end_time, event_desc 
-          FROM events WHERE semester_ID = ?";
-$stmt = $db->prepare($query);
+// Fetch all events for the selected semester with creator details
+$eventQuery = "
+    SELECT 
+        events.*, 
+        COALESCE(admins.firstname_admin, student.firstname_student) AS creator_firstname,
+        COALESCE(admins.lastname_admin, student.lastname_student) AS creator_lastname
+    FROM events
+    LEFT JOIN admins ON events.created_by = admins.id_admin
+    LEFT JOIN student ON events.created_by = student.id_student
+    WHERE events.semester_ID = ?
+    ORDER BY events.date_event DESC
+";
+
+$stmt = $db->prepare($eventQuery);
 $stmt->bind_param("s", $selected_semester);
 $stmt->execute();
 $events = $stmt->get_result();
@@ -298,24 +308,6 @@ $events = $stmt->get_result();
                     No events found in this semester.
                 </div>
             <?php else: 
-                // Updated query to fetch creator details
-                $eventQuery = "
-                    SELECT 
-                        events.*, 
-                        COALESCE(admins.firstname_admin, student.firstname_student) AS creator_firstname,
-                        COALESCE(admins.lastname_admin, student.lastname_student) AS creator_lastname
-                    FROM events
-                    LEFT JOIN admins ON events.created_by = admins.id_admin
-                    LEFT JOIN student ON events.created_by = student.id_student
-                    WHERE events.semester_ID = ?
-                    ORDER BY events.date_event DESC
-                ";
-
-                $stmt = $db->prepare($eventQuery);
-                $stmt->bind_param("s", $selected_semester);
-                $stmt->execute();
-                $events = $stmt->get_result();
-
                 while ($event = $events->fetch_assoc()): 
             ?>
                 <div class="accordion-item">
