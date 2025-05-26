@@ -324,13 +324,18 @@ require_once "././php/admin/semester-selection.php";
     // Set active link based on query parameter
     document.querySelectorAll('.nav-link').forEach(link => {
         const href = link.getAttribute('href');
-        if (currentURL.includes(href) || 
-            (href === '?content=admin-index&admin=dashboard' && 
-             (currentURL.includes('?content=admin-index') || currentURL.includes('?content=admin-index&admin=dashboard')))) {
-            link.classList.add('active'); // Add active class
+        // Check for exact URL match for dashboard
+        if (href === '?content=admin-index&admin=dashboard' && 
+            (currentURL.endsWith('index.php?content=admin-index') || 
+             currentURL.endsWith('index.php?content=admin-index&admin=dashboard'))) {
+            link.classList.add('active');
+        } 
+        // For other links, check if URL contains the href
+        else if (currentURL.includes(href)) {
+            link.classList.add('active');
             const parentMenu = link.closest('.collapse');
             if (parentMenu) {
-                parentMenu.classList.add('show'); // Expand menu if needed
+                parentMenu.classList.add('show');
             }
         }
     });
@@ -338,8 +343,8 @@ require_once "././php/admin/semester-selection.php";
     // Toggle menu visibility on link click
     document.querySelectorAll('.nav-link').forEach(link => {
         link.addEventListener('click', function() {
-            document.querySelectorAll('.nav-link').forEach(item => item.classList.remove('active')); // Remove 'active' from all links
-            this.classList.add('active'); // Add 'active' to clicked link
+            document.querySelectorAll('.nav-link').forEach(item => item.classList.remove('active'));
+            this.classList.add('active');
         });
     });
 };
