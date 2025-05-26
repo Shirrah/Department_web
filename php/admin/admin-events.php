@@ -265,7 +265,7 @@ $selected_semester = $_SESSION['selected_semester'][$user_id] ?? '';
 
 // Fetch all events for the selected semester with creator details
 $eventQuery = "
-    SELECT 
+    SELECT DISTINCT
         events.*, 
         COALESCE(admins.firstname_admin, student.firstname_student) AS creator_firstname,
         COALESCE(admins.lastname_admin, student.lastname_student) AS creator_lastname
@@ -273,7 +273,7 @@ $eventQuery = "
     LEFT JOIN admins ON events.created_by = admins.id_admin
     LEFT JOIN student ON events.created_by = student.id_student
     WHERE events.semester_ID = ?
-    ORDER BY events.date_event DESC
+    ORDER BY events.date_event DESC, events.id_event DESC
 ";
 
 $stmt = $db->prepare($eventQuery);
