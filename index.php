@@ -169,8 +169,14 @@ $(document).ready(function(){
     // Show loading overlay when page starts loading
     $('#loading-overlay').css('display', 'flex');
     
+    // Fallback timeout to ensure loading screen doesn't get stuck
+    const fallbackTimeout = setTimeout(function() {
+        $('#loading-overlay').fadeOut(500);
+    }, 5000); // 5 second fallback
+    
     // Hide loading overlay only when all resources are loaded
     $(window).on('load', function() {
+        clearTimeout(fallbackTimeout); // Clear the fallback timeout
         // Add a small delay to ensure everything is truly loaded
         setTimeout(function() {
             $('#loading-overlay').fadeOut(500);
@@ -183,7 +189,13 @@ $(document).ready(function(){
         const urlParams = new URLSearchParams(window.location.search);
         const page = urlParams.get('content') || 'default';
 
+        // Set a fallback timeout for navigation
+        const navFallbackTimeout = setTimeout(function() {
+            $('#loading-overlay').fadeOut(500);
+        }, 5000);
+
         $('#main-content').load(`index.php?content=${page} .content > *`, function () {
+            clearTimeout(navFallbackTimeout); // Clear the fallback timeout
             // Show/hide header and footer based on content
             if (page === 'log-in') {
                 $('#header, #footer').hide();
@@ -196,6 +208,14 @@ $(document).ready(function(){
             }, 500);
         });
     };
+
+    // Additional check for mobile devices
+    if (!isDesktopDevice()) {
+        // Force hide loading screen after 3 seconds on mobile
+        setTimeout(function() {
+            $('#loading-overlay').fadeOut(500);
+        }, 3000);
+    }
 });
 </script>
 
