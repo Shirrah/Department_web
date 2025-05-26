@@ -57,26 +57,6 @@ ob_start(); // Start output buffering
     <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
     <!-- Add jQuery (CDN version) -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <!-- Add NProgress -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/nprogress/0.2.0/nprogress.min.css">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/nprogress/0.2.0/nprogress.min.js"></script>
-    <style>
-        #nprogress .bar {
-            background: tomato !important;
-            height: 3px !important;
-            position: fixed !important;
-            z-index: 1031 !important;
-            top: 0 !important;
-            left: 0 !important;
-            width: 100% !important;
-        }
-        #nprogress .peg {
-            box-shadow: 0 0 10px tomato, 0 0 5px tomato !important;
-        }
-        #nprogress .spinner {
-            display: none !important;
-        }
-    </style>
 <?php
 $versionFile = file_get_contents(__DIR__ . '/version.json');
 $versionData = json_decode($versionFile, true);
@@ -156,75 +136,21 @@ function isDesktopDevice() {
 }
 
 $(document).ready(function(){
-    // Only initialize NProgress on desktop devices
-    if (isDesktopDevice()) {
-        // Configure NProgress
-        NProgress.configure({ 
-            showSpinner: false,
-            minimum: 0.08,
-            easing: 'linear',
-            speed: 200,
-            trickle: false,
-            trickleSpeed: 200
-        });
+    // Handle browser back/forward buttons
+    window.onpopstate = function () {
+        const urlParams = new URLSearchParams(window.location.search);
+        const page = urlParams.get('content') || 'default';
 
-        // Start progress bar on page load
-        NProgress.start();
-        NProgress.set(0.4); // Set initial progress
-
-        // Complete progress bar when page is fully loaded
-        $(window).on('load', function() {
-            NProgress.set(0.8);
-            setTimeout(function() {
-                NProgress.done();
-            }, 100);
+        $('#main-content').load(`index.php?content=${page} .content > *`, function () {
+            // Show/hide header and footer based on content
+            if (page === 'log-in') {
+                $('#header, #footer').hide();
+            } else {
+                $('#header, #footer').show();
+            }
         });
-
-        // Handle AJAX requests
-        $(document).ajaxStart(function() {
-            NProgress.start();
-            NProgress.set(0.4);
-        });
-
-        $(document).ajaxStop(function() {
-            NProgress.set(0.8);
-            setTimeout(function() {
-                NProgress.done();
-            }, 100);
-        });
-
-        // Handle form submissions
-        $(document).on('submit', 'form', function() {
-            NProgress.start();
-            NProgress.set(0.4);
-        });
-    }
+    };
 });
-
-// Handle browser back/forward buttons
-window.onpopstate = function () {
-    if (isDesktopDevice()) {
-        NProgress.start();
-        NProgress.set(0.4);
-    }
-    const urlParams = new URLSearchParams(window.location.search);
-    const page = urlParams.get('content') || 'default';
-
-    $('#main-content').load(`index.php?content=${page} .content > *`, function () {
-        if (isDesktopDevice()) {
-            NProgress.set(0.8);
-            setTimeout(function() {
-                NProgress.done();
-            }, 100);
-        }
-        // Show/hide header and footer based on content
-        if (page === 'log-in') {
-            $('#header, #footer').hide();
-        } else {
-            $('#header, #footer').show();
-        }
-    });
-};
 </script>
 
 
