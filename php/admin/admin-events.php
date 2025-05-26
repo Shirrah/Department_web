@@ -285,7 +285,7 @@ $events = $stmt->get_result();
             /
             <span>Events & Fees</span>
             /
-            <span>Manage Events</span>
+            <span>Manage Evsdsdssents</span>
         </div>
     </div>
 
